@@ -97,8 +97,16 @@ func (l *lexer) NextToken() *token.Token {
 		kind = token.RightBrace
 	case '-':
 		kind = token.Minus
+		if isDecimal(l.currentChar) {
+			l.pushBack()
+			kind, literal = l.readNumber()
+		}
 	case '+':
 		kind = token.Plus
+		if isDecimal(l.currentChar) {
+			l.pushBack()
+			kind, literal = l.readNumber()
+		}
 	case '/':
 		kind = token.Slash
 	case '*':
