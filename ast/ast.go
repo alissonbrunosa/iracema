@@ -110,16 +110,6 @@ type FunDecl struct {
 
 func (*FunDecl) String() string { return "FunDecl" }
 
-type AssignStmt struct {
-	Token *token.Token
-	Left  []Expr
-	Right []Expr
-
-	stmt
-}
-
-func (*AssignStmt) String() string { return "AssignStmt" }
-
 type IfStmt struct {
 	Cond Expr
 	Then *BlockStmt
@@ -223,6 +213,16 @@ func (b *BinaryExpr) String() string {
 
 	return buf.String()
 }
+
+type AssignExpr struct {
+	Token *token.Token
+	Left  []Expr
+	Right []Expr
+
+	expr
+}
+
+func (*AssignExpr) String() string { return "AssignExpr" }
 
 type BasicLit struct {
 	Token *token.Token

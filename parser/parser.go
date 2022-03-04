@@ -210,7 +210,9 @@ func (p *parser) parseSimpleStmt() ast.Stmt {
 		tok := p.tok
 		p.next()
 		rightExpr := p.parseRightExprList()
-		return &ast.AssignStmt{Left: leftExpr, Token: tok, Right: rightExpr}
+		return &ast.ExprStmt{
+			Expr: &ast.AssignExpr{Left: leftExpr, Token: tok, Right: rightExpr},
+		}
 	}
 
 	return &ast.ExprStmt{Expr: leftExpr[0]}
