@@ -26,8 +26,23 @@ func (p *parser) parse() *ast.File {
 	}
 }
 
+func isLit(stmt ast.Stmt) bool {
+	exprStmt, ok := stmt.(*ast.ExprStmt)
+	if !ok {
+		return false
+	}
+
+	_, ok = exprStmt.Expr.(*ast.BasicLit)
+	return ok
+}
+
 func (p *parser) parseStmtList() (list []ast.Stmt) {
 	for p.tok.Type != token.Eof && p.tok.Type != token.RightBrace {
+		if len(list) != 0 && isLit(list[0]) {
+			list[0] = p.parseStmt()
+			continue
+		}
+
 		list = append(list, p.parseStmt())
 	}
 
