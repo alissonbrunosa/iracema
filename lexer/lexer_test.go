@@ -145,6 +145,10 @@ func TestNextToken(t *testing.T) {
 			Input:        bytes.NewBufferString("stop"),
 			ExpectedType: token.Stop,
 		},
+		"Next": {
+			Input:        bytes.NewBufferString("next"),
+			ExpectedType: token.Next,
+		},
 		"While": {
 			Input:        bytes.NewBufferString("while"),
 			ExpectedType: token.While,

@@ -52,10 +52,17 @@ type StopStmt struct {
 
 func (*StopStmt) String() string { return "stop" }
 
+type NextStmt struct {
+	Token *token.Token
+
+	stmt
+}
+
+func (*NextStmt) String() string { return "next" }
+
 type File struct {
-	Name    string
-	Imports []string
-	Stmts   []Stmt
+	Name  string
+	Stmts []Stmt
 
 	stmt
 }
