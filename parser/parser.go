@@ -83,6 +83,9 @@ func (p *parser) parseStmt() ast.Stmt {
 	case token.Stop:
 		return p.parseStopStmt()
 
+	case token.Next:
+		return p.parseNextStmt()
+
 	case token.Return:
 		return p.parseReturnStmt()
 
@@ -181,6 +184,12 @@ func (p *parser) parseForStmt() ast.Stmt {
 func (p *parser) parseStopStmt() ast.Stmt {
 	return &ast.StopStmt{
 		Token: p.expect(token.Stop),
+	}
+}
+
+func (p *parser) parseNextStmt() ast.Stmt {
+	return &ast.NextStmt{
+		Token: p.expect(token.Next),
 	}
 }
 
