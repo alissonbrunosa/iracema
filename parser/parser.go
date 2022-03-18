@@ -208,7 +208,7 @@ func (p *parser) parseParameterList() (list []*ast.Ident) {
 	p.expect(token.LeftParenthesis)
 	for p.tok.Type != token.RightParenthesis && p.tok.Type != token.Eof {
 		param := p.parseIdent()
-		if param.IsInstanceVariable() {
+		if param.IsAttr() {
 			p.addError(param.Token.Position, "syntax error: argument cannot be an instance variable")
 			continue
 		}

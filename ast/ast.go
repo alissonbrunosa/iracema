@@ -181,9 +181,9 @@ type Ident struct {
 	expr
 }
 
-func (i *Ident) IsConstant() bool         { return 'A' <= i.Value[0] && i.Value[0] <= 'Z' }
-func (i *Ident) IsInstanceVariable() bool { return i.Value[0] == '@' }
-func (*Ident) String() string             { return "Ident" }
+func (i *Ident) IsConstant() bool { return 'A' <= i.Value[0] && i.Value[0] <= 'Z' }
+func (i *Ident) IsAttr() bool     { return i.Value[0] == '@' }
+func (*Ident) String() string     { return "Ident" }
 
 type UnaryExpr struct {
 	Operator *token.Token
