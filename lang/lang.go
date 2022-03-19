@@ -1,3 +1,7 @@
 package lang
 
-type IrObject interface{}
+type IrObject interface {
+	Class() *Class
+	Is(*Class) bool
+	LookupMethod(methodName string) *Method
+}
