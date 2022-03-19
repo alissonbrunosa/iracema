@@ -18,6 +18,22 @@ func (c *Class) String() string {
 	return c.name
 }
 
+func (c *Class) AddGoMethod(name string, body Native) {
+	var arity byte
+	switch body.(type) {
+	case nArgs:
+		arity = 255
+	case zeroArgs:
+		arity = 0
+	case oneArg:
+		arity = 1
+	case twoArgs:
+		arity = 2
+	}
+
+	c.methods[name] = NewGoMethod(name, body, arity)
+}
+
 func NewClass(name string, super *Class) *Class {
 	return &Class{
 		name:    name,
