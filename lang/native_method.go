@@ -18,29 +18,29 @@ type oneArg func(IrObject, IrObject) IrObject
 type twoArgs func(IrObject, IrObject, IrObject) IrObject
 
 func (fn nArgs) Invoke(recv IrObject, argv ...IrObject) IrObject {
-	return fn(rt, recv, argv...)
+	return fn(recv, argv...)
 }
 
 func (fn zeroArgs) Invoke(recv IrObject, argv ...IrObject) IrObject {
-	if ok := checkArity(rt, len(argv), 0); !ok {
+	if ok := checkArity(len(argv), 0); !ok {
 		return nil
 	}
 
-	return fn(rt, recv)
+	return fn(recv)
 }
 
 func (fn oneArg) Invoke(recv IrObject, argv ...IrObject) IrObject {
-	if ok := checkArity(rt, len(argv), 1); !ok {
+	if ok := checkArity(len(argv), 1); !ok {
 		return nil
 	}
 
-	return fn(rt, recv, argv[0])
+	return fn(recv, argv[0])
 }
 
 func (fn twoArgs) Invoke(recv IrObject, argv ...IrObject) IrObject {
-	if ok := checkArity(rt, len(argv), 2); !ok {
+	if ok := checkArity(len(argv), 2); !ok {
 		return nil
 	}
 
-	return fn(rt, recv, argv[0], argv[1])
+	return fn(recv, argv[0], argv[1])
 }
