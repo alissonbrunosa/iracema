@@ -36,7 +36,7 @@ func Test_Is_whenNotInstanceClass(t *testing.T) {
 
 func Test_LookupMethod(t *testing.T) {
 	class := NewClass("ClassOne", nil)
-	class.AddGoMethod("method", zeroArgs(func(recv IrObject) IrObject {
+	class.AddGoMethod("method", zeroArgs(func(rt Runtime, recv IrObject) IrObject {
 		return nil
 	}))
 
@@ -61,7 +61,7 @@ func Test_LookupMethod_WhenNotDefined(t *testing.T) {
 
 func Test_LookupMethod_WhenDefinedInSuper(t *testing.T) {
 	super := NewClass("Super", nil)
-	super.AddGoMethod("method", zeroArgs(func(recv IrObject) IrObject {
+	super.AddGoMethod("method", zeroArgs(func(rt Runtime, recv IrObject) IrObject {
 		return nil
 	}))
 	class := NewClass("ClassOne", super)

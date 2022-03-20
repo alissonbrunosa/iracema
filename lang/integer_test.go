@@ -57,8 +57,8 @@ func Test_toInt_WhenArgumentIsNotInt(t *testing.T) {
 		t.Errorf("expected error to be %s, got %s", expectedError, err.Class())
 	}
 
-	if err.Message != expectedMesg {
-		t.Errorf("expected message to be %s, got %s", expectedMesg, err.Message)
+	if err.message != expectedMesg {
+		t.Errorf("expected message to be %s, got %s", expectedMesg, err.message)
 	}
 }
 
@@ -416,9 +416,9 @@ func TestIntOperationWithInvalidOperand(t *testing.T) {
 		{
 			Scenario:      "compare(<=) with a non numeric",
 			Left:          Int(5),
-			Right:         NewRegexp("5"),
+			Right:         NewString("5"),
 			operation:     intLessThanOrEqual,
-			ExpectedMesg:  "invalid comparison between 'Int' and 'Regexp'",
+			ExpectedMesg:  "invalid comparison between 'Int' and 'String'",
 			ExpectedError: TypeError,
 		},
 	}
@@ -435,8 +435,8 @@ func TestIntOperationWithInvalidOperand(t *testing.T) {
 				t.Error("expected an error to be set in Runtime")
 			}
 
-			if rt.err.Message != test.ExpectedMesg {
-				t.Errorf("expected error message to be %s, got %s", test.ExpectedMesg, rt.err.Message)
+			if rt.err.message != test.ExpectedMesg {
+				t.Errorf("expected error message to be %s, got %s", test.ExpectedMesg, rt.err.message)
 			}
 
 			if rt.err.Class() != test.ExpectedError {

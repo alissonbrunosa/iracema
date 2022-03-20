@@ -33,7 +33,7 @@ func Test_AddGoMethod(t *testing.T) {
 			scenario:      "zeroArgs",
 			expectedName:  "zero",
 			expectedArity: 0,
-			method: zeroArgs(func(self IrObject) IrObject {
+			method: zeroArgs(func(rt Runtime, self IrObject) IrObject {
 				return nil
 			}),
 		},
@@ -41,7 +41,7 @@ func Test_AddGoMethod(t *testing.T) {
 			scenario:      "oneArg",
 			expectedName:  "one",
 			expectedArity: 1,
-			method: oneArg(func(self IrObject, value IrObject) IrObject {
+			method: oneArg(func(rt Runtime, self IrObject, value IrObject) IrObject {
 				return nil
 			}),
 		},
@@ -49,7 +49,7 @@ func Test_AddGoMethod(t *testing.T) {
 			scenario:      "twoArgs",
 			expectedName:  "two",
 			expectedArity: 2,
-			method: twoArgs(func(self IrObject, value1 IrObject, value2 IrObject) IrObject {
+			method: twoArgs(func(rt Runtime, self IrObject, value1 IrObject, value2 IrObject) IrObject {
 				return nil
 			}),
 		},
@@ -57,7 +57,7 @@ func Test_AddGoMethod(t *testing.T) {
 			scenario:      "nArgs",
 			expectedName:  "many",
 			expectedArity: 255,
-			method: nArgs(func(self IrObject, values ...IrObject) IrObject {
+			method: nArgs(func(rt Runtime, self IrObject, values ...IrObject) IrObject {
 				return nil
 			}),
 		},

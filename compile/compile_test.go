@@ -30,7 +30,7 @@ func TestCompile_BinaryExpr(t *testing.T) {
 		expect(bytecode.Push).withOperand(1).toHaveConstant(2),
 		expect(bytecode.Binary).toHaveOperand(ADD),
 		expect(bytecode.Pop),
-		expect(bytecode.PushNil),
+		expect(bytecode.PushNone),
 		expect(bytecode.Return),
 	}
 
@@ -50,7 +50,7 @@ func TestCompile_SimpleExpr(t *testing.T) {
 			Scenario: "empty source",
 			Code:     "",
 			Matchs: []Match{
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -58,7 +58,7 @@ func TestCompile_SimpleExpr(t *testing.T) {
 			Scenario: "compile single lit",
 			Code:     "true",
 			Matchs: []Match{
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -67,7 +67,7 @@ func TestCompile_SimpleExpr(t *testing.T) {
 			Code:     "Int",
 			Matchs: []Match{
 				expect(bytecode.GetConstant).withOperand(0).toHaveConstant("Int"),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -79,7 +79,7 @@ func TestCompile_SimpleExpr(t *testing.T) {
 				expect(bytecode.Push).withOperand(1).toHaveConstant(2),
 				expect(bytecode.Binary).toHaveOperand(ADD),
 				expect(bytecode.Pop),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -87,9 +87,9 @@ func TestCompile_SimpleExpr(t *testing.T) {
 			Scenario: "multiple lit",
 			Code:     "true\nfalse",
 			Matchs: []Match{
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -100,7 +100,7 @@ func TestCompile_SimpleExpr(t *testing.T) {
 				expect(bytecode.PushSelf),
 				expect(bytecode.CallMethod).withOperand(0).toBeMethodCall("method", 0),
 				expect(bytecode.Pop),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -110,7 +110,7 @@ func TestCompile_SimpleExpr(t *testing.T) {
 			Matchs: []Match{
 				expect(bytecode.Push).withOperand(0).toHaveConstant("string"),
 				expect(bytecode.SetLocal).toHaveOperand(0),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -118,9 +118,9 @@ func TestCompile_SimpleExpr(t *testing.T) {
 			Scenario: "compile nil assign",
 			Code:     "a = nil",
 			Matchs: []Match{
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.SetLocal).toHaveOperand(0),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -130,7 +130,7 @@ func TestCompile_SimpleExpr(t *testing.T) {
 			Matchs: []Match{
 				expect(bytecode.Push).withOperand(0).toHaveConstant(true),
 				expect(bytecode.SetLocal).toHaveOperand(0),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -140,7 +140,7 @@ func TestCompile_SimpleExpr(t *testing.T) {
 			Matchs: []Match{
 				expect(bytecode.Push).withOperand(0).toHaveConstant(3.1415),
 				expect(bytecode.SetLocal).toHaveOperand(0),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -153,7 +153,7 @@ func TestCompile_SimpleExpr(t *testing.T) {
 				expect(bytecode.GetLocal).withOperand(0),
 				expect(bytecode.Not),
 				expect(bytecode.SetLocal).withOperand(1),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -167,7 +167,7 @@ func TestCompile_SimpleExpr(t *testing.T) {
 				expect(bytecode.Push).withOperand(2).toHaveConstant(3.1415),
 				expect(bytecode.CallMethod).withOperand(3).toBeMethodCall("insert", 2),
 				expect(bytecode.Pop),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -177,7 +177,7 @@ func TestCompile_SimpleExpr(t *testing.T) {
 			Matchs: []Match{
 				expect(bytecode.Push).withOperand(0).toHaveConstant(100),
 				expect(bytecode.SetLocal).toHaveOperand(0),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -189,7 +189,7 @@ func TestCompile_SimpleExpr(t *testing.T) {
 				expect(bytecode.SetLocal).toHaveOperand(0),
 				expect(bytecode.Push).withOperand(1).toHaveConstant(200),
 				expect(bytecode.SetLocal).toHaveOperand(1),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -200,7 +200,7 @@ func TestCompile_SimpleExpr(t *testing.T) {
 				expect(bytecode.PushSelf),
 				expect(bytecode.CallMethod).withOperand(0).toBeMethodCall("method", 0),
 				expect(bytecode.SetLocal).toHaveOperand(0),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -213,7 +213,7 @@ func TestCompile_SimpleExpr(t *testing.T) {
 				expect(bytecode.Push).withOperand(1).toHaveConstant(2),
 				expect(bytecode.CallMethod).withOperand(2).toBeMethodCall("plus", 2),
 				expect(bytecode.Pop),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -227,7 +227,7 @@ func TestCompile_SimpleExpr(t *testing.T) {
 				expect(bytecode.Push).withOperand(0).toHaveConstant(0),
 				expect(bytecode.CallMethod).withOperand(1).toBeMethodCall("get", 1),
 				expect(bytecode.Pop),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -257,7 +257,7 @@ func TestCompileIfStmt(t *testing.T) {
 				expect(bytecode.Push).withOperand(1).toHaveConstant(10),
 				expect(bytecode.Binary).toHaveOperand(GT),
 				expect(bytecode.JumpIfFalse).toHaveOperand(4),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -271,7 +271,7 @@ func TestCompileIfStmt(t *testing.T) {
 				expect(bytecode.JumpIfFalse).toHaveOperand(6),
 				expect(bytecode.Push).withOperand(2).toHaveConstant(100),
 				expect(bytecode.SetLocal).toHaveOperand(0),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -285,7 +285,7 @@ func TestCompileIfStmt(t *testing.T) {
 				expect(bytecode.JumpIfFalse).toHaveOperand(6),
 				expect(bytecode.Push).withOperand(2).toHaveConstant(100),
 				expect(bytecode.Return),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -303,7 +303,7 @@ func TestCompileIfStmt(t *testing.T) {
 				expect(bytecode.Push).withOperand(4).toHaveConstant(1),
 				expect(bytecode.Binary).toHaveOperand(MUL),
 				expect(bytecode.Pop),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -320,7 +320,7 @@ func TestCompileIfStmt(t *testing.T) {
 				expect(bytecode.Jump).toHaveOperand(9),
 				expect(bytecode.Push).withOperand(3).toHaveConstant(200),
 				expect(bytecode.SetLocal).toHaveOperand(1),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -341,7 +341,7 @@ func TestCompileIfStmt(t *testing.T) {
 				expect(bytecode.Push).withOperand(5).toHaveConstant(1),
 				expect(bytecode.Binary).toHaveOperand(SUB),
 				expect(bytecode.Pop),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -359,7 +359,7 @@ func TestCompileIfStmt(t *testing.T) {
 				expect(bytecode.Jump).toHaveOperand(9),
 				expect(bytecode.Push).withOperand(3).toHaveConstant(200),
 				expect(bytecode.Return),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -390,7 +390,7 @@ func TestCompileWhileStmt(t *testing.T) {
 				expect(bytecode.Binary).toHaveOperand(GT),
 				expect(bytecode.JumpIfFalse).toHaveOperand(5),
 				expect(bytecode.Jump).toHaveOperand(0),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -405,7 +405,7 @@ func TestCompileWhileStmt(t *testing.T) {
 				expect(bytecode.Push).withOperand(2).toHaveConstant(200),
 				expect(bytecode.SetLocal).toHaveOperand(0),
 				expect(bytecode.Jump).toHaveOperand(0),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -420,7 +420,7 @@ func TestCompileWhileStmt(t *testing.T) {
 				expect(bytecode.Push).withOperand(2).toHaveConstant(200),
 				expect(bytecode.Return),
 				expect(bytecode.Jump).toHaveOperand(0),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -437,7 +437,7 @@ func TestCompileWhileStmt(t *testing.T) {
 				expect(bytecode.Binary).toHaveOperand(DIV),
 				expect(bytecode.Pop),
 				expect(bytecode.Jump).toHaveOperand(0),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -451,7 +451,7 @@ func TestCompileWhileStmt(t *testing.T) {
 				expect(bytecode.JumpIfFalse).toHaveOperand(6),
 				expect(bytecode.Jump).toHaveOperand(0),
 				expect(bytecode.Jump).toHaveOperand(0),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -479,7 +479,7 @@ func TestCompileWhileStmt(t *testing.T) {
 				expect(bytecode.Binary).toHaveOperand(SUB),
 				expect(bytecode.SetLocal).toHaveOperand(0),
 				expect(bytecode.Jump).toHaveOperand(2),
-				expect(bytecode.PushNil),
+				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
 		},
@@ -497,14 +497,14 @@ func TestCompileWhileStmt(t *testing.T) {
 
 func TestCompileObjectDecl_Empty(t *testing.T) {
 	objMatches := []Match{
-		expect(bytecode.PushNil),
+		expect(bytecode.PushNone),
 		expect(bytecode.Return),
 	}
 
 	checkers := []Match{
 		expect(bytecode.DefineObject).toDefine("Person", objMatches),
 		expect(bytecode.Pop),
-		expect(bytecode.PushNil),
+		expect(bytecode.PushNone),
 		expect(bytecode.Return),
 	}
 
@@ -518,20 +518,20 @@ func TestCompileObjectDecl_Empty(t *testing.T) {
 
 func TestCompileObjectDecl_WithFunction(t *testing.T) {
 	methMatches := []Match{
-		expect(bytecode.PushNil),
+		expect(bytecode.PushNone),
 		expect(bytecode.Return),
 	}
 
 	objMatches := []Match{
 		expect(bytecode.DefineFunction).toDefine("age", methMatches),
-		expect(bytecode.PushNil),
+		expect(bytecode.PushNone),
 		expect(bytecode.Return),
 	}
 
 	checkers := []Match{
 		expect(bytecode.DefineObject).toDefine("Person", objMatches),
 		expect(bytecode.Pop),
-		expect(bytecode.PushNil),
+		expect(bytecode.PushNone),
 		expect(bytecode.Return),
 	}
 
@@ -551,7 +551,7 @@ func TestCompileFunDecl(t *testing.T) {
 		expect(bytecode.GetLocal).toHaveOperand(1),
 		expect(bytecode.Binary).toHaveOperand(DIV),
 		expect(bytecode.Pop),
-		expect(bytecode.PushNil),
+		expect(bytecode.PushNone),
 		expect(bytecode.Return),
 		expect(bytecode.MatchType).withOperand(0).toHaveConstant("ZeroDivisionError"),
 		expect(bytecode.JumpIfFalse).toHaveOperand(15),
@@ -560,14 +560,14 @@ func TestCompileFunDecl(t *testing.T) {
 		expect(bytecode.GetLocal).toHaveOperand(2),
 		expect(bytecode.CallMethod).withOperand(1).toBeMethodCall("puts", 1),
 		expect(bytecode.Pop),
-		expect(bytecode.PushNil),
+		expect(bytecode.PushNone),
 		expect(bytecode.Return),
 		expect(bytecode.Throw),
 	}
 
 	top := []Match{
 		expect(bytecode.DefineFunction).toDefine("div", methMatches),
-		expect(bytecode.PushNil),
+		expect(bytecode.PushNone),
 		expect(bytecode.Return),
 	}
 
@@ -584,7 +584,7 @@ func TestCompileFunDeclWithMultipleCatches(t *testing.T) {
 		expect(bytecode.PushSelf),
 		expect(bytecode.CallMethod).withOperand(0).toBeMethodCall("explode", 0),
 		expect(bytecode.Pop),
-		expect(bytecode.PushNil),
+		expect(bytecode.PushNone),
 		expect(bytecode.Return),
 		expect(bytecode.MatchType).withOperand(1).toHaveConstant("Error"),
 		expect(bytecode.JumpIfFalse).toHaveOperand(14),
@@ -593,7 +593,7 @@ func TestCompileFunDeclWithMultipleCatches(t *testing.T) {
 		expect(bytecode.GetLocal).toHaveOperand(0),
 		expect(bytecode.CallMethod).withOperand(2).toBeMethodCall("puts", 1),
 		expect(bytecode.Pop),
-		expect(bytecode.PushNil),
+		expect(bytecode.PushNone),
 		expect(bytecode.Return),
 		expect(bytecode.MatchType).withOperand(3).toHaveConstant("ExplodeError"),
 		expect(bytecode.JumpIfFalse).toHaveOperand(23),
@@ -602,14 +602,14 @@ func TestCompileFunDeclWithMultipleCatches(t *testing.T) {
 		expect(bytecode.Push).withOperand(4).toHaveConstant(1),
 		expect(bytecode.CallMethod).withOperand(5).toBeMethodCall("exit", 1),
 		expect(bytecode.Pop),
-		expect(bytecode.PushNil),
+		expect(bytecode.PushNone),
 		expect(bytecode.Return),
 		expect(bytecode.Throw),
 	}
 
 	top := []Match{
 		expect(bytecode.DefineFunction).toDefine("dangerous", methMatches),
-		expect(bytecode.PushNil),
+		expect(bytecode.PushNone),
 		expect(bytecode.Return),
 	}
 
@@ -626,7 +626,7 @@ func TestCompileArrayLit(t *testing.T) {
 		expect(bytecode.Push).withOperand(0).toHaveConstant(1),
 		expect(bytecode.Push).withOperand(1).toHaveConstant(2),
 		expect(bytecode.BuildArray).toHaveOperand(2),
-		expect(bytecode.PushNil),
+		expect(bytecode.PushNone),
 		expect(bytecode.Return),
 	}
 
