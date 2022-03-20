@@ -2,8 +2,19 @@ package lang
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 )
+
+func toString(value IrObject) (*String, *ErrorObject) {
+	if s, ok := value.(*String); ok {
+		return s, nil
+	}
+
+	var mesg = new(strings.Builder)
+	fmt.Fprintf(mesg, "no implicit conversion of %s into Regexp", value.Class())
+	return nil, NewTypeError(mesg.String())
+}
 
 func STRING(obj IrObject) *String {
 	return obj.(*String)
@@ -13,19 +24,19 @@ func unwrapString(obj IrObject) []byte {
 	return STRING(obj).Value
 }
 
-func stringSize(self IrObject) IrObject {
+func stringSize(rt Runtime, self IrObject) IrObject {
 	str := self.(*String)
 	return Int(len(str.Value))
 }
 
-func stringEqual(self IrObject, rhs IrObject) IrObject {
+func stringEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	left := STRING(self)
 	right := STRING(rhs)
 
 	return NewBoolean(bytes.Equal(left.Value, right.Value))
 }
 
-func stringPlus(self IrObject, rhs IrObject) IrObject {
+func stringPlus(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	var buf strings.Builder
 
 	left := unwrapString(self)
@@ -38,7 +49,7 @@ func stringPlus(self IrObject, rhs IrObject) IrObject {
 	return NewString(buf.String())
 }
 
-func stringHash(self IrObject) IrObject {
+func stringHash(rt Runtime, self IrObject) IrObject {
 	str := unwrapString(self)
 
 	var hash Int
@@ -51,7 +62,7 @@ func stringHash(self IrObject) IrObject {
 	return hash
 }
 
-func stringInspect(self IrObject) IrObject {
+func stringInspect(rt Runtime, self IrObject) IrObject {
 	return self
 }
 
