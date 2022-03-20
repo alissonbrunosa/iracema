@@ -2,11 +2,11 @@ package lang
 
 import "fmt"
 
-func noneInspect(self IrObject) IrObject {
+func noneInspect(rt Runtime, self IrObject) IrObject {
 	return NewString("none")
 }
 
-func noneCheck(self IrObject) IrObject {
+func noneCheck(rt Runtime, self IrObject) IrObject {
 	return True
 }
 
