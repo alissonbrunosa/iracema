@@ -28,6 +28,40 @@ func eq(t *testing.T, got IrObject, expected IrObject) {
 	}
 }
 
+func Test_toInt(t *testing.T) {
+	var value IrObject = Int(1)
+
+	result, err := toInt(value)
+
+	if err != nil {
+		t.Fatal("no error is expected")
+	}
+
+	if result != Int(1) {
+		t.Errorf("expected result to be %d, got %d", Int(1), result)
+	}
+}
+
+func Test_toInt_WhenArgumentIsNotInt(t *testing.T) {
+	value := NewString("1")
+	expectedMesg := "no implicit conversion of String into Int"
+	expectedError := TypeError
+
+	_, err := toInt(value)
+
+	if err == nil {
+		t.Fatal("an error is expectect")
+	}
+
+	if err.Class() != expectedError {
+		t.Errorf("expected error to be %s, got %s", expectedError, err.Class())
+	}
+
+	if err.Message != expectedMesg {
+		t.Errorf("expected message to be %s, got %s", expectedMesg, err.Message)
+	}
+}
+
 func Test_intPlus(t *testing.T) {
 	tests := []struct {
 		Left     IrObject
@@ -47,7 +81,7 @@ func Test_intPlus(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := intPlus(test.Left, test.Right)
+		result := intPlus(runtime, test.Left, test.Right)
 		eq(t, result, test.Expected)
 	}
 }
@@ -71,7 +105,7 @@ func Test_intMinus(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := intMinus(test.Left, test.Right)
+		result := intMinus(runtime, test.Left, test.Right)
 		eq(t, result, test.Expected)
 	}
 }
@@ -95,7 +129,7 @@ func Test_intMultiply(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := intMultiply(test.Left, test.Right)
+		result := intMultiply(runtime, test.Left, test.Right)
 		eq(t, result, test.Expected)
 	}
 }
@@ -135,7 +169,7 @@ func Test_intEqual(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.Scenario, func(t *testing.T) {
-			result := intEqual(test.Left, test.Right)
+			result := intEqual(runtime, test.Left, test.Right)
 			eq(t, result, test.Expected)
 		})
 	}
@@ -157,7 +191,7 @@ func Test_intNegate(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := intNegate(test.Obj)
+		result := intNegate(runtime, test.Obj)
 		eq(t, result, test.Expected)
 	}
 }
@@ -186,7 +220,7 @@ func Test_intGreatThan(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := intGreatThan(test.Left, test.Right)
+		result := intGreatThan(runtime, test.Left, test.Right)
 		eq(t, result, test.Expected)
 	}
 }
@@ -215,7 +249,7 @@ func Test_intGreatThanOrEqual(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := intGreaterThanOrEqual(test.Left, test.Right)
+		result := intGreaterThanOrEqual(runtime, test.Left, test.Right)
 		eq(t, result, test.Expected)
 	}
 }
@@ -244,7 +278,7 @@ func Test_intLessThan(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := intLessThan(test.Left, test.Right)
+		result := intLessThan(runtime, test.Left, test.Right)
 		eq(t, result, test.Expected)
 	}
 }
@@ -273,7 +307,7 @@ func Test_intLessThanOrEqual(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := intLessThanOrEqual(test.Left, test.Right)
+		result := intLessThanOrEqual(runtime, test.Left, test.Right)
 		eq(t, result, test.Expected)
 	}
 }
@@ -296,12 +330,118 @@ func Test_intDivide(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := intDivide(test.Left, test.Right)
+		result := intDivide(runtime, test.Left, test.Right)
 		eq(t, result, test.Expected)
 	}
 }
 
 func Test_intInspect(t *testing.T) {
-	result := intInspect(Int(2))
+	result := intInspect(runtime, Int(2))
 	eq(t, result, NewString("2"))
+}
+
+func TestIntOperationWithInvalidOperand(t *testing.T) {
+	tests := []struct {
+		Scenario      string
+		Left          IrObject
+		Right         IrObject
+		operation     func(Runtime, IrObject, IrObject) IrObject
+		ExpectedMesg  string
+		ExpectedError *Class
+	}{
+		{
+			Scenario:      "Int divided by 0",
+			Left:          Int(8),
+			Right:         Int(0),
+			operation:     intDivide,
+			ExpectedMesg:  "divided by 0",
+			ExpectedError: ZeroDivisionError,
+		},
+		{
+			Scenario:      "div by a non numeric",
+			Left:          Int(5),
+			Right:         NewString("1"),
+			operation:     intDivide,
+			ExpectedMesg:  "unsupported operand type(s): 'Int' / 'String'",
+			ExpectedError: TypeError,
+		},
+		{
+			Scenario:      "add with a non numeric",
+			Left:          Int(5),
+			Right:         NewString("1"),
+			operation:     intPlus,
+			ExpectedMesg:  "unsupported operand type(s): 'Int' + 'String'",
+			ExpectedError: TypeError,
+		},
+		{
+			Scenario:      "sub with a non numeric",
+			Left:          Int(5),
+			Right:         NewString("1"),
+			operation:     intMinus,
+			ExpectedMesg:  "unsupported operand type(s): 'Int' - 'String'",
+			ExpectedError: TypeError,
+		},
+		{
+			Scenario:      "mult with a non numeric",
+			Left:          Int(5),
+			Right:         NewString("1"),
+			operation:     intMultiply,
+			ExpectedMesg:  "unsupported operand type(s): 'Int' * 'String'",
+			ExpectedError: TypeError,
+		},
+		{
+			Scenario:      "compare(>) with a non numeric",
+			Left:          Int(5),
+			Right:         False,
+			operation:     intGreatThan,
+			ExpectedMesg:  "invalid comparison between 'Int' and 'Bool'",
+			ExpectedError: TypeError,
+		},
+		{
+			Scenario:      "compare(>=) with a non numeric",
+			Left:          Int(5),
+			Right:         True,
+			operation:     intGreaterThanOrEqual,
+			ExpectedMesg:  "invalid comparison between 'Int' and 'Bool'",
+			ExpectedError: TypeError,
+		},
+		{
+			Scenario:      "compare(<) with a non numeric",
+			Left:          Int(5),
+			Right:         NewString("5"),
+			operation:     intLessThan,
+			ExpectedMesg:  "invalid comparison between 'Int' and 'String'",
+			ExpectedError: TypeError,
+		},
+		{
+			Scenario:      "compare(<=) with a non numeric",
+			Left:          Int(5),
+			Right:         NewRegexp("5"),
+			operation:     intLessThanOrEqual,
+			ExpectedMesg:  "invalid comparison between 'Int' and 'Regexp'",
+			ExpectedError: TypeError,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Scenario, func(t *testing.T) {
+			var rt = new(dummyRuntime)
+
+			if value := test.operation(rt, test.Left, test.Right); value != nil {
+				t.Error("expected value to be nil when an error occurs")
+			}
+
+			if rt.err == nil {
+				t.Error("expected an error to be set in Runtime")
+			}
+
+			if rt.err.Message != test.ExpectedMesg {
+				t.Errorf("expected error message to be %s, got %s", test.ExpectedMesg, rt.err.Message)
+			}
+
+			if rt.err.Class() != test.ExpectedError {
+				t.Errorf("expected error class to be %s, got %s", test.ExpectedError, rt.err.Class())
+			}
+		})
+	}
 }

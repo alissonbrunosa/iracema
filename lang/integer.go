@@ -2,13 +2,24 @@ package lang
 
 import (
 	"fmt"
+	"strings"
 )
 
 func INT(obj IrObject) Int {
 	return obj.(Int)
 }
 
-func intPlus(self IrObject, rhs IrObject) IrObject {
+func toInt(value IrObject) (Int, *ErrorObject) {
+	if i, ok := value.(Int); ok {
+		return i, nil
+	}
+
+	var mesg = new(strings.Builder)
+	fmt.Fprintf(mesg, "no implicit conversion of %s into Int", value.Class())
+	return 0, NewError(mesg.String(), TypeError)
+}
+
+func intPlus(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	left := INT(self)
 	switch right := rhs.(type) {
 	case Int:
@@ -17,12 +28,12 @@ func intPlus(self IrObject, rhs IrObject) IrObject {
 		return Float(left) + right
 	default:
 		err := fmt.Sprintf("unsupported operand type(s): '%s' + '%s'", left.Class(), right.Class())
-		panic(err)
+		rt.SetError(NewTypeError(err))
 		return nil
 	}
 }
 
-func intMinus(self IrObject, rhs IrObject) IrObject {
+func intMinus(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	left := INT(self)
 	switch right := rhs.(type) {
 	case Int:
@@ -31,12 +42,12 @@ func intMinus(self IrObject, rhs IrObject) IrObject {
 		return Float(left) - right
 	default:
 		err := fmt.Sprintf("unsupported operand type(s): '%s' - '%s'", left.Class(), right.Class())
-		panic(err)
+		rt.SetError(NewTypeError(err))
 		return nil
 	}
 }
 
-func intMultiply(lhs, rhs IrObject) IrObject {
+func intMultiply(rt Runtime, lhs, rhs IrObject) IrObject {
 	left := INT(lhs)
 	switch right := rhs.(type) {
 	case Int:
@@ -45,30 +56,31 @@ func intMultiply(lhs, rhs IrObject) IrObject {
 		return Float(left) * right
 	default:
 		err := fmt.Sprintf("unsupported operand type(s): '%s' * '%s'", left.Class(), right.Class())
-		panic(err)
+		rt.SetError(NewTypeError(err))
 		return nil
 	}
 }
 
-func intDivide(lhs, rhs IrObject) IrObject {
+func intDivide(rt Runtime, lhs, rhs IrObject) IrObject {
 	left := INT(lhs)
 	switch right := rhs.(type) {
 	case Int:
 		if right == 0 {
-			panic("divided by 0")
+			err := NewError("divided by 0", ZeroDivisionError)
+			rt.SetError(err)
+			return nil
 		}
-
 		return left / right
 	case Float:
 		return Float(left) / right
 	default:
 		err := fmt.Sprintf("unsupported operand type(s): '%s' / '%s'", left.Class(), right.Class())
-		panic(err)
+		rt.SetError(NewTypeError(err))
 		return nil
 	}
 }
 
-func intEqual(lhs, rhs IrObject) IrObject {
+func intEqual(rt Runtime, lhs, rhs IrObject) IrObject {
 	left := INT(lhs)
 	switch right := rhs.(type) {
 	case Int:
@@ -80,7 +92,7 @@ func intEqual(lhs, rhs IrObject) IrObject {
 	}
 }
 
-func intGreatThan(self IrObject, rhs IrObject) IrObject {
+func intGreatThan(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	left := INT(self)
 	switch right := rhs.(type) {
 	case Int:
@@ -89,12 +101,12 @@ func intGreatThan(self IrObject, rhs IrObject) IrObject {
 		return NewBoolean(left > Int(right))
 	default:
 		err := fmt.Sprintf("invalid comparison between '%s' and '%s'", left.Class(), right.Class())
-		panic(err)
+		rt.SetError(NewTypeError(err))
 		return nil
 	}
 }
 
-func intGreaterThanOrEqual(self IrObject, rhs IrObject) IrObject {
+func intGreaterThanOrEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	left := INT(self)
 	switch right := rhs.(type) {
 	case Int:
@@ -103,12 +115,12 @@ func intGreaterThanOrEqual(self IrObject, rhs IrObject) IrObject {
 		return NewBoolean(left >= Int(right))
 	default:
 		err := fmt.Sprintf("invalid comparison between '%s' and '%s'", left.Class(), right.Class())
-		panic(err)
+		rt.SetError(NewTypeError(err))
 		return nil
 	}
 }
 
-func intLessThanOrEqual(self IrObject, rhs IrObject) IrObject {
+func intLessThanOrEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	left := INT(self)
 	switch right := rhs.(type) {
 	case Int:
@@ -117,12 +129,12 @@ func intLessThanOrEqual(self IrObject, rhs IrObject) IrObject {
 		return NewBoolean(left <= Int(right))
 	default:
 		err := fmt.Sprintf("invalid comparison between '%s' and '%s'", left.Class(), right.Class())
-		panic(err)
+		rt.SetError(NewTypeError(err))
 		return nil
 	}
 }
 
-func intLessThan(self IrObject, rhs IrObject) IrObject {
+func intLessThan(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	left := INT(self)
 	switch right := rhs.(type) {
 	case Int:
@@ -131,21 +143,21 @@ func intLessThan(self IrObject, rhs IrObject) IrObject {
 		return NewBoolean(left < Int(right))
 	default:
 		err := fmt.Sprintf("invalid comparison between '%s' and '%s'", left.Class(), right.Class())
-		panic(err)
+		rt.SetError(NewTypeError(err))
 		return nil
 	}
 }
 
-func intNegate(self IrObject) IrObject {
+func intNegate(rt Runtime, self IrObject) IrObject {
 	return -INT(self)
 }
 
-func intInspect(self IrObject) IrObject {
+func intInspect(rt Runtime, self IrObject) IrObject {
 	inspect := fmt.Sprintf("%d", INT(self))
 	return NewString(inspect)
 }
 
-func intHash(self IrObject) IrObject {
+func intHash(rt Runtime, self IrObject) IrObject {
 	return self
 }
 
@@ -176,7 +188,7 @@ func InitInt() {
 }
 
 /*
- Represets integer numbers
+Represets integer numbers
 */
 type Int int
 
