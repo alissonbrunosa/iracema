@@ -12,7 +12,7 @@ const (
 	Binary                       // binary
 	Return                       // return
 	Compare                      // compare
-	PushNil                      // pushnil
+	PushNone                     // pushnone
 	SetAttr                      // setattr
 	GetAttr                      // getattr
 	PushSelf                     // pushself

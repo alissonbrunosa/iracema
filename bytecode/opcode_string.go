@@ -16,7 +16,7 @@ func _() {
 	_ = x[Binary-5]
 	_ = x[Return-6]
 	_ = x[Compare-7]
-	_ = x[PushNil-8]
+	_ = x[PushNone-8]
 	_ = x[SetAttr-9]
 	_ = x[GetAttr-10]
 	_ = x[PushSelf-11]
@@ -33,9 +33,9 @@ func _() {
 	_ = x[JumpIfFalse-22]
 }
 
-const _Opcode_name = "notpoppushthrowunarybinaryreturncomparepushnilsetattrgetattrpushselfsetlocalgetlocalmatchtypebuildarraycallmethodsetconstantgetconstantdefineobjectdefinefunctionjumpjumpiffalse"
+const _Opcode_name = "notpoppushthrowunarybinaryreturncomparepushnonesetattrgetattrpushselfsetlocalgetlocalmatchtypebuildarraycallmethodsetconstantgetconstantdefineobjectdefinefunctionjumpjumpiffalse"
 
-var _Opcode_index = [...]uint8{0, 3, 6, 10, 15, 20, 26, 32, 39, 46, 53, 60, 68, 76, 84, 93, 103, 113, 124, 135, 147, 161, 165, 176}
+var _Opcode_index = [...]uint8{0, 3, 6, 10, 15, 20, 26, 32, 39, 47, 54, 61, 69, 77, 85, 94, 104, 114, 125, 136, 148, 162, 166, 177}
 
 func (i Opcode) String() string {
 	if i >= Opcode(len(_Opcode_index)-1) {
