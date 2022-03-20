@@ -21,7 +21,7 @@ func Test_floatPlus(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := floatPlus(test.Left, test.Right)
+		result := floatPlus(runtime, test.Left, test.Right)
 		eq(t, result, test.Expected)
 	}
 }
@@ -45,7 +45,7 @@ func Test_floatMinus(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := floatMinus(test.Left, test.Right)
+		result := floatMinus(runtime, test.Left, test.Right)
 		eq(t, result, test.Expected)
 	}
 }
@@ -69,7 +69,7 @@ func Test_floatMultiply(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := floatMultiply(test.Left, test.Right)
+		result := floatMultiply(runtime, test.Left, test.Right)
 		eq(t, result, test.Expected)
 	}
 }
@@ -98,7 +98,7 @@ func Test_floatEqual(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := floatEqual(test.Left, test.Right)
+		result := floatEqual(runtime, test.Left, test.Right)
 		eq(t, result, test.Expected)
 	}
 }
@@ -119,7 +119,7 @@ func Test_floatNegate(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := floatNegate(test.Obj)
+		result := floatNegate(runtime, test.Obj)
 		eq(t, result, test.Expected)
 	}
 }
@@ -148,7 +148,7 @@ func Test_floatGreatThan(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := floatGreatThan(test.Left, test.Right)
+		result := floatGreatThan(runtime, test.Left, test.Right)
 		eq(t, result, test.Expected)
 	}
 }
@@ -177,12 +177,12 @@ func Test_floatLessThan(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := floatLessThan(test.Left, test.Right)
+		result := floatLessThan(runtime, test.Left, test.Right)
 		eq(t, result, test.Expected)
 	}
 }
 
 func Test_floatInspect(t *testing.T) {
-	result := floatInspect(Float(2.9010))
+	result := floatInspect(runtime, Float(2.9010))
 	eq(t, result, NewString("2.901000"))
 }

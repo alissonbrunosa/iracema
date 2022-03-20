@@ -9,7 +9,7 @@ func FLOAT(obj IrObject) Float {
 	return obj.(Float)
 }
 
-func floatPlus(lhs IrObject, rhs IrObject) IrObject {
+func floatPlus(rt Runtime, lhs IrObject, rhs IrObject) IrObject {
 	left := FLOAT(lhs)
 
 	switch right := rhs.(type) {
@@ -23,7 +23,7 @@ func floatPlus(lhs IrObject, rhs IrObject) IrObject {
 	}
 }
 
-func floatMinus(lhs IrObject, rhs IrObject) IrObject {
+func floatMinus(rt Runtime, lhs IrObject, rhs IrObject) IrObject {
 	left := FLOAT(lhs)
 
 	switch right := rhs.(type) {
@@ -37,7 +37,7 @@ func floatMinus(lhs IrObject, rhs IrObject) IrObject {
 	}
 }
 
-func floatMultiply(lhs IrObject, rhs IrObject) IrObject {
+func floatMultiply(rt Runtime, lhs IrObject, rhs IrObject) IrObject {
 	left := FLOAT(lhs)
 
 	switch right := rhs.(type) {
@@ -51,7 +51,7 @@ func floatMultiply(lhs IrObject, rhs IrObject) IrObject {
 	}
 }
 
-func floatDivide(lhs, rhs IrObject) IrObject {
+func floatDivide(rt Runtime, lhs, rhs IrObject) IrObject {
 	left := FLOAT(lhs)
 
 	switch right := rhs.(type) {
@@ -65,7 +65,7 @@ func floatDivide(lhs, rhs IrObject) IrObject {
 	}
 }
 
-func floatEqual(self IrObject, rhs IrObject) IrObject {
+func floatEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	left := FLOAT(self)
 
 	switch right := rhs.(type) {
@@ -79,11 +79,11 @@ func floatEqual(self IrObject, rhs IrObject) IrObject {
 	}
 }
 
-func floatNegate(value IrObject) IrObject {
+func floatNegate(rt Runtime, value IrObject) IrObject {
 	return -FLOAT(value)
 }
 
-func floatGreatThan(lhs IrObject, rhs IrObject) IrObject {
+func floatGreatThan(rt Runtime, lhs IrObject, rhs IrObject) IrObject {
 	left := FLOAT(lhs)
 
 	switch right := rhs.(type) {
@@ -97,7 +97,7 @@ func floatGreatThan(lhs IrObject, rhs IrObject) IrObject {
 	}
 }
 
-func floatLessThan(lhs IrObject, rhs IrObject) IrObject {
+func floatLessThan(rt Runtime, lhs IrObject, rhs IrObject) IrObject {
 	left := FLOAT(lhs)
 
 	switch right := rhs.(type) {
@@ -111,13 +111,13 @@ func floatLessThan(lhs IrObject, rhs IrObject) IrObject {
 	}
 }
 
-func floatInspect(self IrObject) IrObject {
+func floatInspect(rt Runtime, self IrObject) IrObject {
 	value := FLOAT(self)
 	inspect := fmt.Sprintf("%f", value)
 	return NewString(inspect)
 }
 
-func floatHash(self IrObject) IrObject {
+func floatHash(rt Runtime, self IrObject) IrObject {
 	value := FLOAT(self)
 	bits := *(*uint64)(unsafe.Pointer(&value))
 	bits = bits ^ (bits >> 32)
