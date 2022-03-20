@@ -37,13 +37,14 @@ func NewGoMethod(name string, body Native, arity byte) *Method {
 	}
 }
 
-func NewIrMethod(name string, arity byte, body []uint16, localCount byte, consts []IrObject) *Method {
+func NewIrMethod(name string, arity byte, body []uint16, localCount byte, consts []IrObject, catchOffset int) *Method {
 	return &Method{
-		methodType: IrMethod,
-		name:       name,
-		arity:      arity,
-		body:       body,
-		localCount: localCount,
-		constants:  consts,
+		methodType:  IrMethod,
+		name:        name,
+		arity:       arity,
+		body:        body,
+		localCount:  localCount,
+		constants:   consts,
+		catchOffset: catchOffset,
 	}
 }

@@ -20,10 +20,10 @@ func (l *local) String() string {
 	return fmt.Sprintf("%s@%d", l.name, l.index)
 }
 
-type pathKind byte
+type branchType byte
 
 const (
-	basic pathKind = 1 << iota
+	basic branchType = 1 << iota
 	loop
 	catch
 )
@@ -31,14 +31,14 @@ const (
 type jumpLabel struct {
 	index  int
 	cond   bool
-	target *path
+	target *branch
 }
 
-type path struct {
-	kind      pathKind
+type branch struct {
+	kind      branchType
 	startAt   byte
 	hasReturn bool
-	next      *path
+	next      *branch
 }
 
 type instr struct {
@@ -47,16 +47,16 @@ type instr struct {
 }
 
 type fragment struct {
-	name          string
-	argc          byte
-	consts        []lang.IrObject
-	locals        []*local
-	instrs        []*instr
-	jumpLabels    []*jumpLabel
-	catchPosition int
+	name        string
+	argc        byte
+	consts      []lang.IrObject
+	locals      []*local
+	instrs      []*instr
+	jumpLabels  []*jumpLabel
+	catchOffset int
 
-	curPath  *path
-	previous *fragment
+	curBranch *branch
+	previous  *fragment
 }
 
 type compiler struct {
@@ -73,10 +73,10 @@ func New() *compiler {
 
 func (c *compiler) init() {
 	f := &fragment{name: "main"}
-	startPath := &path{kind: basic}
+	startBranch := &branch{kind: basic}
 	c.fragments = append([]*fragment{}, f)
 	c.fragment = f
-	c.usePath(startPath)
+	c.useBranch(startBranch)
 }
 
 func (c *compiler) Compile(file *ast.File) (*lang.Method, error) {
@@ -99,6 +99,7 @@ func (c *compiler) assemble() *lang.Method {
 		bytecode,
 		byte(len(c.locals)),
 		c.consts,
+		c.catchOffset,
 	)
 }
 
@@ -130,7 +131,7 @@ func (c *compiler) compileStmt(stmt ast.Stmt) {
 			c.compileStmt(stmt)
 		}
 
-		if !c.curPath.hasReturn {
+		if !c.curBranch.hasReturn {
 			c.add(bytecode.PushNone, 0)
 			c.add(bytecode.Return, 0)
 		}
@@ -156,18 +157,18 @@ func (c *compiler) compileStmt(stmt ast.Stmt) {
 	case *ast.ReturnStmt:
 		c.compileExpr(node.Expr, true)
 		c.add(bytecode.Return, 0)
-		c.curPath.hasReturn = true
+		c.curBranch.hasReturn = true
 
 	case *ast.StopStmt:
-		if c.curPath.kind == loop {
-			c.jumpToBlock(c.curPath.next, true)
+		if c.curBranch.kind == loop {
+			c.jumpToBlock(c.curBranch.next, true)
 			return
 		}
 		panic("STOP OUTSIDE LOOP")
 
 	case *ast.NextStmt:
-		if c.curPath.kind == loop {
-			c.jumpToBlock(c.curPath, true)
+		if c.curBranch.kind == loop {
+			c.jumpToBlock(c.curBranch, true)
 			return
 		}
 		panic("NEXT OUTSIDE LOOP")
@@ -322,34 +323,34 @@ func (c *compiler) compileBlock(block *ast.BlockStmt, addReturn bool) {
 		c.compileStmt(stmt)
 	}
 
-	if addReturn && !c.curPath.hasReturn {
+	if addReturn && !c.curBranch.hasReturn {
 		c.add(bytecode.PushNone, 0)
 		c.add(bytecode.Return, 0)
-		c.curPath.hasReturn = true
+		c.curBranch.hasReturn = true
 	}
 }
 
 func (c *compiler) compileWhileStmt(node *ast.WhileStmt) {
-	exit := &path{kind: basic}
-	loop := &path{kind: loop, next: exit}
+	exit := &branch{kind: basic}
+	loop := &branch{kind: loop, next: exit}
 
-	c.usePath(loop)
+	c.useBranch(loop)
 	c.compileExpr(node.Cond, true)
 	c.jumpToBlock(exit, false)
 	c.compileBlock(node.Body, false)
 	c.jumpToBlock(loop, true)
-	c.usePath(exit)
+	c.useBranch(exit)
 }
 
 func (c *compiler) compileIfStmt(node *ast.IfStmt) {
-	var elseBlock, endBlock *path
+	var elseBlock, endBlock *branch
 
 	if node.Else == nil {
-		endBlock = &path{kind: basic}
+		endBlock = &branch{kind: basic}
 		elseBlock = endBlock
 	} else {
-		elseBlock = &path{kind: basic}
-		endBlock = &path{kind: basic}
+		elseBlock = &branch{kind: basic}
+		endBlock = &branch{kind: basic}
 	}
 
 	c.compileExpr(node.Cond, true)
@@ -358,14 +359,14 @@ func (c *compiler) compileIfStmt(node *ast.IfStmt) {
 
 	if node.Else != nil {
 		c.jumpToBlock(endBlock, true)
-		c.usePath(elseBlock)
+		c.useBranch(elseBlock)
 		c.compileStmt(node.Else)
 	}
 
-	c.usePath(endBlock)
+	c.useBranch(endBlock)
 }
 
-func (c *compiler) jumpToBlock(target *path, cond bool) {
+func (c *compiler) jumpToBlock(target *branch, cond bool) {
 	label := &jumpLabel{index: len(c.instrs), target: target, cond: cond}
 	c.jumpLabels = append(c.jumpLabels, label)
 	c.instrs = append(c.instrs, nil) // take position
@@ -373,9 +374,9 @@ func (c *compiler) jumpToBlock(target *path, cond bool) {
 
 func (c *compiler) openScope(name string) {
 	c.fragment = &fragment{
-		name:     name,
-		previous: c.fragment,
-		curPath:  &path{kind: basic},
+		name:      name,
+		previous:  c.fragment,
+		curBranch: &branch{kind: basic},
 	}
 
 	c.fragments = append(c.fragments, c.fragment)
@@ -404,15 +405,15 @@ func (c *compiler) compileFunDecl(node *ast.FunDecl) *lang.Method {
 
 	c.compileBlock(node.Body, true)
 
-	end := &path{kind: basic}
+	end := &branch{kind: basic}
 	if len(node.Catches) != 0 {
-		c.catchPosition = len(c.instrs)
+		c.catchOffset = len(c.instrs)
 
 		for _, ch := range node.Catches {
 			catch := end
-			end = &path{kind: basic}
+			end = &branch{kind: basic}
 
-			c.usePath(catch)
+			c.useBranch(catch)
 			c.add(bytecode.MatchType, c.addConstant(ch.Type.Value))
 			c.jumpToBlock(end, false)
 
@@ -424,9 +425,9 @@ func (c *compiler) compileFunDecl(node *ast.FunDecl) *lang.Method {
 			c.compileBlock(ch.Body, true)
 		}
 
-		c.usePath(end)
+		c.useBranch(end)
 		c.add(bytecode.Throw, 0)
-		c.curPath.hasReturn = true
+		c.curBranch.hasReturn = true
 	}
 
 	return c.assemble()
@@ -458,7 +459,7 @@ func (c *compiler) compileLiteral(lit *ast.BasicLit) {
 		if err != nil {
 			panic("invalid boolean literal")
 		}
-		val = lang.NewBoolean(value)
+		val = lang.Bool(value)
 
 	case token.Int:
 		value, err := strconv.Atoi(lit.Value)
@@ -499,7 +500,7 @@ func literalValue(expr ast.Expr) lang.IrObject {
 			panic("invalid boolean literal")
 		}
 
-		return lang.NewBoolean(value)
+		return lang.Bool(value)
 
 	case token.Int:
 		value, err := strconv.Atoi(lit.Value)
@@ -545,15 +546,15 @@ func (c *compiler) resolve(name string) *local {
 	return nil
 }
 
-func (c *compiler) usePath(b *path) {
+func (c *compiler) useBranch(b *branch) {
 	b.startAt = byte(len(c.instrs))
-	if c.curPath == nil {
-		c.curPath = b
+	if c.curBranch == nil {
+		c.curBranch = b
 		return
 	}
 
-	c.curPath.next = b
-	c.curPath = b
+	c.curBranch.next = b
+	c.curBranch = b
 }
 
 func (c *compiler) add(opcode bytecode.Opcode, operand byte) {
