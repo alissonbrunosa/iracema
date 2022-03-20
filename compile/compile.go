@@ -121,7 +121,7 @@ func (c *compiler) compileStmt(stmt ast.Stmt) {
 	switch node := stmt.(type) {
 	case *ast.File:
 		if len(node.Stmts) == 0 {
-			c.add(bytecode.PushNil, 0)
+			c.add(bytecode.PushNone, 0)
 			c.add(bytecode.Return, 0)
 			return
 		}
@@ -131,7 +131,7 @@ func (c *compiler) compileStmt(stmt ast.Stmt) {
 		}
 
 		if !c.curPath.hasReturn {
-			c.add(bytecode.PushNil, 0)
+			c.add(bytecode.PushNone, 0)
 			c.add(bytecode.Return, 0)
 		}
 
@@ -323,7 +323,7 @@ func (c *compiler) compileBlock(block *ast.BlockStmt, addReturn bool) {
 	}
 
 	if addReturn && !c.curPath.hasReturn {
-		c.add(bytecode.PushNil, 0)
+		c.add(bytecode.PushNone, 0)
 		c.add(bytecode.Return, 0)
 		c.curPath.hasReturn = true
 	}
@@ -475,7 +475,7 @@ func (c *compiler) compileLiteral(lit *ast.BasicLit) {
 		val = lang.Float(value)
 
 	case token.Nil:
-		c.add(bytecode.PushNil, 0)
+		c.add(bytecode.PushNone, 0)
 		return
 
 	default:
