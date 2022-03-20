@@ -10,12 +10,13 @@ const (
 type Method struct {
 	*base
 
-	methodType MethodType
-	name       string
-	arity      byte
-	body       interface{}
-	localCount byte
-	constants  []IrObject
+	methodType  MethodType
+	name        string
+	arity       byte
+	body        interface{}
+	localCount  byte
+	constants   []IrObject
+	catchOffset int
 }
 
 func (m *Method) Name() string           { return m.name }
@@ -24,7 +25,8 @@ func (m *Method) Body() interface{}      { return m.body }
 func (m *Method) Instrs() []uint16       { return m.body.([]uint16) }
 func (m *Method) MethodType() MethodType { return m.methodType }
 func (m *Method) Constants() []IrObject  { return m.constants }
-func (m *Method) LocalCout() byte        { return m.localCount }
+func (m *Method) LocalCount() byte       { return m.localCount }
+func (m *Method) CatchOffset() int       { return m.catchOffset }
 
 func NewGoMethod(name string, body Native, arity byte) *Method {
 	return &Method{
