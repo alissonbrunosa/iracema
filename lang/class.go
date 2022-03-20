@@ -1,20 +1,39 @@
 package lang
 
+func CLASS(obj IrObject) *Class {
+	return obj.(*Class)
+}
+
+func classNew(rt Runtime, self IrObject, args ...IrObject) IrObject {
+	c := CLASS(self)
+	object := c.Alloc()
+	safeCall(rt, object, "init", args...)
+	return object
+}
+
 var irClass *Class
+
+func InitClass() {
+	if irClass != nil {
+		return
+	}
+
+	irClass = NewClass("Class", ObjectClass)
+	irClass.AddGoMethod("new", nArgs(classNew))
+}
+
+type Allocator func(*Class) IrObject
 
 type Class struct {
 	*base
 
-	name    string
-	super   *Class
-	methods map[string]*Method
+	name      string
+	super     *Class
+	methods   map[string]*Method
+	allocator func(*Class) IrObject
 }
 
 func (c *Class) Name() string {
-	return c.name
-}
-
-func (c *Class) String() string {
 	return c.name
 }
 
@@ -34,6 +53,18 @@ func (c *Class) AddGoMethod(name string, body Native) {
 	c.methods[name] = NewGoMethod(name, body, arity)
 }
 
+func (c *Class) AddMethod(name string, fun *Method) {
+	c.methods[name] = fun
+}
+
+func (c *Class) Alloc() IrObject {
+	return allocator(c)(c)
+}
+
+func (c *Class) String() string {
+	return c.name
+}
+
 func NewClass(name string, super *Class) *Class {
 	return &Class{
 		name:    name,
@@ -42,4 +73,14 @@ func NewClass(name string, super *Class) *Class {
 
 		base: &base{class: irClass},
 	}
+}
+
+func allocator(class *Class) Allocator {
+	for cls := class; cls != nil; cls = class.super {
+		if cls.allocator != nil {
+			return cls.allocator
+		}
+	}
+
+	panic("undefined method new for " + class.name)
 }

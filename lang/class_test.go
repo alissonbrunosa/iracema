@@ -82,3 +82,77 @@ func Test_AddGoMethod(t *testing.T) {
 		})
 	}
 }
+
+func Test_classNew_CallsInitMethod(t *testing.T) {
+	class := NewClass("Dummy", ObjectClass)
+
+	var called = false
+	init := zeroArgs(func(rt Runtime, self IrObject) IrObject {
+		called = true
+		return nil
+	})
+
+	class.AddGoMethod("init", init)
+
+	classNew(runtime, class)
+	if !called {
+		t.Error("expected init to be called")
+	}
+}
+func Test_classNew_ReturnObjectFromTargetClass(t *testing.T) {
+	class := NewClass("Dummy", ObjectClass)
+
+	object := classNew(runtime, class)
+
+	if object.Class() != class {
+		t.Errorf("expected class to be %s, got %s", class.name, object.Class().name)
+	}
+}
+
+func Test_Alloc_PanicsIfNotDefiend(t *testing.T) {
+	class := NewClass("Dummy", nil)
+
+	defer func() {
+		err := recover()
+		expectedReason := "undefined method new for Dummy"
+		if err != expectedReason {
+			t.Errorf("expected panic reason to be %q, got %q", expectedReason, err)
+		}
+	}()
+
+	class.Alloc()
+	t.Error("expected function to panic")
+}
+
+func Test_Alloc(t *testing.T) {
+	called := false
+
+	class := NewClass("Dummy", nil)
+	class.allocator = func(class *Class) IrObject {
+		called = true
+		return nil
+	}
+
+	class.Alloc()
+
+	if !called {
+		t.Error("expected class alloc function to be called")
+	}
+}
+
+func Test_Alloc_WhenSuperClassHasItDefined(t *testing.T) {
+	called := false
+
+	super := NewClass("SuperDummy", nil)
+	super.allocator = func(class *Class) IrObject {
+		called = true
+		return nil
+	}
+
+	class := NewClass("Dummy", super)
+	class.Alloc()
+
+	if !called {
+		t.Error("expected super's alloc function to be called")
+	}
+}
