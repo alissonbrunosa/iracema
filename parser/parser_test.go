@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestParseAssignExpr(t *testing.T) {
+func TestParseAssignStmt(t *testing.T) {
 	tests := []struct {
 		Scenario          string
 		Code              string
@@ -50,17 +50,12 @@ func TestParseAssignExpr(t *testing.T) {
 		t.Run(tt.Scenario, func(t *testing.T) {
 			stmts := setupTest(t, tt.Code, tt.ExpectedStmtCount)
 
-			stmt, ok := stmts[0].(*ast.ExprStmt)
+			assignStmt, ok := stmts[0].(*ast.AssignStmt)
 			if !ok {
-				t.Errorf("Expected to be a *ast.ExprStmt, got %T", stmts[0])
+				t.Errorf("Expected to be a *ast.AssignStmt, got %T", stmts[0])
 			}
 
-			assignExpr, ok := stmt.Expr.(*ast.AssignExpr)
-			if !ok {
-				t.Errorf("Expected to be a *ast.AssignExpr, got %T", stmts[0])
-			}
-
-			for i, leftExpr := range assignExpr.Left {
+			for i, leftExpr := range assignStmt.Left {
 				leftHand, ok := leftExpr.(*ast.Ident)
 				if !ok {
 					t.Errorf("Expected leftHand to be a *ast.Ident, got %T", leftHand)
@@ -71,7 +66,7 @@ func TestParseAssignExpr(t *testing.T) {
 				}
 			}
 
-			for i, rightExpr := range assignExpr.Right {
+			for i, rightExpr := range assignStmt.Right {
 				rightHand, ok := rightExpr.(*ast.BasicLit)
 				if !ok {
 					t.Errorf("Expected rightHand to be a *ast.BasicLit, got %T", rightHand)

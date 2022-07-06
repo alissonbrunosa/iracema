@@ -139,6 +139,31 @@ func (c *compiler) compileStmt(stmt ast.Stmt) {
 	case *ast.ExprStmt:
 		c.compileExpr(node.Expr, false)
 
+	case *ast.AssignStmt:
+		for i, value := range node.Right {
+			switch lhs := node.Left[i].(type) {
+			case *ast.Ident:
+				if lhs.IsAttr() {
+					c.compileExpr(value, true)
+					c.add(bytecode.SetAttr, c.addConstant(lhs.Value))
+					continue
+				}
+
+				local := c.defineLocal(lhs.Value, false)
+				c.compileExpr(value, true)
+				local.initialized = true
+				c.add(bytecode.SetLocal, local.index)
+
+			case *ast.IndexExpr:
+				c.compileExpr(lhs.Expr, true)
+				c.compileExpr(lhs.Index, true)
+				c.compileExpr(value, true)
+				ci := lang.NewCallInfo("insert", 2)
+				c.add(bytecode.CallMethod, c.addConstant(ci))
+				c.add(bytecode.Pop, 0)
+			}
+		}
+
 	case *ast.WhileStmt:
 		c.compileWhileStmt(node)
 
@@ -234,31 +259,6 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) {
 
 	case *ast.BlockExpr:
 		panic("TODO: ainda falta escrever a solucao para clojures")
-
-	case *ast.AssignExpr:
-		for i, value := range node.Right {
-			switch lhs := node.Left[i].(type) {
-			case *ast.Ident:
-				if lhs.IsAttr() {
-					c.compileExpr(value, true)
-					c.add(bytecode.SetAttr, c.addConstant(lhs.Value))
-					continue
-				}
-
-				local := c.defineLocal(lhs.Value, false)
-				c.compileExpr(value, true)
-				local.initialized = true
-				c.add(bytecode.SetLocal, local.index)
-
-			case *ast.IndexExpr:
-				c.compileExpr(lhs.Expr, true)
-				c.compileExpr(lhs.Index, true)
-				c.compileExpr(value, true)
-				ci := lang.NewCallInfo("insert", 2)
-				c.add(bytecode.CallMethod, c.addConstant(ci))
-				c.add(bytecode.Pop, 0)
-			}
-		}
 
 	case *ast.IndexExpr:
 		c.compileExpr(node.Expr, true)

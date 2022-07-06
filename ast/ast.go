@@ -87,14 +87,15 @@ type ObjectDecl struct {
 
 func (*ObjectDecl) String() string { return "ObjectDecl" }
 
-type VarDecl struct {
-	Names  []*Ident
-	Values []Expr
+type AssignStmt struct {
+	Token *token.Token
+	Left  []Expr
+	Right []Expr
 
 	stmt
 }
 
-func (*VarDecl) String() string { return "VarDecl" }
+func (*AssignStmt) String() string { return "AssignStmt" }
 
 type CatchDecl struct {
 	Ref  *Ident
@@ -220,16 +221,6 @@ func (b *BinaryExpr) String() string {
 
 	return buf.String()
 }
-
-type AssignExpr struct {
-	Token *token.Token
-	Left  []Expr
-	Right []Expr
-
-	expr
-}
-
-func (*AssignExpr) String() string { return "AssignExpr" }
 
 type BasicLit struct {
 	Token *token.Token
