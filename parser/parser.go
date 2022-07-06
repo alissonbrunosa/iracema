@@ -164,7 +164,7 @@ func (p *parser) parseIfStmt() ast.Stmt {
 		case token.LeftBrace:
 			alternative = p.parseBlockStmt()
 		default:
-			p.addError(p.tok.Position, "syntax error: expected left brace or if statment")
+			p.addError(p.tok.Position, "syntax error: expected left brace or if statement")
 			p.next()
 		}
 	}

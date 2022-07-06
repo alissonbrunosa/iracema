@@ -16,7 +16,7 @@ func (*node) aNode()         {}
 func (*node) String() string { return "" }
 
 //
-// Statments
+// Statement
 //
 
 type Stmt interface {

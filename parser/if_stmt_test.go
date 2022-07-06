@@ -144,5 +144,5 @@ func TestParseIfStmt_WithElseIfStmt(t *testing.T) {
 func TestIfWithInvalidElseBlock(t *testing.T) {
 	code := `if value == 20 { puts("path 1") } else 100`
 
-	testParserError(t, code, "[Lin: 1 Col: 40] syntax error: expected left brace or if statment")
+	testParserError(t, code, "[Lin: 1 Col: 40] syntax error: expected left brace or if statement")
 }
