@@ -167,6 +167,9 @@ func (c *compiler) compileStmt(stmt ast.Stmt) {
 	case *ast.WhileStmt:
 		c.compileWhileStmt(node)
 
+	case *ast.ForStmt:
+		c.compileForStmt(node)
+
 	case *ast.ObjectDecl:
 		object := c.compileObjectDecl(node)
 		c.add(bytecode.DefineObject, c.addConstant(object))
@@ -337,6 +340,27 @@ func (c *compiler) compileWhileStmt(node *ast.WhileStmt) {
 	c.useBranch(loop)
 	c.compileExpr(node.Cond, true)
 	c.jumpToBlock(exit, false)
+	c.compileBlock(node.Body, false)
+	c.jumpToBlock(loop, true)
+	c.useBranch(exit)
+}
+
+func (c *compiler) compileForStmt(node *ast.ForStmt) {
+	exit := &branch{kind: basic}
+	setup := &branch{kind: basic}
+	loop := &branch{kind: loop, next: exit}
+
+	c.useBranch(setup)
+	c.compileExpr(node.Iterable, true)
+	c.add(bytecode.NewIterator, 0)
+
+	c.useBranch(loop)
+	c.add(bytecode.Iterate, 0)
+	c.jumpToBlock(exit, false)
+
+	local := c.defineLocal(node.Element.Value, true)
+	c.add(bytecode.SetLocal, local.index)
+
 	c.compileBlock(node.Body, false)
 	c.jumpToBlock(loop, true)
 	c.useBranch(exit)
