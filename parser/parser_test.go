@@ -360,6 +360,18 @@ func TestParseObjectDecl(t *testing.T) {
 	testConst(t, objDecl.Name, "Person")
 }
 
+func TestParseObjectDecl_with_Parent(t *testing.T) {
+	stmts := setupTest(t, "object Dog is Animal {}", 1)
+
+	objDecl, ok := stmts[0].(*ast.ObjectDecl)
+	if !ok {
+		t.Errorf("expected first stmt to be *ast.ObjectDecl, got %T", stmts[0])
+	}
+
+	testConst(t, objDecl.Name, "Dog")
+	testConst(t, objDecl.Parent, "Animal")
+}
+
 func TestFunDecl(t *testing.T) {
 	tests := []struct {
 		Code           string

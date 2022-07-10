@@ -105,10 +105,16 @@ func (p *parser) parseStmt() ast.Stmt {
 func (p *parser) parseObjectDecl() ast.Stmt {
 	p.expect(token.Object)
 
-	return &ast.ObjectDecl{
-		Name: p.parseConst(),
-		Body: p.parseBlockStmt(),
+	name := p.parseConst()
+
+	var parent *ast.Ident
+	if p.consume(token.Is) {
+		parent = p.parseConst()
 	}
+
+	body := p.parseBlockStmt()
+
+	return &ast.ObjectDecl{Name: name, Parent: parent, Body: body}
 }
 
 func (p *parser) parseFunDecl() ast.Stmt {
