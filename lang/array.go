@@ -297,6 +297,14 @@ type Array struct {
 	Elements []IrObject
 }
 
+func (a *Array) Length() int {
+	return len(a.Elements)
+}
+
+func (a *Array) At(idx int) IrObject {
+	return a.Elements[idx]
+}
+
 func NewArray(elements []IrObject) *Array {
 	return &Array{
 		Elements: elements,

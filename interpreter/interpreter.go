@@ -198,6 +198,30 @@ func (i *Interpreter) Dispatch() (lang.IrObject, error) {
 			class.AddMethod(meth.Name(), meth)
 			goto next_instr
 
+		case bytecode.NewIterator:
+			if it := i.Pop(); it.Is(lang.ArrayClass) {
+				iter := lang.NewIterator(it)
+				i.Push(iter)
+				goto next_instr
+			}
+
+			err := lang.NewTypeError("object is not iterable")
+			i.SetError(err)
+			goto fail
+
+		case bytecode.Iterate:
+			iter := i.Top(0).(*lang.Iterator)
+
+			if iter.HasNext() {
+				i.Push(iter.Next())
+				i.Push(lang.True)
+			} else {
+				i.Pop()
+				i.Push(lang.False)
+			}
+
+			goto next_instr
+
 		case bytecode.CallMethod:
 			ci := constants[operand].(*lang.CallInfo)
 			recv := i.Top(ci.Argc())
