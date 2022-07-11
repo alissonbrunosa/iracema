@@ -129,6 +129,16 @@ type IfStmt struct {
 
 func (*IfStmt) String() string { return "IfStmt" }
 
+type ForStmt struct {
+	Element  *Ident
+	Iterable Expr
+	Body     *BlockStmt
+
+	stmt
+}
+
+func (*ForStmt) String() string { return "ForStmt" }
+
 type WhileStmt struct {
 	Cond Expr
 	Body *BlockStmt

@@ -494,6 +494,113 @@ func TestCompileWhileStmt(t *testing.T) {
 		})
 	}
 }
+func TestCompileForStmt(t *testing.T) {
+	tests := []struct {
+		Scenario string
+		Code     string
+		Matches  []Match
+	}{
+		{
+			Scenario: "compile for stmt",
+			Code:     "for el in [] {}",
+			Matches: []Match{
+				expect(bytecode.BuildArray).toHaveOperand(0),
+				expect(bytecode.NewIterator),
+				expect(bytecode.Iterate),
+				expect(bytecode.JumpIfFalse).toHaveOperand(6),
+				expect(bytecode.SetLocal).toHaveOperand(0),
+				expect(bytecode.Jump).toHaveOperand(2),
+				expect(bytecode.PushNone),
+				expect(bytecode.Return),
+			},
+		},
+		{
+			Scenario: "compile for with body",
+			Code:     "for e in [1] { puts(e) }",
+			Matches: []Match{
+				expect(bytecode.Push).withOperand(0).toHaveConstant(1),
+				expect(bytecode.BuildArray).toHaveOperand(1),
+				expect(bytecode.NewIterator),
+				expect(bytecode.Iterate),
+				expect(bytecode.JumpIfFalse).toHaveOperand(11),
+				expect(bytecode.SetLocal).toHaveOperand(0),
+				expect(bytecode.PushSelf),
+				expect(bytecode.GetLocal).toHaveOperand(0),
+				expect(bytecode.CallMethod).withOperand(1).toBeMethodCall("puts", 1),
+				expect(bytecode.Pop),
+				expect(bytecode.Jump).toHaveOperand(3),
+				expect(bytecode.PushNone),
+				expect(bytecode.Return),
+			},
+		},
+		{
+			Scenario: "compile for with return",
+			Code:     "for el in [] { return 200 }",
+			Matches: []Match{
+				expect(bytecode.BuildArray).toHaveOperand(0),
+				expect(bytecode.NewIterator),
+				expect(bytecode.Iterate),
+				expect(bytecode.JumpIfFalse).toHaveOperand(8),
+				expect(bytecode.SetLocal).toHaveOperand(0),
+				expect(bytecode.Push).withOperand(0).toHaveConstant(200),
+				expect(bytecode.Return),
+				expect(bytecode.Jump).toHaveOperand(2),
+				expect(bytecode.PushNone),
+				expect(bytecode.Return),
+			},
+		},
+		{
+			Scenario: "compile for with next stmt",
+			Code:     "for el in [] { next }",
+			Matches: []Match{
+				expect(bytecode.BuildArray).toHaveOperand(0),
+				expect(bytecode.NewIterator),
+				expect(bytecode.Iterate),
+				expect(bytecode.JumpIfFalse).toHaveOperand(7),
+				expect(bytecode.SetLocal).toHaveOperand(0),
+				expect(bytecode.Jump).toHaveOperand(2),
+				expect(bytecode.Jump).toHaveOperand(2),
+				expect(bytecode.PushNone),
+				expect(bytecode.Return),
+			},
+		},
+		{
+			Scenario: "compile for with stop stmt",
+			Code: `for el in [] {
+				     if el == 2 { stop }
+					 puts(el)
+				   }`,
+			Matches: []Match{
+				expect(bytecode.BuildArray).toHaveOperand(0),
+				expect(bytecode.NewIterator),
+				expect(bytecode.Iterate),
+				expect(bytecode.JumpIfFalse).toHaveOperand(15),
+				expect(bytecode.SetLocal).toHaveOperand(0),
+				expect(bytecode.GetLocal).toHaveOperand(0),
+				expect(bytecode.Push).withOperand(0).toHaveConstant(2),
+				expect(bytecode.Binary).toHaveOperand(EQ),
+				expect(bytecode.JumpIfFalse).toHaveOperand(10),
+				expect(bytecode.Jump).toHaveOperand(15),
+				expect(bytecode.PushSelf),
+				expect(bytecode.GetLocal).toHaveOperand(0),
+				expect(bytecode.CallMethod).withOperand(1).toBeMethodCall("puts", 1),
+				expect(bytecode.Pop),
+				expect(bytecode.Jump).toHaveOperand(2),
+				expect(bytecode.PushNone),
+				expect(bytecode.Return),
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Scenario, func(t *testing.T) {
+			fun := compile(test.Code)
+			for i, instr := range fun.Instrs() {
+				test.Matches[i].Match(t, instr, fun.Constants())
+			}
+		})
+	}
+}
 
 func TestCompileObjectDecl_Empty(t *testing.T) {
 	objMatches := []Match{

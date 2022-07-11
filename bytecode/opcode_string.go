@@ -31,11 +31,13 @@ func _() {
 	_ = x[DefineFunction-20]
 	_ = x[Jump-21]
 	_ = x[JumpIfFalse-22]
+	_ = x[Iterate-23]
+	_ = x[NewIterator-24]
 }
 
-const _Opcode_name = "notpoppushthrowunarybinaryreturncomparepushnonesetattrgetattrpushselfsetlocalgetlocalmatchtypebuildarraycallmethodsetconstantgetconstantdefineobjectdefinefunctionjumpjumpiffalse"
+const _Opcode_name = "notpoppushthrowunarybinaryreturncomparepushnonesetattrgetattrpushselfsetlocalgetlocalmatchtypebuildarraycallmethodsetconstantgetconstantdefineobjectdefinefunctionjumpjumpiffalseiteratenewiterator"
 
-var _Opcode_index = [...]uint8{0, 3, 6, 10, 15, 20, 26, 32, 39, 47, 54, 61, 69, 77, 85, 94, 104, 114, 125, 136, 148, 162, 166, 177}
+var _Opcode_index = [...]uint8{0, 3, 6, 10, 15, 20, 26, 32, 39, 47, 54, 61, 69, 77, 85, 94, 104, 114, 125, 136, 148, 162, 166, 177, 184, 195}
 
 func (i Opcode) String() string {
 	if i >= Opcode(len(_Opcode_index)-1) {

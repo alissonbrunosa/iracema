@@ -27,4 +27,6 @@ const (
 	DefineFunction               // definefunction
 	Jump                         // jump
 	JumpIfFalse                  // jumpiffalse
+	Iterate                      // iterate
+	NewIterator                  // newiterator
 )
