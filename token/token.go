@@ -8,6 +8,8 @@ const (
 
 	// keywords
 	If
+	For
+	In
 	Stop
 	Next
 	While
@@ -56,6 +58,8 @@ var types = [...]string{
 	Eof:     "Eof",
 
 	If:     "if",
+	For:    "for",
+	In:     "in",
 	Stop:   "stop",
 	Next:   "next",
 	While:  "while",
@@ -99,6 +103,8 @@ var types = [...]string{
 
 var keywords = map[string]Type{
 	"if":     If,
+	"for":    For,
+	"in":     In,
 	"stop":   Stop,
 	"next":   Next,
 	"while":  While,

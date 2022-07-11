@@ -141,6 +141,10 @@ func TestNextToken(t *testing.T) {
 			Input:        bytes.NewBufferString("if"),
 			ExpectedType: token.If,
 		},
+		"Else": {
+			Input:        bytes.NewBufferString("else"),
+			ExpectedType: token.Else,
+		},
 		"Stop": {
 			Input:        bytes.NewBufferString("stop"),
 			ExpectedType: token.Stop,
@@ -149,13 +153,17 @@ func TestNextToken(t *testing.T) {
 			Input:        bytes.NewBufferString("next"),
 			ExpectedType: token.Next,
 		},
+		"for": {
+			Input:        bytes.NewBufferString("for"),
+			ExpectedType: token.For,
+		},
+		"in": {
+			Input:        bytes.NewBufferString("in"),
+			ExpectedType: token.In,
+		},
 		"While": {
 			Input:        bytes.NewBufferString("while"),
 			ExpectedType: token.While,
-		},
-		"Else": {
-			Input:        bytes.NewBufferString("else"),
-			ExpectedType: token.Else,
 		},
 		"GreaterThan": {
 			Input:        bytes.NewBufferString(">"),

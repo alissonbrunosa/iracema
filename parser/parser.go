@@ -78,6 +78,9 @@ func (p *parser) parseStmt() ast.Stmt {
 		return p.parseIfStmt()
 
 	case token.While:
+		return p.parseWhileStmt()
+
+	case token.For:
 		return p.parseForStmt()
 
 	case token.Stop:
@@ -172,13 +175,20 @@ func (p *parser) parseIfStmt() ast.Stmt {
 	return &ast.IfStmt{Cond: predicate, Then: consequent, Else: alternative}
 }
 
-func (p *parser) parseForStmt() ast.Stmt {
+func (p *parser) parseWhileStmt() ast.Stmt {
 	p.expect(token.While)
 
-	return &ast.WhileStmt{
-		Cond: p.parseExpr(true),
-		Body: p.parseBlockStmt(),
-	}
+	return &ast.WhileStmt{Cond: p.parseExpr(true), Body: p.parseBlockStmt()}
+}
+
+func (p *parser) parseForStmt() ast.Stmt {
+	p.expect(token.For)
+	element := p.parseIdent()
+	p.expect(token.In)
+	iterable := p.parseExpr(false)
+	body := p.parseBlockStmt()
+
+	return &ast.ForStmt{Element: element, Iterable: iterable, Body: body}
 }
 
 func (p *parser) parseStopStmt() ast.Stmt {
