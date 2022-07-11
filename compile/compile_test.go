@@ -502,6 +502,7 @@ func TestCompileObjectDecl_Empty(t *testing.T) {
 	}
 
 	checkers := []Match{
+		expect(bytecode.PushNone),
 		expect(bytecode.DefineObject).toDefine("Person", objMatches),
 		expect(bytecode.Pop),
 		expect(bytecode.PushNone),
@@ -529,6 +530,7 @@ func TestCompileObjectDecl_WithFunction(t *testing.T) {
 	}
 
 	checkers := []Match{
+		expect(bytecode.PushNone),
 		expect(bytecode.DefineObject).toDefine("Person", objMatches),
 		expect(bytecode.Pop),
 		expect(bytecode.PushNone),
@@ -538,6 +540,28 @@ func TestCompileObjectDecl_WithFunction(t *testing.T) {
 	code := `object Person {
  			   fun age {}
  			 }`
+
+	fun := compile(code)
+	for i, instr := range fun.Instrs() {
+		checkers[i].Match(t, instr, fun.Constants())
+	}
+}
+
+func TestCompileObjectDecl_Empty_WithParent(t *testing.T) {
+	objMatches := []Match{
+		expect(bytecode.PushNone),
+		expect(bytecode.Return),
+	}
+
+	checkers := []Match{
+		expect(bytecode.GetConstant).withOperand(0).toHaveConstant("Animal"),
+		expect(bytecode.DefineObject).toDefine("Dog", objMatches),
+		expect(bytecode.Pop),
+		expect(bytecode.PushNone),
+		expect(bytecode.Return),
+	}
+
+	code := "object Dog is Animal {}"
 
 	fun := compile(code)
 	for i, instr := range fun.Instrs() {
