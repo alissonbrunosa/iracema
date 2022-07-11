@@ -76,9 +76,9 @@ func NewClass(name string, super *Class) *Class {
 }
 
 func allocator(class *Class) Allocator {
-	for ; class != nil; class = class.super {
-		if class.allocator != nil {
-			return class.allocator
+	for cls := class; cls != nil; cls = cls.super {
+		if cls.allocator != nil {
+			return cls.allocator
 		}
 	}
 
