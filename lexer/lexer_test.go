@@ -217,6 +217,10 @@ func TestNextToken(t *testing.T) {
 			Input:        bytes.NewBufferString("%"),
 			ExpectedType: token.Illegal,
 		},
+		"is": {
+			Input:        bytes.NewBufferString("is"),
+			ExpectedType: token.Is,
+		},
 	}
 
 	for scenario, test := range tests {

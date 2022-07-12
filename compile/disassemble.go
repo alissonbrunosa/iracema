@@ -22,7 +22,7 @@ var binaryOperator = map[byte]string{
 	LE:  "<=",
 }
 
-func (c *compiler) Dissamble(file *ast.File) {
+func (c *compiler) Disassemble(file *ast.File) {
 	c.Compile(file)
 
 	for _, fragment := range c.fragments {
@@ -48,6 +48,9 @@ func (c *compiler) Dissamble(file *ast.File) {
 				fmt.Fprintf(w, "%-30s%s\n", ins.opcode, fragment.locals[ins.operand])
 			case bytecode.JumpIfFalse, bytecode.Jump:
 				fmt.Fprintf(w, "%-30s%d\n", ins.opcode, ins.operand*2)
+			case bytecode.DefineObject:
+				m := fragment.consts[ins.operand].(*lang.Method)
+				fmt.Fprintf(w, "%-30s%s\n", ins.opcode, m.Name())
 			default:
 				fmt.Fprintln(w, ins.opcode)
 			}

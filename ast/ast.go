@@ -78,9 +78,10 @@ func (f *File) String() string {
 }
 
 type ObjectDecl struct {
-	Name  *Ident
-	Body  *BlockStmt
-	Attrs []*Ident
+	Name   *Ident
+	Parent *Ident
+	Body   *BlockStmt
+	Attrs  []*Ident
 
 	stmt
 }

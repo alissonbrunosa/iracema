@@ -187,7 +187,13 @@ func (i *Interpreter) Dispatch() (lang.IrObject, error) {
 
 		case bytecode.DefineObject:
 			body := constants[operand].(*lang.Method)
-			class := lang.NewClass(body.Name(), lang.ObjectClass)
+
+			parent := lang.ObjectClass
+			if p := i.Pop(); p != lang.None {
+				parent = p.(*lang.Class)
+			}
+
+			class := lang.NewClass(body.Name(), parent)
 			lang.DefineType(body.Name(), class)
 			i.PushObjectFrame(class, body)
 			goto start_frame

@@ -46,7 +46,7 @@ func executeFile(file string) {
 	os.Exit(0)
 }
 
-func dissamble(file string) {
+func disassemble(file string) {
 	f, err := os.Open(file)
 	if err != nil {
 		printError(err.Error())
@@ -62,7 +62,7 @@ func dissamble(file string) {
 
 	var c = compile.New()
 	if len(os.Args) >= 2 {
-		c.Dissamble(ast)
+		c.Disassemble(ast)
 		os.Exit(0)
 	}
 }
@@ -78,7 +78,7 @@ func main() {
 		}
 
 		file := os.Args[len(os.Args)-1]
-		dissamble(file)
+		disassemble(file)
 	}
 
 	file := os.Args[len(os.Args)-1]

@@ -172,6 +172,13 @@ func (c *compiler) compileStmt(stmt ast.Stmt) {
 
 	case *ast.ObjectDecl:
 		object := c.compileObjectDecl(node)
+
+		if node.Parent != nil {
+			c.add(bytecode.GetConstant, c.addConstant(node.Parent.Value))
+		} else {
+			c.add(bytecode.PushNone, 0)
+		}
+
 		c.add(bytecode.DefineObject, c.addConstant(object))
 		c.add(bytecode.Pop, 0)
 
