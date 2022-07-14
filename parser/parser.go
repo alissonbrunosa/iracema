@@ -173,7 +173,7 @@ func (p *parser) parseIfStmt() ast.Stmt {
 		case token.LeftBrace:
 			alternative = p.parseBlockStmt()
 		default:
-			p.addError(p.tok.Position, "syntax error: expected left brace or if statement")
+			p.addError(p.tok.Position, "expected left brace or if statement")
 			p.next()
 		}
 	}
@@ -225,7 +225,7 @@ func (p *parser) parseParameterList() (list []*ast.Ident) {
 	for p.tok.Type != token.RightParenthesis && p.tok.Type != token.Eof {
 		param := p.parseIdent()
 		if param.IsAttr() {
-			p.addError(param.Token.Position, "syntax error: argument cannot be an instance variable")
+			p.addError(param.Token.Position, "argument cannot be an instance variable")
 			continue
 		}
 
@@ -381,7 +381,7 @@ func (p *parser) parseConst() *ast.Ident {
 
 	ident := &ast.Ident{Value: tok.Literal}
 	if !ident.IsConstant() {
-		p.addError(tok.Position, "syntax error: expected ident to be a constant")
+		p.addError(tok.Position, "expected ident to be a constant")
 	}
 
 	return ident
@@ -492,7 +492,7 @@ func (p *parser) at(kind token.Type) bool {
 
 func (p *parser) addError(pos *token.Position, err string) {
 	var b strings.Builder
-	fmt.Fprintf(&b, "[Lin: %d Col: %d] ", pos.Line(), pos.Column())
+	fmt.Fprintf(&b, "[Lin: %d Col: %d] syntax error: ", pos.Line(), pos.Column())
 	b.WriteString(err)
 
 	p.errors = append(p.errors, &Error{Msg: b.String()})
@@ -500,7 +500,7 @@ func (p *parser) addError(pos *token.Position, err string) {
 
 func (p *parser) expect(expected token.Type) (tok *token.Token) {
 	if p.tok.Type != expected {
-		p.addError(p.tok.Position, fmt.Sprintf("syntax error: expected '%s', found '%s'", expected, p.tok.Type))
+		p.addError(p.tok.Position, fmt.Sprintf("expected '%s', found '%s'", expected, p.tok.Type))
 	}
 
 	tok = p.tok
@@ -517,7 +517,7 @@ func (p *parser) atComma(next token.Type) bool {
 		return false
 	}
 
-	p.addError(p.tok.Position, "syntax error: missing ','")
+	p.addError(p.tok.Position, "missing ','")
 	p.next() // cosume invalid token
 	return false
 }
