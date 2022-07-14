@@ -221,6 +221,18 @@ func TestNextToken(t *testing.T) {
 			Input:        bytes.NewBufferString("is"),
 			ExpectedType: token.Is,
 		},
+		"switch": {
+			Input:        bytes.NewBufferString("switch"),
+			ExpectedType: token.Switch,
+		},
+		"case": {
+			Input:        bytes.NewBufferString("case"),
+			ExpectedType: token.Case,
+		},
+		"default": {
+			Input:        bytes.NewBufferString("default"),
+			ExpectedType: token.Default,
+		},
 	}
 
 	for scenario, test := range tests {
