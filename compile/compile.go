@@ -170,6 +170,9 @@ func (c *compiler) compileStmt(stmt ast.Stmt) {
 	case *ast.ForStmt:
 		c.compileForStmt(node)
 
+	case *ast.SwitchStmt:
+		c.compileSwitchStmt(node)
+
 	case *ast.ObjectDecl:
 		object := c.compileObjectDecl(node)
 
@@ -371,6 +374,36 @@ func (c *compiler) compileForStmt(node *ast.ForStmt) {
 	c.compileBlock(node.Body, false)
 	c.jumpToBlock(loop, true)
 	c.useBranch(exit)
+}
+
+func (c *compiler) compileSwitchStmt(node *ast.SwitchStmt) {
+	endBranch := &branch{kind: basic}
+
+	lenCases := len(node.Cases) - 1
+	for i, caseClause := range node.Cases {
+		nextCaseBranch := &branch{kind: basic}
+
+		c.compileExpr(node.Key, true)
+		c.compileExpr(caseClause.Value, true)
+
+		callInfo := lang.NewCallInfo("==", 1)
+		c.add(bytecode.CallMethod, c.addConstant(callInfo))
+
+		c.jumpToBlock(nextCaseBranch, false)
+		c.compileBlock(caseClause.Body, false)
+
+		if i != lenCases || node.Default != nil {
+			c.jumpToBlock(endBranch, true)
+		}
+
+		c.useBranch(nextCaseBranch)
+	}
+
+	if node.Default != nil {
+		c.compileBlock(node.Default.Body, false)
+	}
+
+	c.useBranch(endBranch)
 }
 
 func (c *compiler) compileIfStmt(node *ast.IfStmt) {
