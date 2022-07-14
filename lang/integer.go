@@ -202,9 +202,9 @@ func (Int) LookupMethod(name string) *Method {
 	return nil
 }
 
-func (Int) Is(class *Class) bool {
+func (Int) Is(parent *Class) bool {
 	for class := IntClass; class != nil; class = class.super {
-		if class == class {
+		if class == parent {
 			return true
 		}
 	}

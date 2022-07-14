@@ -1,0 +1,10 @@
+linters:
+  enable:
+  - gofmt
+  - nolintlint
+run:
+  timeout: 3m
+  go: "1.17"
+
+issues:
+  new: true
