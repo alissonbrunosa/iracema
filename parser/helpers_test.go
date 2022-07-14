@@ -73,6 +73,8 @@ func testConst(t *testing.T, expr ast.Expr, expectedName string) {
 }
 
 func testArguments(t *testing.T, args []ast.Expr, expectedArgs []string) {
+	t.Helper()
+
 	if len(args) != len(expectedArgs) {
 		t.Errorf("expected args length to be %d, got %d", len(expectedArgs), len(args))
 		return
