@@ -506,14 +506,7 @@ func TestParseReturnStmt(t *testing.T) {
 			t.Errorf("expected first stmt to be *ast.ReturnStmt, got %T", stmts[0])
 		}
 
-		lit, ok := returnStmt.Expr.(*ast.BasicLit)
-		if !ok {
-			t.Errorf("expected first stmt to be *ast.BasicLit, got %T", returnStmt.Expr)
-		}
-
-		if lit.Value != test.ExpectedExpr {
-			t.Errorf("expected BasicLit.Value to be %q, got %q", test.ExpectedExpr, lit.Value)
-		}
+		testLit(t, returnStmt.Expr, "true")
 	}
 }
 
