@@ -44,9 +44,9 @@ func (Bool) LookupMethod(name string) *Method {
 	return nil
 }
 
-func (Bool) Is(class *Class) bool {
+func (Bool) Is(parent *Class) bool {
 	for class := BoolClass; class != nil; class = class.super {
-		if class == class {
+		if class == parent {
 			return true
 		}
 	}

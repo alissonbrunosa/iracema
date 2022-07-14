@@ -12,7 +12,6 @@ import (
 type local struct {
 	name        string
 	index       byte
-	depth       int
 	initialized bool
 }
 
@@ -25,7 +24,6 @@ type branchType byte
 const (
 	basic branchType = 1 << iota
 	loop
-	catch
 )
 
 type jumpLabel struct {
@@ -230,7 +228,7 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) {
 		}
 
 		if local := c.resolve(node.Value); local != nil {
-			if local.initialized == false {
+			if !local.initialized {
 				panic("underfined " + local.name)
 			}
 
@@ -464,11 +462,6 @@ func (c *compiler) compileFunDecl(node *ast.FunDecl) *lang.Method {
 	return c.assemble()
 }
 
-func isLiteral(node ast.Expr) bool {
-	_, ok := node.(*ast.BasicLit)
-	return ok
-}
-
 func (c *compiler) compileArrayLireral(node *ast.ArrayLit) {
 	size := len(node.Elements)
 	for _, el := range node.Elements {
@@ -516,44 +509,6 @@ func (c *compiler) compileLiteral(lit *ast.BasicLit) {
 	}
 
 	c.add(bytecode.Push, c.addConstant(val))
-}
-
-func literalValue(expr ast.Expr) lang.IrObject {
-	lit := expr.(*ast.BasicLit)
-
-	switch lit.Type() {
-	case token.String:
-		return lang.NewString(lit.Value)
-
-	case token.Bool:
-		value, err := strconv.ParseBool(lit.Value)
-		if err != nil {
-			panic("invalid boolean literal")
-		}
-
-		return lang.Bool(value)
-
-	case token.Int:
-		value, err := strconv.Atoi(lit.Value)
-		if err != nil {
-			panic("invalid integer literal")
-		}
-		return lang.Int(value)
-
-	case token.Float:
-		value, err := strconv.ParseFloat(lit.Value, 64)
-		if err != nil {
-			panic("invalid float literal")
-		}
-		return lang.Float(value)
-
-	case token.Nil:
-		return lang.None
-
-	default:
-		fmt.Printf("DEFAULT %T, %q, %q\n", lit, lit.Value, lit.Token.Type)
-		panic("invalid literal")
-	}
 }
 
 func (c *compiler) defineLocal(name string, initialized bool) *local {

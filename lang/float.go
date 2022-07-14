@@ -163,9 +163,9 @@ func (Float) LookupMethod(name string) *Method {
 	return nil
 }
 
-func (Float) Is(class *Class) bool {
+func (Float) Is(parent *Class) bool {
 	for class := FloatClass; class != nil; class = class.super {
-		if class == class {
+		if class == parent {
 			return true
 		}
 	}

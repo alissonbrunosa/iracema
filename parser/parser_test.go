@@ -552,8 +552,8 @@ func TestParseHashLiteral(t *testing.T) {
 	}
 
 	expectedKeyValues := [][]string{
-		[]string{"1", "10"},
-		[]string{"2", "20"},
+		{"1", "10"},
+		{"2", "20"},
 	}
 
 	for i, pair := range lit.Elements {

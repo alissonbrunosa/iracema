@@ -5,11 +5,11 @@ import (
 )
 
 const (
-	TOP_FRAME      byte = 0x01
-	OBJECT_FRAME        = 0x02
-	IRMETHOD_FRAME      = 0x04
-	SINGLE_FRAME        = 0x08
-	GOMETHOD_FRAME      = 0x10
+	TOP_FRAME      = 0x01
+	OBJECT_FRAME   = 0x02
+	IRMETHOD_FRAME = 0x04
+	SINGLE_FRAME   = 0x08
+	GOMETHOD_FRAME = 0x10
 )
 
 type frame struct {
