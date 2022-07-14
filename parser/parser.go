@@ -37,7 +37,7 @@ func isLit(stmt ast.Stmt) bool {
 }
 
 func (p *parser) parseStmtList() (list []ast.Stmt) {
-	for p.tok.Type != token.Eof && p.tok.Type != token.RightBrace {
+	for p.tok.Type != token.Eof && p.tok.Type != token.RightBrace && p.tok.Type != token.Case && p.tok.Type != token.Default {
 		if len(list) != 0 && isLit(list[0]) {
 			list[0] = p.parseStmt()
 			continue
@@ -53,9 +53,18 @@ var startStmt = map[token.Type]bool{
 	token.Object: true,
 	token.Fun:    true,
 	token.If:     true,
+	token.For:    true,
 	token.While:  true,
+	token.Switch: true,
 	token.Stop:   true,
 	token.Return: true,
+}
+
+var switchStartStmt = map[token.Type]bool{
+	token.Case:       true,
+	token.Colon:      true,
+	token.Default:    true,
+	token.RightBrace: true,
 }
 
 func (p *parser) advance(to map[token.Type]bool) {
@@ -82,6 +91,9 @@ func (p *parser) parseStmt() ast.Stmt {
 
 	case token.For:
 		return p.parseForStmt()
+
+	case token.Switch:
+		return p.parseSwitchStmt()
 
 	case token.Stop:
 		return p.parseStopStmt()
@@ -195,6 +207,47 @@ func (p *parser) parseForStmt() ast.Stmt {
 	body := p.parseBlockStmt()
 
 	return &ast.ForStmt{Element: element, Iterable: iterable, Body: body}
+}
+
+func (p *parser) parseSwitchStmt() ast.Stmt {
+	p.expect(token.Switch)
+
+	s := new(ast.SwitchStmt)
+	s.Key = p.parseExpr(false)
+	p.expect(token.LeftBrace)
+
+	for p.tok.Type != token.Eof && p.tok.Type != token.RightBrace {
+		if caseClause, isDefault := p.parseCaseCluase(); isDefault {
+			s.Default = caseClause
+		} else {
+			s.Cases = append(s.Cases, caseClause)
+		}
+	}
+
+	p.expect(token.RightBrace)
+
+	return s
+}
+
+func (p *parser) parseCaseCluase() (*ast.CaseClause, bool) {
+	c := new(ast.CaseClause)
+
+	if p.consume(token.Case) {
+		c.Value = p.parseExpr(false)
+		p.expect(token.Colon)
+		c.Body = &ast.BlockStmt{Stmts: p.parseStmtList()}
+		return c, false
+	}
+
+	if p.consume(token.Default) {
+		p.expect(token.Colon)
+		c.Body = &ast.BlockStmt{Stmts: p.parseStmtList()}
+		return c, true
+	}
+
+	p.addError(p.tok.Position, "expected case, default or }")
+	p.advance(switchStartStmt)
+	return nil, false
 }
 
 func (p *parser) parseStopStmt() ast.Stmt {
