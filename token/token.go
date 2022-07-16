@@ -10,6 +10,9 @@ const (
 	If
 	Is
 	For
+	Switch
+	Case
+	Default
 	In
 	Stop
 	Next
@@ -58,20 +61,23 @@ var types = [...]string{
 	Illegal: "Illegal",
 	Eof:     "Eof",
 
-	If:     "if",
-	Is:     "is",
-	For:    "for",
-	In:     "in",
-	Stop:   "stop",
-	Next:   "next",
-	While:  "while",
-	Else:   "else",
-	Fun:    "fun",
-	Nil:    "nil",
-	Catch:  "catch",
-	Block:  "block",
-	Object: "object",
-	Return: "return",
+	If:      "if",
+	Is:      "is",
+	For:     "for",
+	Switch:  "switch",
+	Case:    "case",
+	Default: "default",
+	In:      "in",
+	Stop:    "stop",
+	Next:    "next",
+	While:   "while",
+	Else:    "else",
+	Fun:     "fun",
+	Nil:     "nil",
+	Catch:   "catch",
+	Block:   "block",
+	Object:  "object",
+	Return:  "return",
 
 	Int:    "Int",
 	Float:  "Float",
@@ -104,22 +110,25 @@ var types = [...]string{
 }
 
 var keywords = map[string]Type{
-	"if":     If,
-	"is":     Is,
-	"for":    For,
-	"in":     In,
-	"stop":   Stop,
-	"next":   Next,
-	"while":  While,
-	"else":   Else,
-	"fun":    Fun,
-	"nil":    Nil,
-	"true":   Bool,
-	"false":  Bool,
-	"catch":  Catch,
-	"block":  Block,
-	"object": Object,
-	"return": Return,
+	"if":      If,
+	"is":      Is,
+	"for":     For,
+	"switch":  Switch,
+	"case":    Case,
+	"default": Default,
+	"in":      In,
+	"stop":    Stop,
+	"next":    Next,
+	"while":   While,
+	"else":    Else,
+	"fun":     Fun,
+	"nil":     Nil,
+	"true":    Bool,
+	"false":   Bool,
+	"catch":   Catch,
+	"block":   Block,
+	"object":  Object,
+	"return":  Return,
 }
 
 const LowestPrecedence = 0
