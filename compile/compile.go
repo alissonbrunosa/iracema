@@ -32,12 +32,6 @@ func (l *local) String() string {
 	return fmt.Sprintf("%s@%d", l.name, l.index)
 }
 
-type jumpLabel struct {
-	index  int
-	cond   bool
-	target *codeblock
-}
-
 type codeblock struct {
 	startAt   byte
 	hasReturn bool
@@ -46,6 +40,7 @@ type codeblock struct {
 type instr struct {
 	opcode  bytecode.Opcode
 	operand byte
+	target  *codeblock
 }
 
 type fragment struct {
@@ -54,7 +49,7 @@ type fragment struct {
 	consts      []lang.IrObject
 	locals      []*local
 	instrs      []*instr
-	jumpLabels  []*jumpLabel
+	jumps       []int
 	catchOffset int
 
 	control  *controlflow
@@ -108,17 +103,13 @@ func (c *compiler) assemble() *lang.Method {
 }
 
 func (c *compiler) patchJumps() {
-	if len(c.jumpLabels) == 0 {
+	if len(c.jumps) == 0 {
 		return
 	}
 
-	for _, label := range c.jumpLabels {
-		if label.cond {
-			c.instrs[label.index] = &instr{opcode: bytecode.Jump, operand: label.target.startAt}
-			continue
-		}
-
-		c.instrs[label.index] = &instr{opcode: bytecode.JumpIfFalse, operand: label.target.startAt}
+	for _, index := range c.jumps {
+		ins := c.instrs[index]
+		ins.operand = ins.target.startAt
 	}
 }
 
@@ -194,7 +185,7 @@ func (c *compiler) compileStmt(stmt ast.Stmt) {
 		c.compileBlock(node, false)
 
 	case *ast.ReturnStmt:
-		c.rewindControlFlow()
+		c.rewindControlFlow(false)
 		c.compileExpr(node.Expr, true)
 		c.add(bytecode.Return, 0)
 		c.block.hasReturn = true
@@ -338,14 +329,14 @@ func (c *compiler) compileWhileStmt(node *ast.WhileStmt) {
 	exit := new(codeblock)
 	loop := new(codeblock)
 
-	c.PushFlow(WHILE_LOOP, loop, exit)
-	defer c.PopFlow()
+	c.pushControlFlow(WHILE_LOOP, loop, exit)
+	defer c.popControlFlow()
 
 	c.useBlock(loop)
 	c.compileExpr(node.Cond, true)
-	c.jumpToBlock(exit, false)
+	c.jumpToBlock(bytecode.JumpIfFalse, exit)
 	c.compileBlock(node.Body, false)
-	c.jumpToBlock(loop, true)
+	c.jumpToBlock(bytecode.Jump, loop)
 	c.useBlock(exit)
 }
 
@@ -354,8 +345,8 @@ func (c *compiler) compileForStmt(node *ast.ForStmt) {
 	setup := new(codeblock)
 	loop := new(codeblock)
 
-	c.PushFlow(FOR_LOOP, loop, exit)
-	defer c.PopFlow()
+	c.pushControlFlow(FOR_LOOP, loop, exit)
+	defer c.popControlFlow()
 
 	c.useBlock(setup)
 	c.compileExpr(node.Iterable, true)
@@ -363,13 +354,14 @@ func (c *compiler) compileForStmt(node *ast.ForStmt) {
 
 	c.useBlock(loop)
 	c.add(bytecode.Iterate, 0)
-	c.jumpToBlock(exit, false)
+	c.jumpToBlock(bytecode.JumpIfFalse, exit)
 
 	local := c.defineLocal(node.Element.Value, true)
 	c.add(bytecode.SetLocal, local.index)
 
 	c.compileBlock(node.Body, false)
-	c.jumpToBlock(loop, true)
+	c.jumpToBlock(bytecode.Jump, loop)
+
 	c.useBlock(exit)
 }
 
@@ -385,11 +377,11 @@ func (c *compiler) compileIfStmt(node *ast.IfStmt) {
 	}
 
 	c.compileExpr(node.Cond, true)
-	c.jumpToBlock(elseBlock, false)
+	c.jumpToBlock(bytecode.JumpIfFalse, elseBlock)
 	c.compileBlock(node.Then, false)
 
 	if node.Else != nil {
-		c.jumpToBlock(endBlock, true)
+		c.jumpToBlock(bytecode.Jump, endBlock)
 		c.useBlock(elseBlock)
 		c.compileStmt(node.Else)
 	}
@@ -397,10 +389,13 @@ func (c *compiler) compileIfStmt(node *ast.IfStmt) {
 	c.useBlock(endBlock)
 }
 
-func (c *compiler) jumpToBlock(target *codeblock, cond bool) {
-	label := &jumpLabel{index: len(c.instrs), target: target, cond: cond}
-	c.jumpLabels = append(c.jumpLabels, label)
-	c.instrs = append(c.instrs, nil) // take position
+func (c *compiler) jumpToBlock(op bytecode.Opcode, target *codeblock) {
+	if c.block.hasReturn {
+		return
+	}
+
+	c.jumps = append(c.jumps, len(c.instrs))
+	c.instrs = append(c.instrs, &instr{opcode: op, target: target})
 }
 
 func (c *compiler) openScope(name string) {
@@ -446,7 +441,7 @@ func (c *compiler) compileFunDecl(node *ast.FunDecl) *lang.Method {
 
 			c.useBlock(catch)
 			c.add(bytecode.MatchType, c.addConstant(ch.Type.Value))
-			c.jumpToBlock(end, false)
+			c.jumpToBlock(bytecode.JumpIfFalse, end)
 
 			if ch.Ref != nil {
 				local := c.defineLocal(ch.Ref.Value, true)
@@ -513,38 +508,57 @@ func (c *compiler) compileLiteral(lit *ast.BasicLit) {
 	c.add(bytecode.Push, c.addConstant(val))
 }
 
-func (c *compiler) rewindControlFlow() {
-	for c.control != nil {
-		switch c.control.loop {
-		case FOR_LOOP, WHILE_LOOP:
-			return
-		default:
-			c.PopFlow()
-		}
-	}
-}
-
-func (c *compiler) compileStopStmt(_stop *ast.StopStmt) {
-	c.rewindControlFlow()
-
+func (c *compiler) cleanControlFlow() {
 	if c.control == nil {
-		panic("STOP OUTSIDE LOOP")
+		return
 	}
 
 	if c.control.loop == FOR_LOOP {
 		c.add(bytecode.Pop, 0)
 	}
-	c.jumpToBlock(c.control.exit, true)
+}
+
+func (c *compiler) rewindControlFlow(inLoop bool) {
+	for c.control != nil {
+		switch c.control.loop {
+		case FOR_LOOP, WHILE_LOOP:
+			if inLoop {
+				return
+			}
+		}
+
+		c.cleanControlFlow()
+		c.popControlFlow()
+	}
+}
+
+func (c *compiler) compileReturnStmt(ret *ast.ReturnStmt) {
+	c.rewindControlFlow(false)
+
+	c.compileExpr(ret.Expr, true)
+	c.add(bytecode.Return, 0)
+	c.block.hasReturn = true
+}
+
+func (c *compiler) compileStopStmt(_stop *ast.StopStmt) {
+	c.rewindControlFlow(true)
+
+	if c.control == nil {
+		panic("STOP OUTSIDE LOOP")
+	}
+
+	c.cleanControlFlow()
+	c.jumpToBlock(bytecode.Jump, c.control.exit)
 }
 
 func (c *compiler) compileNextStmt(_next *ast.NextStmt) {
-	c.rewindControlFlow()
+	c.rewindControlFlow(true)
 
 	if c.control == nil {
 		panic("NEXT OUTSIDE LOOP")
 	}
 
-	c.jumpToBlock(c.control.start, true)
+	c.jumpToBlock(bytecode.Jump, c.control.start)
 }
 
 func (c *compiler) defineLocal(name string, initialized bool) *local {
@@ -590,7 +604,7 @@ func (c *compiler) addConstant(arg interface{}) byte {
 	return byte(len(c.consts) - 1)
 }
 
-func (c *compiler) PushFlow(loop int, start, exit *codeblock) {
+func (c *compiler) pushControlFlow(loop int, start, exit *codeblock) {
 	if c.control == nil {
 		c.control = &controlflow{
 			loop:  loop,
@@ -608,7 +622,7 @@ func (c *compiler) PushFlow(loop int, start, exit *codeblock) {
 	}
 }
 
-func (c *compiler) PopFlow() {
+func (c *compiler) popControlFlow() {
 	if c.control == nil {
 		return
 	}
