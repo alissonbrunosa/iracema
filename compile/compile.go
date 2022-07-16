@@ -9,10 +9,22 @@ import (
 	"strconv"
 )
 
+const (
+	FOR_LOOP   = 1
+	WHILE_LOOP = 2
+)
+
+type controlflow struct {
+	loop  int
+	start *codeblock
+	exit  *codeblock
+
+	next *controlflow
+}
+
 type local struct {
 	name        string
 	index       byte
-	depth       int
 	initialized bool
 }
 
@@ -20,30 +32,15 @@ func (l *local) String() string {
 	return fmt.Sprintf("%s@%d", l.name, l.index)
 }
 
-type branchType byte
-
-const (
-	basic branchType = 1 << iota
-	loop
-	catch
-)
-
-type jumpLabel struct {
-	index  int
-	cond   bool
-	target *branch
-}
-
-type branch struct {
-	kind      branchType
+type codeblock struct {
 	startAt   byte
 	hasReturn bool
-	next      *branch
 }
 
 type instr struct {
 	opcode  bytecode.Opcode
 	operand byte
+	target  *codeblock
 }
 
 type fragment struct {
@@ -52,11 +49,12 @@ type fragment struct {
 	consts      []lang.IrObject
 	locals      []*local
 	instrs      []*instr
-	jumpLabels  []*jumpLabel
+	jumps       []int
 	catchOffset int
 
-	curBranch *branch
-	previous  *fragment
+	control  *controlflow
+	block    *codeblock
+	previous *fragment
 }
 
 type compiler struct {
@@ -72,11 +70,12 @@ func New() *compiler {
 }
 
 func (c *compiler) init() {
-	f := &fragment{name: "main"}
-	startBranch := &branch{kind: basic}
-	c.fragments = append([]*fragment{}, f)
-	c.fragment = f
-	c.useBranch(startBranch)
+	c.fragment = &fragment{
+		name:  "main",
+		block: new(codeblock),
+	}
+
+	c.fragments = append(c.fragments, c.fragment)
 }
 
 func (c *compiler) Compile(file *ast.File) (*lang.Method, error) {
@@ -104,17 +103,13 @@ func (c *compiler) assemble() *lang.Method {
 }
 
 func (c *compiler) patchJumps() {
-	if len(c.jumpLabels) == 0 {
+	if len(c.jumps) == 0 {
 		return
 	}
 
-	for _, label := range c.jumpLabels {
-		if label.cond {
-			c.instrs[label.index] = &instr{opcode: bytecode.Jump, operand: label.target.startAt}
-			continue
-		}
-
-		c.instrs[label.index] = &instr{opcode: bytecode.JumpIfFalse, operand: label.target.startAt}
+	for _, index := range c.jumps {
+		ins := c.instrs[index]
+		ins.operand = ins.target.startAt
 	}
 }
 
@@ -131,7 +126,7 @@ func (c *compiler) compileStmt(stmt ast.Stmt) {
 			c.compileStmt(stmt)
 		}
 
-		if !c.curBranch.hasReturn {
+		if !c.block.hasReturn {
 			c.add(bytecode.PushNone, 0)
 			c.add(bytecode.Return, 0)
 		}
@@ -193,29 +188,19 @@ func (c *compiler) compileStmt(stmt ast.Stmt) {
 		c.compileBlock(node, false)
 
 	case *ast.ReturnStmt:
+		c.rewindControlFlow(false)
 		c.compileExpr(node.Expr, true)
 		c.add(bytecode.Return, 0)
-		c.curBranch.hasReturn = true
+		c.block.hasReturn = true
 
 	case *ast.StopStmt:
-		if c.curBranch.kind == loop {
-			c.jumpToBlock(c.curBranch.next, true)
-			return
-		}
-		panic("STOP OUTSIDE LOOP")
+		c.compileStopStmt(node)
 
 	case *ast.NextStmt:
-		if c.curBranch.kind == loop {
-			c.jumpToBlock(c.curBranch, true)
-			return
-		}
-		panic("NEXT OUTSIDE LOOP")
+		c.compileNextStmt(node)
 
 	case *ast.IfStmt:
 		c.compileIfStmt(node)
-
-	default:
-		return
 	}
 }
 
@@ -336,44 +321,51 @@ func (c *compiler) compileBlock(block *ast.BlockStmt, addReturn bool) {
 		c.compileStmt(stmt)
 	}
 
-	if addReturn && !c.curBranch.hasReturn {
+	if addReturn && !c.block.hasReturn {
 		c.add(bytecode.PushNone, 0)
 		c.add(bytecode.Return, 0)
-		c.curBranch.hasReturn = true
+		c.block.hasReturn = true
 	}
 }
 
 func (c *compiler) compileWhileStmt(node *ast.WhileStmt) {
-	exit := &branch{kind: basic}
-	loop := &branch{kind: loop, next: exit}
+	exit := new(codeblock)
+	loop := new(codeblock)
 
-	c.useBranch(loop)
+	c.pushControlFlow(WHILE_LOOP, loop, exit)
+	defer c.popControlFlow()
+
+	c.useBlock(loop)
 	c.compileExpr(node.Cond, true)
-	c.jumpToBlock(exit, false)
+	c.jumpToBlock(bytecode.JumpIfFalse, exit)
 	c.compileBlock(node.Body, false)
-	c.jumpToBlock(loop, true)
-	c.useBranch(exit)
+	c.jumpToBlock(bytecode.Jump, loop)
+	c.useBlock(exit)
 }
 
 func (c *compiler) compileForStmt(node *ast.ForStmt) {
-	exit := &branch{kind: basic}
-	setup := &branch{kind: basic}
-	loop := &branch{kind: loop, next: exit}
+	exit := new(codeblock)
+	setup := new(codeblock)
+	loop := new(codeblock)
 
-	c.useBranch(setup)
+	c.pushControlFlow(FOR_LOOP, loop, exit)
+	defer c.popControlFlow()
+
+	c.useBlock(setup)
 	c.compileExpr(node.Iterable, true)
 	c.add(bytecode.NewIterator, 0)
 
-	c.useBranch(loop)
+	c.useBlock(loop)
 	c.add(bytecode.Iterate, 0)
-	c.jumpToBlock(exit, false)
+	c.jumpToBlock(bytecode.JumpIfFalse, exit)
 
 	local := c.defineLocal(node.Element.Value, true)
 	c.add(bytecode.SetLocal, local.index)
 
 	c.compileBlock(node.Body, false)
-	c.jumpToBlock(loop, true)
-	c.useBranch(exit)
+	c.jumpToBlock(bytecode.Jump, loop)
+
+	c.useBlock(exit)
 }
 
 func (c *compiler) compileSwitchStmt(node *ast.SwitchStmt) {
@@ -407,40 +399,43 @@ func (c *compiler) compileSwitchStmt(node *ast.SwitchStmt) {
 }
 
 func (c *compiler) compileIfStmt(node *ast.IfStmt) {
-	var elseBlock, endBlock *branch
+	var elseBlock, endBlock *codeblock
 
 	if node.Else == nil {
-		endBlock = &branch{kind: basic}
+		endBlock = new(codeblock)
 		elseBlock = endBlock
 	} else {
-		elseBlock = &branch{kind: basic}
-		endBlock = &branch{kind: basic}
+		elseBlock = new(codeblock)
+		endBlock = new(codeblock)
 	}
 
 	c.compileExpr(node.Cond, true)
-	c.jumpToBlock(elseBlock, false)
+	c.jumpToBlock(bytecode.JumpIfFalse, elseBlock)
 	c.compileBlock(node.Then, false)
 
 	if node.Else != nil {
-		c.jumpToBlock(endBlock, true)
-		c.useBranch(elseBlock)
+		c.jumpToBlock(bytecode.Jump, endBlock)
+		c.useBlock(elseBlock)
 		c.compileStmt(node.Else)
 	}
 
-	c.useBranch(endBlock)
+	c.useBlock(endBlock)
 }
 
-func (c *compiler) jumpToBlock(target *branch, cond bool) {
-	label := &jumpLabel{index: len(c.instrs), target: target, cond: cond}
-	c.jumpLabels = append(c.jumpLabels, label)
-	c.instrs = append(c.instrs, nil) // take position
+func (c *compiler) jumpToBlock(op bytecode.Opcode, target *codeblock) {
+	if c.block.hasReturn {
+		return
+	}
+
+	c.jumps = append(c.jumps, len(c.instrs))
+	c.instrs = append(c.instrs, &instr{opcode: op, target: target})
 }
 
 func (c *compiler) openScope(name string) {
 	c.fragment = &fragment{
-		name:      name,
-		previous:  c.fragment,
-		curBranch: &branch{kind: basic},
+		name:     name,
+		previous: c.fragment,
+		block:    new(codeblock),
 	}
 
 	c.fragments = append(c.fragments, c.fragment)
@@ -469,17 +464,17 @@ func (c *compiler) compileFunDecl(node *ast.FunDecl) *lang.Method {
 
 	c.compileBlock(node.Body, true)
 
-	end := &branch{kind: basic}
+	end := new(codeblock)
 	if len(node.Catches) != 0 {
 		c.catchOffset = len(c.instrs)
 
 		for _, ch := range node.Catches {
 			catch := end
-			end = &branch{kind: basic}
+			end = new(codeblock)
 
-			c.useBranch(catch)
+			c.useBlock(catch)
 			c.add(bytecode.MatchType, c.addConstant(ch.Type.Value))
-			c.jumpToBlock(end, false)
+			c.jumpToBlock(bytecode.JumpIfFalse, end)
 
 			if ch.Ref != nil {
 				local := c.defineLocal(ch.Ref.Value, true)
@@ -489,17 +484,12 @@ func (c *compiler) compileFunDecl(node *ast.FunDecl) *lang.Method {
 			c.compileBlock(ch.Body, true)
 		}
 
-		c.useBranch(end)
+		c.useBlock(end)
 		c.add(bytecode.Throw, 0)
-		c.curBranch.hasReturn = true
+		c.block.hasReturn = true
 	}
 
 	return c.assemble()
-}
-
-func isLiteral(node ast.Expr) bool {
-	_, ok := node.(*ast.BasicLit)
-	return ok
 }
 
 func (c *compiler) compileArrayLireral(node *ast.ArrayLit) {
@@ -551,42 +541,57 @@ func (c *compiler) compileLiteral(lit *ast.BasicLit) {
 	c.add(bytecode.Push, c.addConstant(val))
 }
 
-func literalValue(expr ast.Expr) lang.IrObject {
-	lit := expr.(*ast.BasicLit)
-
-	switch lit.Type() {
-	case token.String:
-		return lang.NewString(lit.Value)
-
-	case token.Bool:
-		value, err := strconv.ParseBool(lit.Value)
-		if err != nil {
-			panic("invalid boolean literal")
-		}
-
-		return lang.Bool(value)
-
-	case token.Int:
-		value, err := strconv.Atoi(lit.Value)
-		if err != nil {
-			panic("invalid integer literal")
-		}
-		return lang.Int(value)
-
-	case token.Float:
-		value, err := strconv.ParseFloat(lit.Value, 64)
-		if err != nil {
-			panic("invalid float literal")
-		}
-		return lang.Float(value)
-
-	case token.Nil:
-		return lang.None
-
-	default:
-		fmt.Printf("DEFAULT %T, %q, %q\n", lit, lit.Value, lit.Token.Type)
-		panic("invalid literal")
+func (c *compiler) cleanControlFlow() {
+	if c.control == nil {
+		return
 	}
+
+	if c.control.loop == FOR_LOOP {
+		c.add(bytecode.Pop, 0)
+	}
+}
+
+func (c *compiler) rewindControlFlow(inLoop bool) {
+	for c.control != nil {
+		switch c.control.loop {
+		case FOR_LOOP, WHILE_LOOP:
+			if inLoop {
+				return
+			}
+		}
+
+		c.cleanControlFlow()
+		c.popControlFlow()
+	}
+}
+
+func (c *compiler) compileReturnStmt(ret *ast.ReturnStmt) {
+	c.rewindControlFlow(false)
+
+	c.compileExpr(ret.Expr, true)
+	c.add(bytecode.Return, 0)
+	c.block.hasReturn = true
+}
+
+func (c *compiler) compileStopStmt(_stop *ast.StopStmt) {
+	c.rewindControlFlow(true)
+
+	if c.control == nil {
+		panic("STOP OUTSIDE LOOP")
+	}
+
+	c.cleanControlFlow()
+	c.jumpToBlock(bytecode.Jump, c.control.exit)
+}
+
+func (c *compiler) compileNextStmt(_next *ast.NextStmt) {
+	c.rewindControlFlow(true)
+
+	if c.control == nil {
+		panic("NEXT OUTSIDE LOOP")
+	}
+
+	c.jumpToBlock(bytecode.Jump, c.control.start)
 }
 
 func (c *compiler) defineLocal(name string, initialized bool) *local {
@@ -610,15 +615,9 @@ func (c *compiler) resolve(name string) *local {
 	return nil
 }
 
-func (c *compiler) useBranch(b *branch) {
+func (c *compiler) useBlock(b *codeblock) {
 	b.startAt = byte(len(c.instrs))
-	if c.curBranch == nil {
-		c.curBranch = b
-		return
-	}
-
-	c.curBranch.next = b
-	c.curBranch = b
+	c.block = b
 }
 
 func (c *compiler) add(opcode bytecode.Opcode, operand byte) {
@@ -636,4 +635,30 @@ func (c *compiler) addConstant(arg interface{}) byte {
 	}
 
 	return byte(len(c.consts) - 1)
+}
+
+func (c *compiler) pushControlFlow(loop int, start, exit *codeblock) {
+	if c.control == nil {
+		c.control = &controlflow{
+			loop:  loop,
+			start: start,
+			exit:  exit,
+		}
+		return
+	}
+
+	c.control = &controlflow{
+		loop:  loop,
+		start: start,
+		exit:  exit,
+		next:  c.control,
+	}
+}
+
+func (c *compiler) popControlFlow() {
+	if c.control == nil {
+		return
+	}
+
+	c.control = c.control.next
 }
