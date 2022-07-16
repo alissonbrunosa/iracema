@@ -59,7 +59,7 @@ func (m *multiByteMatch) Match(t *testing.T, instr uint16, _ []lang.IrObject) {
 	}
 
 	if m.operand != operand {
-		t.Errorf("expected instr(%s)'s operand to be %d, got %d", m.opcode, m.operand, operand)
+		t.Errorf("expected operand to be %d, got %d", m.operand, operand)
 	}
 }
 

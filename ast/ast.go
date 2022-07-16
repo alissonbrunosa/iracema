@@ -148,23 +148,6 @@ type WhileStmt struct {
 
 func (*WhileStmt) String() string { return "WhileStmt" }
 
-type CaseClause struct {
-	Value Expr
-	Body  *BlockStmt
-}
-
-func (*CaseClause) String() string { return "CaseClause" }
-
-type SwitchStmt struct {
-	Key     Expr
-	Cases   []*CaseClause
-	Default *CaseClause
-
-	stmt
-}
-
-func (*SwitchStmt) String() string { return "SwitchStmt" }
-
 type ExprStmt struct {
 	Expr Expr
 
