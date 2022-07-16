@@ -165,6 +165,9 @@ func (c *compiler) compileStmt(stmt ast.Stmt) {
 	case *ast.ForStmt:
 		c.compileForStmt(node)
 
+	case *ast.SwitchStmt:
+		c.compileSwitchStmt(node)
+
 	case *ast.ObjectDecl:
 		object := c.compileObjectDecl(node)
 
@@ -363,6 +366,36 @@ func (c *compiler) compileForStmt(node *ast.ForStmt) {
 	c.jumpToBlock(bytecode.Jump, loop)
 
 	c.useBlock(exit)
+}
+
+func (c *compiler) compileSwitchStmt(node *ast.SwitchStmt) {
+	endBlock := new(codeblock)
+
+	lenCases := len(node.Cases) - 1
+	for i, caseClause := range node.Cases {
+		nextCaseBlock := new(codeblock)
+
+		c.compileExpr(node.Key, true)
+		c.compileExpr(caseClause.Value, true)
+
+		callInfo := lang.NewCallInfo("==", 1)
+		c.add(bytecode.CallMethod, c.addConstant(callInfo))
+
+		c.jumpToBlock(bytecode.JumpIfFalse, nextCaseBlock)
+		c.compileBlock(caseClause.Body, false)
+
+		if i != lenCases || node.Default != nil {
+			c.jumpToBlock(bytecode.Jump, endBlock)
+		}
+
+		c.useBlock(nextCaseBlock)
+	}
+
+	if node.Default != nil {
+		c.compileBlock(node.Default.Body, false)
+	}
+
+	c.useBlock(endBlock)
 }
 
 func (c *compiler) compileIfStmt(node *ast.IfStmt) {

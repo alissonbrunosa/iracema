@@ -492,6 +492,7 @@ func TestCompileWhileStmt(t *testing.T) {
 		})
 	}
 }
+
 func TestCompileForStmt(t *testing.T) {
 	tests := []struct {
 		Scenario string
@@ -585,6 +586,95 @@ func TestCompileForStmt(t *testing.T) {
 				expect(bytecode.CallMethod).withOperand(1).toBeMethodCall("puts", 1),
 				expect(bytecode.Pop),
 				expect(bytecode.Jump).toHaveOperand(2),
+				expect(bytecode.PushNone),
+				expect(bytecode.Return),
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Scenario, func(t *testing.T) {
+			fun := compile(test.Code)
+			for i, instr := range fun.Instrs() {
+				test.Matches[i].Match(t, instr, fun.Constants())
+			}
+		})
+	}
+}
+
+func TestCompileSwitchStmt(t *testing.T) {
+	tests := []struct {
+		Scenario string
+		Code     string
+		Matches  []Match
+	}{
+		{
+			Scenario: "compile switch stmt",
+			Code:     "switch 10 { case 10: puts(10) }",
+			Matches: []Match{
+				expect(bytecode.Push).toHaveOperand(0).toHaveConstant(10),
+				expect(bytecode.Push).toHaveOperand(1).toHaveConstant(10),
+				expect(bytecode.CallMethod).withOperand(2).toBeMethodCall("==", 1),
+				expect(bytecode.JumpIfFalse).toHaveOperand(8),
+				expect(bytecode.PushSelf),
+				expect(bytecode.Push).toHaveOperand(3).toHaveConstant(10),
+				expect(bytecode.CallMethod).withOperand(4).toBeMethodCall("puts", 1),
+				expect(bytecode.Pop),
+				expect(bytecode.PushNone),
+				expect(bytecode.Return),
+			},
+		},
+		{
+			Scenario: "compile switch stmt multiple cases",
+			Code:     "switch 10 { case 10: puts(10) case 20: puts(20) }",
+			Matches: []Match{
+				expect(bytecode.Push).toHaveOperand(0).toHaveConstant(10),
+				expect(bytecode.Push).toHaveOperand(1).toHaveConstant(10),
+				expect(bytecode.CallMethod).withOperand(2).toBeMethodCall("==", 1),
+				expect(bytecode.JumpIfFalse).toHaveOperand(9),
+				expect(bytecode.PushSelf),
+				expect(bytecode.Push).toHaveOperand(3).toHaveConstant(10),
+				expect(bytecode.CallMethod).withOperand(4).toBeMethodCall("puts", 1),
+				expect(bytecode.Pop),
+				expect(bytecode.Jump).toHaveOperand(17),
+				expect(bytecode.Push).toHaveOperand(5).toHaveConstant(10),
+				expect(bytecode.Push).toHaveOperand(6).toHaveConstant(20),
+				expect(bytecode.CallMethod).withOperand(7).toBeMethodCall("==", 1),
+				expect(bytecode.JumpIfFalse).toHaveOperand(17),
+				expect(bytecode.PushSelf),
+				expect(bytecode.Push).toHaveOperand(8).toHaveConstant(20),
+				expect(bytecode.CallMethod).withOperand(9).toBeMethodCall("puts", 1),
+				expect(bytecode.Pop),
+				expect(bytecode.PushNone),
+				expect(bytecode.Return),
+			},
+		},
+		{
+			Scenario: "compile switch stmt full",
+			Code:     `switch 10 { case 10: puts(10) case 20: puts(20) default: puts("default") }`,
+			Matches: []Match{
+				expect(bytecode.Push).toHaveOperand(0).toHaveConstant(10),
+				expect(bytecode.Push).toHaveOperand(1).toHaveConstant(10),
+				expect(bytecode.CallMethod).withOperand(2).toBeMethodCall("==", 1),
+				expect(bytecode.JumpIfFalse).toHaveOperand(9),
+				expect(bytecode.PushSelf),
+				expect(bytecode.Push).toHaveOperand(3).toHaveConstant(10),
+				expect(bytecode.CallMethod).withOperand(4).toBeMethodCall("puts", 1),
+				expect(bytecode.Pop),
+				expect(bytecode.Jump).toHaveOperand(22),
+				expect(bytecode.Push).toHaveOperand(5).toHaveConstant(10),
+				expect(bytecode.Push).toHaveOperand(6).toHaveConstant(20),
+				expect(bytecode.CallMethod).withOperand(7).toBeMethodCall("==", 1),
+				expect(bytecode.JumpIfFalse).toHaveOperand(18),
+				expect(bytecode.PushSelf),
+				expect(bytecode.Push).toHaveOperand(8).toHaveConstant(20),
+				expect(bytecode.CallMethod).withOperand(9).toBeMethodCall("puts", 1),
+				expect(bytecode.Pop),
+				expect(bytecode.Jump).toHaveOperand(22),
+				expect(bytecode.PushSelf),
+				expect(bytecode.Push).toHaveOperand(10).toHaveConstant("default"),
+				expect(bytecode.CallMethod).withOperand(11).toBeMethodCall("puts", 1),
+				expect(bytecode.Pop),
 				expect(bytecode.PushNone),
 				expect(bytecode.Return),
 			},
