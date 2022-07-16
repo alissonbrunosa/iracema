@@ -369,11 +369,11 @@ func (c *compiler) compileForStmt(node *ast.ForStmt) {
 }
 
 func (c *compiler) compileSwitchStmt(node *ast.SwitchStmt) {
-	endBranch := &branch{kind: basic}
+	endBlock := new(codeblock)
 
 	lenCases := len(node.Cases) - 1
 	for i, caseClause := range node.Cases {
-		nextCaseBranch := &branch{kind: basic}
+		nextCaseBlock := new(codeblock)
 
 		c.compileExpr(node.Key, true)
 		c.compileExpr(caseClause.Value, true)
@@ -381,21 +381,21 @@ func (c *compiler) compileSwitchStmt(node *ast.SwitchStmt) {
 		callInfo := lang.NewCallInfo("==", 1)
 		c.add(bytecode.CallMethod, c.addConstant(callInfo))
 
-		c.jumpToBlock(nextCaseBranch, false)
+		c.jumpToBlock(bytecode.JumpIfFalse, nextCaseBlock)
 		c.compileBlock(caseClause.Body, false)
 
 		if i != lenCases || node.Default != nil {
-			c.jumpToBlock(endBranch, true)
+			c.jumpToBlock(bytecode.Jump, endBlock)
 		}
 
-		c.useBranch(nextCaseBranch)
+		c.useBlock(nextCaseBlock)
 	}
 
 	if node.Default != nil {
 		c.compileBlock(node.Default.Body, false)
 	}
 
-	c.useBranch(endBranch)
+	c.useBlock(endBlock)
 }
 
 func (c *compiler) compileIfStmt(node *ast.IfStmt) {
