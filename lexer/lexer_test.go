@@ -119,11 +119,6 @@ func TestNextToken(t *testing.T) {
 			ExpectedType:    token.Int,
 			ExpectedLiteral: "10",
 		},
-		"Negative Int": {
-			Input:           bytes.NewBufferString("-10"),
-			ExpectedType:    token.Int,
-			ExpectedLiteral: "-10",
-		},
 		"Float": {
 			Input:           bytes.NewBufferString("10.10"),
 			ExpectedType:    token.Float,
