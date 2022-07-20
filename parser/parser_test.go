@@ -90,6 +90,13 @@ func TestBinaryExpr(t *testing.T) {
 		ExpectedRightValue string
 	}{
 		{
+			Scenario:           "operation without space between operands",
+			Code:               "10+2",
+			ExpectedLeftValue:  "10",
+			ExpectedOperator:   token.Plus,
+			ExpectedRightValue: "2",
+		},
+		{
 			Scenario:           "add operation",
 			Code:               "10 + 2",
 			ExpectedLeftValue:  "10",
@@ -211,8 +218,8 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		{Code: "10 / (2 * 5)", ExpectedOutput: "(10/(2*5))"},
 		{Code: "!true", ExpectedOutput: "(!true)"},
 		{Code: "!!true", ExpectedOutput: "(!(!true))"},
-		{Code: "-10 * 10", ExpectedOutput: "(-10*10)"},
-		{Code: "10 + -10 * 10", ExpectedOutput: "(10+(-10*10))"},
+		{Code: "-10 * 10", ExpectedOutput: "((-10)*10)"},
+		{Code: "10 + -10 * 10", ExpectedOutput: "(10+((-10)*10))"},
 	}
 
 	for _, test := range tests {
