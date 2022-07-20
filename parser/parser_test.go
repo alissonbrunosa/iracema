@@ -316,7 +316,7 @@ func TestInvalidFunDecl(t *testing.T) {
 		{
 			Scenario:    "Missing closing brace",
 			Code:        "fun name {\n",
-			ExpectedErr: "[Lin: 2 Col: 1] syntax error: expected '}', found 'Eof'",
+			ExpectedErr: "[Lin: 2 Col: 1] syntax error: expected '}', found 'EOF'",
 		},
 	}
 

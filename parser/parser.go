@@ -172,7 +172,7 @@ func (p *parser) parseBlockStmt() *ast.BlockStmt {
 
 func (p *parser) parseIfStmt() ast.Stmt {
 	p.expect(token.If)
-	predicate := p.parseExpr(true)
+	predicate := p.parseExpr()
 	consequent := p.parseBlockStmt()
 
 	var alternative ast.Stmt
@@ -196,14 +196,14 @@ func (p *parser) parseIfStmt() ast.Stmt {
 func (p *parser) parseWhileStmt() ast.Stmt {
 	p.expect(token.While)
 
-	return &ast.WhileStmt{Cond: p.parseExpr(true), Body: p.parseBlockStmt()}
+	return &ast.WhileStmt{Cond: p.parseExpr(), Body: p.parseBlockStmt()}
 }
 
 func (p *parser) parseForStmt() ast.Stmt {
 	p.expect(token.For)
 	element := p.parseIdent()
 	p.expect(token.In)
-	iterable := p.parseExpr(false)
+	iterable := p.parseExpr()
 	body := p.parseBlockStmt()
 
 	return &ast.ForStmt{Element: element, Iterable: iterable, Body: body}
@@ -213,7 +213,7 @@ func (p *parser) parseSwitchStmt() ast.Stmt {
 	p.expect(token.Switch)
 
 	s := new(ast.SwitchStmt)
-	s.Key = p.parseExpr(false)
+	s.Key = p.parseExpr()
 	p.expect(token.LeftBrace)
 
 	for p.tok.Type != token.Eof && p.tok.Type != token.RightBrace {
@@ -233,7 +233,7 @@ func (p *parser) parseCaseCluase() (*ast.CaseClause, bool) {
 	c := new(ast.CaseClause)
 
 	if p.consume(token.Case) {
-		c.Value = p.parseExpr(false)
+		c.Value = p.parseExpr()
 		p.expect(token.Colon)
 		c.Body = &ast.BlockStmt{Stmts: p.parseStmtList()}
 		return c, false
@@ -265,7 +265,7 @@ func (p *parser) parseNextStmt() ast.Stmt {
 func (p *parser) parseReturnStmt() ast.Stmt {
 	return &ast.ReturnStmt{
 		Token: p.expect(token.Return),
-		Expr:  p.parseExpr(false),
+		Expr:  p.parseExpr(),
 	}
 }
 
@@ -310,59 +310,57 @@ func (p *parser) parseSimpleStmt() ast.Stmt {
 }
 
 func (p *parser) parseLeftExprList() []ast.Expr {
-	return p.parseExprList(true)
+	return p.parseExprList()
 }
 
 func (p *parser) parseRightExprList() []ast.Expr {
-	return p.parseExprList(false)
+	return p.parseExprList()
 }
 
-func (p *parser) parseExprList(leftHand bool) (list []ast.Expr) {
-	list = append(list, p.parseExpr(leftHand))
+func (p *parser) parseExprList() (list []ast.Expr) {
+	list = append(list, p.parseExpr())
 
 	for p.tok.Type == token.Comma {
 		p.next()
-		list = append(list, p.parseExpr(leftHand))
+		list = append(list, p.parseExpr())
 	}
 
 	return
 }
 
-func (p *parser) parseExpr(leftHand bool) ast.Expr {
-	return p.parseBinaryExpr(leftHand, token.LowestPrecedence+1)
+func (p *parser) parseExpr() ast.Expr {
+	return p.parseBinaryExpr(token.LowestPrecedence)
 }
 
-func (p *parser) parseBinaryExpr(leftHand bool, precedence int) ast.Expr {
-	left := p.parseUnaryExpr(leftHand)
+func (p *parser) parseBinaryExpr(precedence int) ast.Expr {
+	left := p.parseUnaryExpr()
 
-	for {
-		if p.tok.Precedence() < precedence {
-			return left
-		}
-
+	for p.tok.Precedence() > precedence {
 		tok := p.expect(p.tok.Type)
-		right := p.parseBinaryExpr(false, tok.Precedence()+1)
+		right := p.parseBinaryExpr(tok.Precedence())
 
 		left = &ast.BinaryExpr{Left: left, Operator: tok, Right: right}
 	}
+
+	return left
 }
 
-func (p *parser) parseUnaryExpr(leftHand bool) (expr ast.Expr) {
+func (p *parser) parseUnaryExpr() (expr ast.Expr) {
 	switch p.tok.Type {
 	case token.Not, token.Plus, token.Minus:
 		expr = &ast.UnaryExpr{
 			Operator: p.expect(p.tok.Type),
-			Expr:     p.parseUnaryExpr(leftHand),
+			Expr:     p.parseUnaryExpr(),
 		}
 	default:
-		expr = p.parsePrimaryExpr(leftHand)
+		expr = p.parsePrimaryExpr()
 	}
 
 	return
 }
 
-func (p *parser) parsePrimaryExpr(leftHand bool) (expr ast.Expr) {
-	expr = p.parseOperand(leftHand)
+func (p *parser) parsePrimaryExpr() (expr ast.Expr) {
+	expr = p.parseOperand()
 
 	for {
 		switch p.tok.Type {
@@ -383,7 +381,7 @@ func (p *parser) parsePrimaryExpr(leftHand bool) (expr ast.Expr) {
 	}
 }
 
-func (p *parser) parseOperand(leftHand bool) (expr ast.Expr) {
+func (p *parser) parseOperand() (expr ast.Expr) {
 	switch p.tok.Type {
 	case
 		token.Int, token.Float, token.String, token.Bool,
@@ -442,7 +440,7 @@ func (p *parser) parseConst() *ast.Ident {
 
 func (p *parser) parseGroupExpr() ast.Expr {
 	p.expect(token.LeftParenthesis)
-	expr := p.parseExpr(false)
+	expr := p.parseExpr()
 	p.expect(token.RightParenthesis)
 
 	return &ast.GroupExpr{Expr: expr}
@@ -465,7 +463,7 @@ func (p *parser) parseArgumentList() (list []ast.Expr) {
 
 	p.expect(token.LeftParenthesis)
 	for p.tok.Type != token.RightParenthesis && p.tok.Type != token.Eof {
-		list = append(list, p.parseExpr(false))
+		list = append(list, p.parseExpr())
 		if !p.atComma(token.RightParenthesis) {
 			break
 		}
@@ -483,7 +481,7 @@ func (p *parser) parseArrayLit() *ast.ArrayLit {
 
 	var list []ast.Expr
 	for p.tok.Type != token.RightBracket && p.tok.Type != token.Eof {
-		list = append(list, p.parseExpr(false))
+		list = append(list, p.parseExpr())
 		if !p.atComma(token.RightBracket) {
 			break
 		}
@@ -520,9 +518,9 @@ func (p *parser) KeyValuePairList() (list []*ast.KeyValueExpr) {
 
 func (p *parser) KeyValuePair() *ast.KeyValueExpr {
 	return &ast.KeyValueExpr{
-		Key:   p.parseExpr(false),
+		Key:   p.parseExpr(),
 		Colon: p.expect(token.Colon),
-		Value: p.parseExpr(false),
+		Value: p.parseExpr(),
 	}
 }
 
@@ -530,7 +528,7 @@ func (p *parser) parseIndexExpr(expr ast.Expr) ast.Expr {
 	return &ast.IndexExpr{
 		Expr:         expr,
 		LeftBracket:  p.expect(token.LeftBracket),
-		Index:        p.parseExpr(false),
+		Index:        p.parseExpr(),
 		RightBracket: p.expect(token.RightBracket),
 	}
 }
