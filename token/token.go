@@ -1,114 +1,5 @@
 package token
 
-type Type int
-
-const (
-	Illegal Type = iota
-	Eof
-
-	// keywords
-	If
-	Is
-	For
-	Switch
-	Case
-	Default
-	In
-	Stop
-	Next
-	While
-	Else
-	Fun
-	Nil
-	Catch
-	Block
-	Object
-	Return
-
-	// literals
-	Int
-	Float
-	String
-	Bool
-
-	// arithmetic operations
-	Minus
-	Plus
-	Slash
-	Star
-
-	Dot
-	Colon
-	Not
-	Arrow
-	Comma
-	Assign
-	Equal
-	LessThan
-	LessOrEqualThan
-	GreaterThan
-	GreaterOrEqualThan
-	Ident
-	LeftParenthesis
-	RightParenthesis
-	LeftBracket
-	RightBracket
-	LeftBrace
-	RightBrace
-)
-
-var types = [...]string{
-	Illegal: "Illegal",
-	Eof:     "Eof",
-
-	If:      "if",
-	Is:      "is",
-	For:     "for",
-	Switch:  "switch",
-	Case:    "case",
-	Default: "default",
-	In:      "in",
-	Stop:    "stop",
-	Next:    "next",
-	While:   "while",
-	Else:    "else",
-	Fun:     "fun",
-	Nil:     "nil",
-	Catch:   "catch",
-	Block:   "block",
-	Object:  "object",
-	Return:  "return",
-
-	Int:    "Int",
-	Float:  "Float",
-	String: "String",
-	Bool:   "Bool",
-
-	Minus: "-",
-	Slash: "/",
-	Plus:  "+",
-	Star:  "*",
-
-	Dot:                ".",
-	Colon:              ":",
-	Not:                "!",
-	Arrow:              "->",
-	Comma:              ",",
-	Assign:             "=",
-	Equal:              "==",
-	LessThan:           "<",
-	LessOrEqualThan:    "<=",
-	GreaterThan:        ">",
-	GreaterOrEqualThan: ">=",
-	Ident:              "Ident",
-	LeftParenthesis:    "(",
-	RightParenthesis:   ")",
-	LeftBracket:        "[",
-	RightBracket:       "]",
-	LeftBrace:          "{",
-	RightBrace:         "}",
-}
-
 var keywords = map[string]Type{
 	"if":      If,
 	"is":      Is,
@@ -132,10 +23,6 @@ var keywords = map[string]Type{
 }
 
 const LowestPrecedence = 0
-
-func (t Type) String() string {
-	return types[t]
-}
 
 type Token struct {
 	*Position
