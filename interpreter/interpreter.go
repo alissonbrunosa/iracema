@@ -20,7 +20,13 @@ const (
 	LE
 )
 
-var names = map[byte]string{
+var unary_ops = map[bytecode.Opcode]string{
+	bytecode.UnaryAdd: "uadd",
+	bytecode.UnarySub: "usub",
+	bytecode.UnaryNot: "unot",
+}
+
+var binary_ops = map[byte]string{
 	ADD: "+",
 	SUB: "-",
 	MUL: "*",
@@ -58,11 +64,11 @@ func (i *Interpreter) Dispatch() (lang.IrObject, error) {
 
 	next_instr:
 		instr := instrs[i.instrPointer]
-		op := bytecode.Opcode(instr >> 8)
+		opcode := bytecode.Opcode(instr >> 8)
 		operand := byte(instr & 255)
 		i.instrPointer++
 
-		switch op {
+		switch opcode {
 		case bytecode.Push:
 			value := constants[operand]
 			i.Push(value)
@@ -123,16 +129,29 @@ func (i *Interpreter) Dispatch() (lang.IrObject, error) {
 		case bytecode.Binary:
 			rhs := i.Pop()
 			lhs := i.Pop()
-			name := names[operand]
+			name := binary_ops[operand]
 
-			method := lhs.LookupMethod(name)
-			val := method.Body().(lang.Native).Invoke(i, lhs, rhs)
-			if val == nil {
-				goto fail
+			if method := lhs.LookupMethod(name); method != nil {
+				val := i.Call(lhs, method, rhs)
+				i.Push(val)
+				goto next_instr
 			}
 
-			i.Push(val)
-			goto next_instr
+			i.err = lang.NewNoMethodError(lhs, name)
+			goto fail
+
+		case bytecode.UnaryNot, bytecode.UnaryAdd, bytecode.UnarySub:
+			recv := i.Pop()
+
+			opname := unary_ops[opcode]
+			if method := recv.LookupMethod(opname); method != nil {
+				val := i.Call(recv, method)
+				i.Push(val)
+				goto next_instr
+			}
+
+			i.err = lang.NewNoMethodError(recv, opname)
+			goto fail
 
 		case bytecode.BuildArray:
 			elements := i.PopN(operand)
@@ -264,7 +283,7 @@ func (i *Interpreter) Dispatch() (lang.IrObject, error) {
 			}
 
 		default:
-			panic(op.String())
+			panic(opcode.String())
 
 		}
 
