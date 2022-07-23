@@ -19,7 +19,7 @@ func toInt(value IrObject) (Int, *ErrorObject) {
 	return 0, NewError(mesg.String(), TypeError)
 }
 
-func intPlus(rt Runtime, self IrObject, rhs IrObject) IrObject {
+func intAdd(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	left := INT(self)
 	switch right := rhs.(type) {
 	case Int:
@@ -33,7 +33,7 @@ func intPlus(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	}
 }
 
-func intMinus(rt Runtime, self IrObject, rhs IrObject) IrObject {
+func intSub(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	left := INT(self)
 	switch right := rhs.(type) {
 	case Int:
@@ -148,7 +148,11 @@ func intLessThan(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	}
 }
 
-func intNegate(rt Runtime, self IrObject) IrObject {
+func intUnaryAdd(rt Runtime, self IrObject) IrObject {
+	return self
+}
+
+func intUnarySub(rt Runtime, self IrObject) IrObject {
 	return -INT(self)
 }
 
@@ -171,20 +175,21 @@ func InitInt() {
 	IntClass = NewClass("Int", ObjectClass)
 	IntClass.AddGoMethod("==", oneArg(intEqual))
 	IntClass.AddGoMethod("hash", zeroArgs(intHash))
-	IntClass.AddGoMethod("+", oneArg(intPlus))
-	IntClass.AddGoMethod("plus", oneArg(intPlus))
-	IntClass.AddGoMethod("-", oneArg(intMinus))
-	IntClass.AddGoMethod("minus", oneArg(intMinus))
+	IntClass.AddGoMethod("+", oneArg(intAdd))
+	IntClass.AddGoMethod("add", oneArg(intAdd))
+	IntClass.AddGoMethod("-", oneArg(intSub))
+	IntClass.AddGoMethod("sub", oneArg(intSub))
 	IntClass.AddGoMethod("*", oneArg(intMultiply))
 	IntClass.AddGoMethod("multiply", oneArg(intMultiply))
 	IntClass.AddGoMethod("/", oneArg(intDivide))
-	IntClass.AddGoMethod("divide_by", oneArg(intDivide))
+	IntClass.AddGoMethod("divide", oneArg(intDivide))
 	IntClass.AddGoMethod(">", oneArg(intGreatThan))
 	IntClass.AddGoMethod(">=", oneArg(intGreaterThanOrEqual))
 	IntClass.AddGoMethod("<", oneArg(intLessThan))
 	IntClass.AddGoMethod("<=", oneArg(intLessThanOrEqual))
 	IntClass.AddGoMethod("inspect", zeroArgs(intInspect))
-	IntClass.AddGoMethod("negate", zeroArgs(intNegate))
+	IntClass.AddGoMethod("uadd", zeroArgs(intUnaryAdd))
+	IntClass.AddGoMethod("usub", zeroArgs(intUnarySub))
 }
 
 /*

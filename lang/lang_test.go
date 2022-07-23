@@ -17,7 +17,7 @@ func (rt *dummyRuntime) Call(recv IrObject, method *Method, args ...IrObject) Ir
 
 var runtime = new(dummyRuntime)
 
-func eq(t *testing.T, got IrObject, expected IrObject) {
+func assertEqual(t *testing.T, got IrObject, expected IrObject) {
 	t.Helper()
 
 	var result bool

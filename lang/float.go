@@ -9,7 +9,7 @@ func FLOAT(obj IrObject) Float {
 	return obj.(Float)
 }
 
-func floatPlus(rt Runtime, lhs IrObject, rhs IrObject) IrObject {
+func floatAdd(rt Runtime, lhs IrObject, rhs IrObject) IrObject {
 	left := FLOAT(lhs)
 
 	switch right := rhs.(type) {
@@ -23,7 +23,7 @@ func floatPlus(rt Runtime, lhs IrObject, rhs IrObject) IrObject {
 	}
 }
 
-func floatMinus(rt Runtime, lhs IrObject, rhs IrObject) IrObject {
+func floatSub(rt Runtime, lhs IrObject, rhs IrObject) IrObject {
 	left := FLOAT(lhs)
 
 	switch right := rhs.(type) {
@@ -79,8 +79,12 @@ func floatEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	}
 }
 
-func floatNegate(rt Runtime, value IrObject) IrObject {
-	return -FLOAT(value)
+func floatUnaryAdd(rt Runtime, self IrObject) IrObject {
+	return self
+}
+
+func floatUnarySub(rt Runtime, self IrObject) IrObject {
+	return -FLOAT(self)
 }
 
 func floatGreatThan(rt Runtime, lhs IrObject, rhs IrObject) IrObject {
@@ -134,18 +138,19 @@ func InitFloat() {
 	FloatClass = NewClass("Float", ObjectClass)
 	FloatClass.AddGoMethod("==", oneArg(floatEqual))
 	FloatClass.AddGoMethod("hash", zeroArgs(floatHash))
-	FloatClass.AddGoMethod("+", oneArg(floatPlus))
-	FloatClass.AddGoMethod("plus", oneArg(floatPlus))
-	FloatClass.AddGoMethod("-", oneArg(floatMinus))
-	FloatClass.AddGoMethod("minus", oneArg(floatMinus))
+	FloatClass.AddGoMethod("+", oneArg(floatAdd))
+	FloatClass.AddGoMethod("add", oneArg(floatAdd))
+	FloatClass.AddGoMethod("-", oneArg(floatSub))
+	FloatClass.AddGoMethod("sub", oneArg(floatSub))
 	FloatClass.AddGoMethod("*", oneArg(floatMultiply))
 	FloatClass.AddGoMethod("multiply", oneArg(floatMultiply))
 	FloatClass.AddGoMethod("/", oneArg(floatDivide))
-	FloatClass.AddGoMethod("divide_by", oneArg(floatDivide))
+	FloatClass.AddGoMethod("divide", oneArg(floatDivide))
 	FloatClass.AddGoMethod(">", oneArg(floatGreatThan))
 	FloatClass.AddGoMethod("<", oneArg(floatLessThan))
 	FloatClass.AddGoMethod("inspect", zeroArgs(floatInspect))
-	FloatClass.AddGoMethod("negate", zeroArgs(floatNegate))
+	FloatClass.AddGoMethod("uadd", zeroArgs(floatUnaryAdd))
+	FloatClass.AddGoMethod("usub", zeroArgs(floatUnarySub))
 }
 
 /*

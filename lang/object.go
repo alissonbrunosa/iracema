@@ -38,6 +38,10 @@ func objectInspect(rt Runtime, self IrObject) IrObject {
 	return NewString(str)
 }
 
+func objectUnaryNot(rt Runtime, self IrObject) IrObject {
+	return !IsTruthy(self)
+}
+
 func objectAlloc(class *Class) IrObject {
 	return &Object{
 		base:  &base{class: class},
@@ -84,4 +88,5 @@ func InitObject() {
 	ObjectClass.AddGoMethod("object_id", zeroArgs(objectId))
 	ObjectClass.AddGoMethod("inspect", zeroArgs(objectInspect))
 	ObjectClass.AddGoMethod("nil?", zeroArgs(returnFalse))
+	ObjectClass.AddGoMethod("unot", zeroArgs(objectUnaryNot))
 }

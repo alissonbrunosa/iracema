@@ -38,7 +38,7 @@ func Test_toInt_WhenArgumentIsNotInt(t *testing.T) {
 	}
 }
 
-func Test_intPlus(t *testing.T) {
+func Test_intAdd(t *testing.T) {
 	tests := []struct {
 		Left     IrObject
 		Right    IrObject
@@ -57,12 +57,12 @@ func Test_intPlus(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := intPlus(runtime, test.Left, test.Right)
-		eq(t, result, test.Expected)
+		result := intAdd(runtime, test.Left, test.Right)
+		assertEqual(t, result, test.Expected)
 	}
 }
 
-func Test_intMinus(t *testing.T) {
+func Test_intSub(t *testing.T) {
 	tests := []struct {
 		Left     IrObject
 		Right    IrObject
@@ -81,8 +81,8 @@ func Test_intMinus(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := intMinus(runtime, test.Left, test.Right)
-		eq(t, result, test.Expected)
+		result := intSub(runtime, test.Left, test.Right)
+		assertEqual(t, result, test.Expected)
 	}
 }
 
@@ -106,7 +106,7 @@ func Test_intMultiply(t *testing.T) {
 
 	for _, test := range tests {
 		result := intMultiply(runtime, test.Left, test.Right)
-		eq(t, result, test.Expected)
+		assertEqual(t, result, test.Expected)
 	}
 }
 
@@ -146,30 +146,20 @@ func Test_intEqual(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.Scenario, func(t *testing.T) {
 			result := intEqual(runtime, test.Left, test.Right)
-			eq(t, result, test.Expected)
+			assertEqual(t, result, test.Expected)
 		})
 	}
 }
 
-func Test_intNegate(t *testing.T) {
-	tests := []struct {
-		Obj      IrObject
-		Expected IrObject
-	}{
-		{
-			Obj:      Int(2),
-			Expected: Int(-2),
-		},
-		{
-			Obj:      Int(-2),
-			Expected: Int(2),
-		},
-	}
+func Test_intUnarySub(t *testing.T) {
+	result := intUnarySub(runtime, Int(20))
+	assertEqual(t, result, Int(-20))
+}
 
-	for _, test := range tests {
-		result := intNegate(runtime, test.Obj)
-		eq(t, result, test.Expected)
-	}
+func Test_intUnaryAdd(t *testing.T) {
+	value := Int(20)
+	result := intUnaryAdd(runtime, value)
+	assertEqual(t, result, value)
 }
 
 func Test_intGreatThan(t *testing.T) {
@@ -197,7 +187,7 @@ func Test_intGreatThan(t *testing.T) {
 
 	for _, test := range tests {
 		result := intGreatThan(runtime, test.Left, test.Right)
-		eq(t, result, test.Expected)
+		assertEqual(t, result, test.Expected)
 	}
 }
 
@@ -226,7 +216,7 @@ func Test_intGreatThanOrEqual(t *testing.T) {
 
 	for _, test := range tests {
 		result := intGreaterThanOrEqual(runtime, test.Left, test.Right)
-		eq(t, result, test.Expected)
+		assertEqual(t, result, test.Expected)
 	}
 }
 
@@ -255,7 +245,7 @@ func Test_intLessThan(t *testing.T) {
 
 	for _, test := range tests {
 		result := intLessThan(runtime, test.Left, test.Right)
-		eq(t, result, test.Expected)
+		assertEqual(t, result, test.Expected)
 	}
 }
 
@@ -284,7 +274,7 @@ func Test_intLessThanOrEqual(t *testing.T) {
 
 	for _, test := range tests {
 		result := intLessThanOrEqual(runtime, test.Left, test.Right)
-		eq(t, result, test.Expected)
+		assertEqual(t, result, test.Expected)
 	}
 }
 func Test_intDivide(t *testing.T) {
@@ -307,13 +297,13 @@ func Test_intDivide(t *testing.T) {
 
 	for _, test := range tests {
 		result := intDivide(runtime, test.Left, test.Right)
-		eq(t, result, test.Expected)
+		assertEqual(t, result, test.Expected)
 	}
 }
 
 func Test_intInspect(t *testing.T) {
 	result := intInspect(runtime, Int(2))
-	eq(t, result, NewString("2"))
+	assertEqual(t, result, NewString("2"))
 }
 
 func TestIntOperationWithInvalidOperand(t *testing.T) {
@@ -345,7 +335,7 @@ func TestIntOperationWithInvalidOperand(t *testing.T) {
 			Scenario:      "add with a non numeric",
 			Left:          Int(5),
 			Right:         NewString("1"),
-			operation:     intPlus,
+			operation:     intAdd,
 			ExpectedMesg:  "unsupported operand type(s): 'Int' + 'String'",
 			ExpectedError: TypeError,
 		},
@@ -353,7 +343,7 @@ func TestIntOperationWithInvalidOperand(t *testing.T) {
 			Scenario:      "sub with a non numeric",
 			Left:          Int(5),
 			Right:         NewString("1"),
-			operation:     intMinus,
+			operation:     intSub,
 			ExpectedMesg:  "unsupported operand type(s): 'Int' - 'String'",
 			ExpectedError: TypeError,
 		},
