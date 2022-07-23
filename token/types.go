@@ -40,17 +40,17 @@ const (
 	Not   // !
 	Arrow // ->
 	Comma
-	Assign             // =
-	Equal              // ==
-	LessThan           // <
-	LessOrEqualThan    // <=
-	GreaterThan        // >
-	GreaterOrEqualThan // >=
-	Ident              // Ident
-	LeftParenthesis    // (
-	RightParenthesis   // )
-	LeftBracket        // [
-	RightBracket       // ]
-	LeftBrace          // {
-	RightBrace         // }
+	Assign           // =
+	Equal            // ==
+	Less             // <
+	LessEqual        // <=
+	Great            // >
+	GreatEqual       // >=
+	Ident            // Ident
+	LeftParenthesis  // (
+	RightParenthesis // )
+	LeftBracket      // [
+	RightBracket     // ]
+	LeftBrace        // {
+	RightBrace       // }
 )

@@ -9,17 +9,12 @@ import (
 	"strings"
 )
 
-var binaryOperator = map[byte]string{
-	ADD: "add",
-	SUB: "sub",
-	MUL: "mul",
-	DIV: "div",
-	EQ:  "==",
-	GT:  ">",
-	GE:  ">=",
-	NE:  "!=",
-	LT:  "<",
-	LE:  "<=",
+var compareOps = map[byte]string{
+	0: "==",
+	1: ">",
+	2: ">=",
+	3: "<",
+	4: "<=",
 }
 
 func (c *compiler) Disassemble(file *ast.File) {
@@ -39,8 +34,6 @@ func (c *compiler) Disassemble(file *ast.File) {
 			switch ins.opcode {
 			case bytecode.Push, bytecode.MatchType, bytecode.GetConstant:
 				fmt.Fprintf(w, "%-30s%s\n", ins.opcode, fragment.consts[ins.operand])
-			case bytecode.Binary:
-				fmt.Fprintf(w, "%-30s%s\n", ins.opcode, binaryOperator[ins.operand])
 			case bytecode.CallMethod:
 				ci := fragment.consts[ins.operand].(*lang.CallInfo)
 				fmt.Fprintf(w, "%-30sname: %s argc:%d\n", ins.opcode, ci.Name(), ci.Argc())
@@ -51,6 +44,8 @@ func (c *compiler) Disassemble(file *ast.File) {
 			case bytecode.DefineObject:
 				m := fragment.consts[ins.operand].(*lang.Method)
 				fmt.Fprintf(w, "%-30s%s\n", ins.opcode, m.Name())
+			case bytecode.Compare:
+				fmt.Fprintf(w, "%-30soperator: %q\n", ins.opcode, compareOps[ins.operand])
 			default:
 				fmt.Fprintln(w, ins.opcode)
 			}

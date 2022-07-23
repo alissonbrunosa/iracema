@@ -48,10 +48,10 @@ func TestToken_Precedence(t *testing.T) {
 		ExpectedPrecedence int
 	}{
 		{Tok: &Token{Type: Equal}, ExpectedPrecedence: 2},
-		{Tok: &Token{Type: LessThan}, ExpectedPrecedence: 2},
-		{Tok: &Token{Type: LessOrEqualThan}, ExpectedPrecedence: 2},
-		{Tok: &Token{Type: GreaterThan}, ExpectedPrecedence: 2},
-		{Tok: &Token{Type: GreaterOrEqualThan}, ExpectedPrecedence: 2},
+		{Tok: &Token{Type: Less}, ExpectedPrecedence: 2},
+		{Tok: &Token{Type: LessEqual}, ExpectedPrecedence: 2},
+		{Tok: &Token{Type: Great}, ExpectedPrecedence: 2},
+		{Tok: &Token{Type: GreatEqual}, ExpectedPrecedence: 2},
 		{Tok: &Token{Type: Minus}, ExpectedPrecedence: 3},
 		{Tok: &Token{Type: Plus}, ExpectedPrecedence: 3},
 		{Tok: &Token{Type: Slash}, ExpectedPrecedence: 4},

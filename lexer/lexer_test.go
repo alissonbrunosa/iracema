@@ -162,19 +162,19 @@ func TestNextToken(t *testing.T) {
 		},
 		"GreaterThan": {
 			Input:        bytes.NewBufferString(">"),
-			ExpectedType: token.GreaterThan,
+			ExpectedType: token.Great,
 		},
 		"GreaterOrEqualThan": {
 			Input:        bytes.NewBufferString(">="),
-			ExpectedType: token.GreaterOrEqualThan,
+			ExpectedType: token.GreatEqual,
 		},
 		"LessThan": {
 			Input:        bytes.NewBufferString("<"),
-			ExpectedType: token.LessThan,
+			ExpectedType: token.Less,
 		},
 		"LessOrEqualThan": {
 			Input:        bytes.NewBufferString("<="),
-			ExpectedType: token.LessOrEqualThan,
+			ExpectedType: token.LessEqual,
 		},
 		"Return": {
 			Input:        bytes.NewBufferString("return"),

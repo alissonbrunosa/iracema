@@ -8,10 +8,14 @@ const (
 	Pop                   // POP
 	Push                  // PUSH
 	Throw                 // THROW
+	Add                   // ADD
+	Sub                   // SUB
+	Mul                   // MUL
+	Div                   // DIV
 	UnaryNot              // UNARY_NOT
 	UnaryAdd              // UNARY_ADD
 	UnarySub              // UNARY_SUB
-	Binary                // BINARY
+	Compare               // COMPARE
 	Return                // RETURN
 	PushNone              // PUSH_NONE
 	SetAttr               // SET_ATTR

@@ -7,36 +7,25 @@ import (
 	"os"
 )
 
-const (
-	ADD byte = iota
-	SUB
-	MUL
-	DIV
-	EQ
-	GT
-	GE
-	NE
-	LT
-	LE
-)
-
-var unary_ops = map[bytecode.Opcode]string{
+var unaryOps = map[bytecode.Opcode]string{
 	bytecode.UnaryAdd: "uadd",
 	bytecode.UnarySub: "usub",
 	bytecode.UnaryNot: "unot",
 }
 
-var binary_ops = map[byte]string{
-	ADD: "+",
-	SUB: "-",
-	MUL: "*",
-	DIV: "/",
-	EQ:  "==",
-	GT:  ">",
-	GE:  ">=",
-	NE:  "!=",
-	LT:  "<",
-	LE:  "<=",
+var binaryOps = map[bytecode.Opcode]string{
+	bytecode.Add: "+",
+	bytecode.Sub: "-",
+	bytecode.Mul: "*",
+	bytecode.Div: "/",
+}
+
+var compareOps = map[byte]string{
+	0: "==",
+	1: ">",
+	2: ">=",
+	3: "<",
+	4: "<=",
 }
 
 type Interpreter struct {
@@ -126,24 +115,38 @@ func (i *Interpreter) Dispatch() (lang.IrObject, error) {
 			}
 			goto next_instr
 
-		case bytecode.Binary:
+		case bytecode.Compare:
 			rhs := i.Pop()
 			lhs := i.Pop()
-			name := binary_ops[operand]
 
-			if method := lhs.LookupMethod(name); method != nil {
+			opname := compareOps[operand]
+			if method := lhs.LookupMethod(opname); method != nil {
 				val := i.Call(lhs, method, rhs)
 				i.Push(val)
 				goto next_instr
 			}
 
-			i.err = lang.NewNoMethodError(lhs, name)
+			i.err = lang.NewNoMethodError(lhs, opname)
+			goto fail
+
+		case bytecode.Add, bytecode.Sub, bytecode.Mul, bytecode.Div:
+			rhs := i.Pop()
+			lhs := i.Pop()
+
+			opname := binaryOps[opcode]
+			if method := lhs.LookupMethod(opname); method != nil {
+				val := i.Call(lhs, method, rhs)
+				i.Push(val)
+				goto next_instr
+			}
+
+			i.err = lang.NewNoMethodError(lhs, opname)
 			goto fail
 
 		case bytecode.UnaryNot, bytecode.UnaryAdd, bytecode.UnarySub:
 			recv := i.Pop()
 
-			opname := unary_ops[opcode]
+			opname := unaryOps[opcode]
 			if method := recv.LookupMethod(opname); method != nil {
 				val := i.Call(recv, method)
 				i.Push(val)
