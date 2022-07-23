@@ -107,7 +107,7 @@ func (p *parser) parseStmt() ast.Stmt {
 	case
 		token.Ident, token.String, token.Bool, token.Int, token.Float,
 		token.LeftParenthesis, token.Not, token.Plus, token.Minus,
-		token.LeftBracket, token.LeftBrace, token.Nil, token.Block:
+		token.LeftBracket, token.LeftBrace, token.None, token.Block:
 		return p.parseSimpleStmt()
 
 	default:
@@ -385,7 +385,7 @@ func (p *parser) parseOperand() (expr ast.Expr) {
 	switch p.tok.Type {
 	case
 		token.Int, token.Float, token.String, token.Bool,
-		token.Nil:
+		token.None:
 		expr = &ast.BasicLit{Token: p.tok, Value: p.tok.Literal}
 		p.next()
 

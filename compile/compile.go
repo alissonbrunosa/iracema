@@ -256,7 +256,7 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) {
 		c.compileExpr(node.Expr, isEvaluated)
 
 	case *ast.BlockExpr:
-		panic("TODO: ainda falta escrever a solucao para clojures")
+		panic("not implemented")
 
 	case *ast.IndexExpr:
 		c.compileExpr(node.Expr, true)
@@ -529,7 +529,7 @@ func (c *compiler) compileLiteral(lit *ast.BasicLit) {
 		}
 		val = lang.Float(value)
 
-	case token.Nil:
+	case token.None:
 		c.add(bytecode.PushNone, 0)
 		return
 

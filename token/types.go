@@ -19,7 +19,7 @@ const (
 	While   // while
 	Else    // else
 	Fun     // fun
-	Nil     // nil
+	None    // none
 	Catch   // catch
 	Block   // block
 	Object  // object

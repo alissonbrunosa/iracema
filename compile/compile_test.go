@@ -115,8 +115,8 @@ func TestCompile_SimpleExpr(t *testing.T) {
 			},
 		},
 		{
-			Scenario: "compile nil assign",
-			Code:     "a = nil",
+			Scenario: "compile none assign",
+			Code:     "a = none",
 			Matchs: []Match{
 				expect(bytecode.PushNone),
 				expect(bytecode.SetLocal).toHaveOperand(0),
