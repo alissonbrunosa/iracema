@@ -24,7 +24,7 @@ func TestParseWhileStmt(t *testing.T) {
 	testIdent(t, predicate.Left, "value")
 	testLit(t, predicate.Right, "10")
 
-	if predicate.Operator.Type != token.GreaterThan {
+	if predicate.Operator.Type != token.Great {
 		t.Errorf("expected operator to be token.GreaterThan, got %q", predicate.Operator)
 	}
 }
@@ -47,7 +47,7 @@ func TestParseWhileStmtWithStopStmt(t *testing.T) {
 	testIdent(t, predicate.Left, "value")
 	testLit(t, predicate.Right, "10")
 
-	if predicate.Operator.Type != token.GreaterThan {
+	if predicate.Operator.Type != token.Great {
 		t.Errorf("expected operator to be token.GreaterThan, got %q", predicate.Operator)
 	}
 

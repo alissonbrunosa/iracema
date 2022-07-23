@@ -242,8 +242,7 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) {
 	case *ast.BinaryExpr:
 		c.compileExpr(node.Left, true)
 		c.compileExpr(node.Right, true)
-		operator := binary(node.Operator.String())
-		c.add(bytecode.Binary, operator)
+		c.addBinary(node.Operator)
 
 		if !isEvaluated {
 			c.add(bytecode.Pop, 0)
@@ -305,28 +304,35 @@ func (c *compiler) addUnary(t *token.Token) {
 	}
 }
 
-func binary(operator string) byte {
-	switch operator {
-	case "+":
-		return ADD
-	case "-":
-		return SUB
-	case "*":
-		return MUL
-	case "/":
-		return DIV
-	case "==":
-		return EQ
-	case "!=":
-		return NE
-	case ">":
-		return GT
-	case ">=":
-		return GE
-	case "<":
-		return LT
-	case "<=":
-		return LE
+func (c *compiler) addBinary(t *token.Token) {
+	switch t.Type {
+	case token.Plus:
+		c.add(bytecode.Add, 0)
+
+	case token.Minus:
+		c.add(bytecode.Sub, 0)
+
+	case token.Star:
+		c.add(bytecode.Mul, 0)
+
+	case token.Slash:
+		c.add(bytecode.Div, 0)
+
+	case token.Equal:
+		c.add(bytecode.Compare, 0)
+
+	case token.Less:
+		c.add(bytecode.Compare, 1)
+
+	case token.LessEqual:
+		c.add(bytecode.Compare, 2)
+
+	case token.Great:
+		c.add(bytecode.Compare, 3)
+
+	case token.GreatEqual:
+		c.add(bytecode.Compare, 4)
+
 	default:
 		panic("not a binary operator")
 	}

@@ -60,16 +60,16 @@ func (l *lexer) NextToken() *token.Token {
 		}
 
 	case '>':
-		kind = token.GreaterThan
+		kind = token.Great
 		if l.currentChar == '=' {
-			kind = token.GreaterOrEqualThan
+			kind = token.GreatEqual
 			l.nextChar()
 		}
 
 	case '<':
-		kind = token.LessThan
+		kind = token.Less
 		if l.currentChar == '=' {
-			kind = token.LessOrEqualThan
+			kind = token.LessEqual
 			l.nextChar()
 		}
 
