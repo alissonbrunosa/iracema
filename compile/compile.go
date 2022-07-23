@@ -237,7 +237,7 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) {
 
 	case *ast.UnaryExpr:
 		c.compileExpr(node.Expr, true)
-		c.add(bytecode.Not, 0)
+		c.addUnary(node.Operator)
 
 	case *ast.BinaryExpr:
 		c.compileExpr(node.Left, true)
@@ -286,6 +286,22 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) {
 
 	default:
 		return
+	}
+}
+
+func (c *compiler) addUnary(t *token.Token) {
+	switch t.Type {
+	case token.Plus:
+		c.add(bytecode.UnaryAdd, 0)
+
+	case token.Minus:
+		c.add(bytecode.UnarySub, 0)
+
+	case token.Not:
+		c.add(bytecode.UnaryNot, 0)
+
+	default:
+		panic("not a unary operator")
 	}
 }
 

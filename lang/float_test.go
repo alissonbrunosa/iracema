@@ -21,8 +21,8 @@ func Test_floatPlus(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := floatPlus(runtime, test.Left, test.Right)
-		eq(t, result, test.Expected)
+		result := floatAdd(runtime, test.Left, test.Right)
+		assertEqual(t, result, test.Expected)
 	}
 }
 
@@ -45,8 +45,8 @@ func Test_floatMinus(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := floatMinus(runtime, test.Left, test.Right)
-		eq(t, result, test.Expected)
+		result := floatSub(runtime, test.Left, test.Right)
+		assertEqual(t, result, test.Expected)
 	}
 }
 
@@ -70,7 +70,7 @@ func Test_floatMultiply(t *testing.T) {
 
 	for _, test := range tests {
 		result := floatMultiply(runtime, test.Left, test.Right)
-		eq(t, result, test.Expected)
+		assertEqual(t, result, test.Expected)
 	}
 }
 
@@ -99,29 +99,19 @@ func Test_floatEqual(t *testing.T) {
 
 	for _, test := range tests {
 		result := floatEqual(runtime, test.Left, test.Right)
-		eq(t, result, test.Expected)
+		assertEqual(t, result, test.Expected)
 	}
 }
 
-func Test_floatNegate(t *testing.T) {
-	tests := []struct {
-		Obj      IrObject
-		Expected IrObject
-	}{
-		{
-			Obj:      Float(2.0),
-			Expected: Float(-2.0),
-		},
-		{
-			Obj:      Float(-2),
-			Expected: Float(2.0),
-		},
-	}
+func Test_floatUnaryMinus(t *testing.T) {
+	result := floatUnarySub(runtime, Float(20.40))
+	assertEqual(t, result, Float(-20.40))
+}
 
-	for _, test := range tests {
-		result := floatNegate(runtime, test.Obj)
-		eq(t, result, test.Expected)
-	}
+func Test_floatUnaryPlus(t *testing.T) {
+	value := Float(20.40)
+	result := floatUnaryAdd(runtime, value)
+	assertEqual(t, result, value)
 }
 
 func Test_floatGreatThan(t *testing.T) {
@@ -149,7 +139,7 @@ func Test_floatGreatThan(t *testing.T) {
 
 	for _, test := range tests {
 		result := floatGreatThan(runtime, test.Left, test.Right)
-		eq(t, result, test.Expected)
+		assertEqual(t, result, test.Expected)
 	}
 }
 
@@ -178,11 +168,11 @@ func Test_floatLessThan(t *testing.T) {
 
 	for _, test := range tests {
 		result := floatLessThan(runtime, test.Left, test.Right)
-		eq(t, result, test.Expected)
+		assertEqual(t, result, test.Expected)
 	}
 }
 
 func Test_floatInspect(t *testing.T) {
 	result := floatInspect(runtime, Float(2.9010))
-	eq(t, result, NewString("2.901000"))
+	assertEqual(t, result, NewString("2.901000"))
 }

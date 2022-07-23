@@ -151,7 +151,7 @@ func TestCompile_SimpleExpr(t *testing.T) {
 				expect(bytecode.Push).withOperand(0).toHaveConstant(true),
 				expect(bytecode.SetLocal).withOperand(0),
 				expect(bytecode.GetLocal).withOperand(0),
-				expect(bytecode.Not),
+				expect(bytecode.UnaryNot),
 				expect(bytecode.SetLocal).withOperand(1),
 				expect(bytecode.PushNone),
 				expect(bytecode.Return),
@@ -853,5 +853,47 @@ func TestCompileArrayLit(t *testing.T) {
 	fun := compile("[1, 2]")
 	for i, instr := range fun.Instrs() {
 		top[i].Match(t, instr, fun.Constants())
+	}
+}
+
+func TestCompileUnaryOperator(t *testing.T) {
+	table := []struct {
+		code     string
+		matchers []Match
+	}{
+		{
+			code: "+10",
+			matchers: []Match{
+				expect(bytecode.Push).withOperand(0).toHaveConstant(10),
+				expect(bytecode.UnaryAdd),
+				expect(bytecode.PushNone),
+				expect(bytecode.Return),
+			},
+		},
+		{
+			code: "-10",
+			matchers: []Match{
+				expect(bytecode.Push).withOperand(0).toHaveConstant(10),
+				expect(bytecode.UnarySub),
+				expect(bytecode.PushNone),
+				expect(bytecode.Return),
+			},
+		},
+		{
+			code: "!10",
+			matchers: []Match{
+				expect(bytecode.Push).withOperand(0).toHaveConstant(10),
+				expect(bytecode.UnaryNot),
+				expect(bytecode.PushNone),
+				expect(bytecode.Return),
+			},
+		},
+	}
+
+	for _, test := range table {
+		fun := compile(test.code)
+		for i, instr := range fun.Instrs() {
+			test.matchers[i].Match(t, instr, fun.Constants())
+		}
 	}
 }
