@@ -4,30 +4,6 @@ import (
 	"testing"
 )
 
-func eq(t *testing.T, got IrObject, expected IrObject) {
-	t.Helper()
-
-	var result bool
-	var value IrObject
-	switch res := expected.(type) {
-	case Int:
-		result = res == got.(Int)
-	case Float:
-		result = res == got.(Float)
-	case *String:
-		result = string(res.Value) == string(got.(*String).Value)
-	case Bool:
-		result = res == got.(Bool)
-
-	default:
-		t.Fatalf("wrong type %T", res)
-	}
-
-	if !result {
-		t.Errorf("expected value to be %v, got %v", expected, value)
-	}
-}
-
 func Test_toInt(t *testing.T) {
 	var value IrObject = Int(1)
 
