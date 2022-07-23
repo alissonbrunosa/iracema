@@ -22,7 +22,7 @@ func _() {
 	_ = x[While-11]
 	_ = x[Else-12]
 	_ = x[Fun-13]
-	_ = x[Nil-14]
+	_ = x[None-14]
 	_ = x[Catch-15]
 	_ = x[Block-16]
 	_ = x[Object-17]
@@ -55,9 +55,9 @@ func _() {
 	_ = x[RightBrace-44]
 }
 
-const _Type_name = "IllegalEOFifisforswitchcasedefaultinstopnextwhileelsefunnilcatchblockobjectreturnIntFloatStringBool-+/*.:!->Comma===<<=>>=Ident()[]{}"
+const _Type_name = "IllegalEOFifisforswitchcasedefaultinstopnextwhileelsefunnonecatchblockobjectreturnIntFloatStringBool-+/*.:!->Comma===<<=>>=Ident()[]{}"
 
-var _Type_index = [...]uint8{0, 7, 10, 12, 14, 17, 23, 27, 34, 36, 40, 44, 49, 53, 56, 59, 64, 69, 75, 81, 84, 89, 95, 99, 100, 101, 102, 103, 104, 105, 106, 108, 113, 114, 116, 117, 119, 120, 122, 127, 128, 129, 130, 131, 132, 133}
+var _Type_index = [...]uint8{0, 7, 10, 12, 14, 17, 23, 27, 34, 36, 40, 44, 49, 53, 56, 60, 65, 70, 76, 82, 85, 90, 96, 100, 101, 102, 103, 104, 105, 106, 107, 109, 114, 115, 117, 118, 120, 121, 123, 128, 129, 130, 131, 132, 133, 134}
 
 func (i Type) String() string {
 	if i >= Type(len(_Type_index)-1) {

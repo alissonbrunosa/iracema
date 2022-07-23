@@ -49,9 +49,9 @@ func TestNextToken(t *testing.T) {
 			ExpectedType:    token.Bool,
 			ExpectedLiteral: "false",
 		},
-		"nil": {
-			Input:        bytes.NewBufferString("nil"),
-			ExpectedType: token.Nil,
+		"none": {
+			Input:        bytes.NewBufferString("none"),
+			ExpectedType: token.None,
 		},
 		"Assign": {
 			Input:        bytes.NewBufferString("="),
