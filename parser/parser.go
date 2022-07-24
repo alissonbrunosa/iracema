@@ -107,7 +107,8 @@ func (p *parser) parseStmt() ast.Stmt {
 	case
 		token.Ident, token.String, token.Bool, token.Int, token.Float,
 		token.LeftParenthesis, token.Not, token.Plus, token.Minus,
-		token.LeftBracket, token.LeftBrace, token.None, token.Block:
+		token.LeftBracket, token.LeftBrace, token.None, token.Block,
+		token.Super:
 		return p.parseSimpleStmt()
 
 	default:
@@ -296,25 +297,18 @@ func (p *parser) parseParameterList() (list []*ast.Ident) {
 }
 
 func (p *parser) parseSimpleStmt() ast.Stmt {
-	leftExpr := p.parseLeftExprList()
+	leftExpr := p.parseExprList()
 
 	switch p.tok.Type {
 	case token.Assign:
-		tok := p.tok
-		p.next()
-		rightExpr := p.parseRightExprList()
-		return &ast.AssignStmt{Left: leftExpr, Token: tok, Right: rightExpr}
+		return &ast.AssignStmt{
+			Left:  leftExpr,
+			Token: p.expect(token.Assign),
+			Right: p.parseExprList(),
+		}
 	}
 
 	return &ast.ExprStmt{Expr: leftExpr[0]}
-}
-
-func (p *parser) parseLeftExprList() []ast.Expr {
-	return p.parseExprList()
-}
-
-func (p *parser) parseRightExprList() []ast.Expr {
-	return p.parseExprList()
 }
 
 func (p *parser) parseExprList() (list []ast.Expr) {
@@ -403,6 +397,9 @@ func (p *parser) parseOperand() (expr ast.Expr) {
 
 	case token.LeftBrace:
 		expr = p.parseHashLit()
+
+	case token.Super:
+		expr = p.parseSuperExpr()
 
 	default:
 		p.addError(p.tok.Position, fmt.Sprintf("no parse implemented for (%q) just yet\n", p.tok.Type))
@@ -530,6 +527,14 @@ func (p *parser) parseIndexExpr(expr ast.Expr) ast.Expr {
 		LeftBracket:  p.expect(token.LeftBracket),
 		Index:        p.parseExpr(),
 		RightBracket: p.expect(token.RightBracket),
+	}
+}
+
+func (p *parser) parseSuperExpr() ast.Expr {
+	return &ast.SuperExpr{
+		Token:        p.expect(token.Super),
+		ExplicitArgs: p.at(token.LeftParenthesis),
+		Arguments:    p.parseArgumentList(),
 	}
 }
 
