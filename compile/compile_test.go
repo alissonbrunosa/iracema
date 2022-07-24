@@ -799,7 +799,76 @@ func TestCompileFunDecl(t *testing.T) {
 	}
 }
 
-func TestCompileFunDeclWithMultipleCatches(t *testing.T) {
+func TestCompileFunDecl_withCallSuperImplictArgs(t *testing.T) {
+	methMatches := []Match{
+		expect(bytecode.PushSelf),
+		expect(bytecode.GetLocal).toHaveOperand(0),
+		expect(bytecode.GetLocal).toHaveOperand(1),
+		expect(bytecode.CallSuper),
+		expect(bytecode.Pop),
+		expect(bytecode.PushNone),
+		expect(bytecode.Return),
+	}
+
+	top := []Match{
+		expect(bytecode.DefineFunction).toDefine("do_stuff", methMatches),
+		expect(bytecode.PushNone),
+		expect(bytecode.Return),
+	}
+
+	meth := compile("fun do_stuff(a, b) { super }")
+	for i, instr := range meth.Instrs() {
+		top[i].Match(t, instr, meth.Constants())
+	}
+}
+
+func TestCompileFunDecl_withCallSuperImplicitArgs(t *testing.T) {
+	methMatches := []Match{
+		expect(bytecode.PushSelf),
+		expect(bytecode.GetLocal).toHaveOperand(0),
+		expect(bytecode.GetLocal).toHaveOperand(1),
+		expect(bytecode.CallSuper),
+		expect(bytecode.Pop),
+		expect(bytecode.PushNone),
+		expect(bytecode.Return),
+	}
+
+	top := []Match{
+		expect(bytecode.DefineFunction).toDefine("do_stuff", methMatches),
+		expect(bytecode.PushNone),
+		expect(bytecode.Return),
+	}
+
+	meth := compile("fun do_stuff(a, b) { super }")
+	for i, instr := range meth.Instrs() {
+		top[i].Match(t, instr, meth.Constants())
+	}
+}
+
+func TestCompileFunDecl_withCallSuperExplicitArgs(t *testing.T) {
+	methMatches := []Match{
+		expect(bytecode.PushSelf),
+		expect(bytecode.GetLocal),
+		expect(bytecode.Push).withOperand(0).toHaveConstant(10),
+		expect(bytecode.CallSuper),
+		expect(bytecode.Pop),
+		expect(bytecode.PushNone),
+		expect(bytecode.Return),
+	}
+
+	top := []Match{
+		expect(bytecode.DefineFunction).toDefine("do_stuff", methMatches),
+		expect(bytecode.PushNone),
+		expect(bytecode.Return),
+	}
+
+	meth := compile("fun do_stuff(a, b) { super(a, 10) }")
+	for i, instr := range meth.Instrs() {
+		top[i].Match(t, instr, meth.Constants())
+	}
+}
+
+func TestCompileFunDecl_withMultipleCatches(t *testing.T) {
 	methMatches := []Match{
 		expect(bytecode.PushSelf),
 		expect(bytecode.CallMethod).withOperand(0).toBeMethodCall("explode", 0),

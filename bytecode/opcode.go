@@ -18,6 +18,7 @@ const (
 	MatchType             // MATCH_TYPE
 	BuildArray            // BUILD_ARRAY
 	CallMethod            // CALL_METHOD
+	CallSuper             // CALL_SUPER
 	SetConstant           // SET_CONSTANT
 	GetConstant           // GET_CONSTANT
 	DefineObject          // DEFINE_OBJECT

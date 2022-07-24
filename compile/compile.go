@@ -62,13 +62,14 @@ type instr struct {
 }
 
 type fragment struct {
-	name        string
-	argc        byte
-	consts      []lang.IrObject
-	locals      []*local
-	instrs      []*instr
-	jumps       []int
-	catchOffset int
+	name         string
+	argc         byte
+	consts       []lang.IrObject
+	paramIndices []byte
+	locals       []*local
+	instrs       []*instr
+	jumps        []int
+	catchOffset  int
 
 	control  *controlflow
 	block    *codeblock
@@ -301,6 +302,29 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) {
 			c.add(bytecode.Pop, 0)
 		}
 
+	case *ast.SuperExpr:
+		c.add(bytecode.PushSelf, 0)
+
+		var ci lang.IrObject
+		if node.ExplicitArgs {
+			ci = lang.NewCallInfo(c.name, byte(len(node.Arguments)))
+
+			for _, arg := range node.Arguments {
+				c.compileExpr(arg, true)
+			}
+		} else {
+			ci = lang.NewCallInfo(c.name, byte(len(c.paramIndices)))
+
+			for _, index := range c.paramIndices {
+				c.add(bytecode.GetLocal, index)
+			}
+		}
+
+		c.add(bytecode.CallSuper, c.addConstant(ci))
+		if !isEvaluated {
+			c.add(bytecode.Pop, 0)
+		}
+
 	default:
 		return
 	}
@@ -459,7 +483,8 @@ func (c *compiler) compileFunDecl(node *ast.FunDecl) *lang.Method {
 
 	c.argc = byte(len(node.Parameters))
 	for _, param := range node.Parameters {
-		c.defineLocal(param.Value, true)
+		p := c.defineLocal(param.Value, true)
+		c.paramIndices = append(c.paramIndices, p.index)
 	}
 
 	c.compileBlock(node.Body, true)

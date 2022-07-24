@@ -234,6 +234,54 @@ func (i *Interpreter) Dispatch() (lang.IrObject, error) {
 				os.Exit(1)
 			}
 
+		case bytecode.CallSuper:
+			if (i.frame.flags & IRMETHOD_FRAME) == 0 {
+				i.err = lang.NewError("Really?! Calling super outside of a method", lang.Error)
+				goto fail
+			}
+
+			info := constants[operand].(*lang.CallInfo)
+			recv := i.Top(info.Argc())
+			super := recv.Class().Super()
+			method := super.LookupMethod(info.Name())
+
+			if method == nil {
+				i.err = lang.NewError(
+					"no superclass of '%s' has method '%s'",
+					lang.NoMethodError,
+					recv.Class(),
+					info.Name(),
+				)
+				goto fail
+			}
+
+			switch m := method.Body().(type) {
+			case lang.Native:
+				args := i.PopN(info.Argc() + 1)
+
+				i.PushGoFrame(recv, method)
+				val := m.Invoke(i, recv, args...)
+				i.PopFrame()
+				if val != nil {
+					i.Push(val)
+					goto next_instr
+				}
+
+				goto fail
+
+			case []uint16:
+				if info.Argc() != method.Arity() {
+					i.err = lang.NewArityError(int(info.Argc()), int(method.Arity()))
+					goto fail
+				}
+
+				i.PushFrame(recv, method, IRMETHOD_FRAME)
+				goto start_frame
+			default:
+				fmt.Println("Damn! That's a bug!")
+				os.Exit(1)
+			}
+
 		default:
 			fmt.Printf("Instruction %s is not implemented yet\n", opcode)
 			os.Exit(1)

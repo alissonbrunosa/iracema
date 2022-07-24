@@ -228,6 +228,10 @@ func TestNextToken(t *testing.T) {
 			Input:        bytes.NewBufferString("default"),
 			ExpectedType: token.Default,
 		},
+		"super": {
+			Input:        bytes.NewBufferString("super"),
+			ExpectedType: token.Super,
+		},
 	}
 
 	for scenario, test := range tests {

@@ -95,9 +95,9 @@ func NewTypeError(mesg string) *ErrorObject {
 	}
 }
 
-func NewError(msg string, class *Class) *ErrorObject {
+func NewError(msg string, class *Class, args ...any) *ErrorObject {
 	return &ErrorObject{
-		message: msg,
+		message: fmt.Sprintf(msg, args...),
 		base:    &base{class: class},
 	}
 }

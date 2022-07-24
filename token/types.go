@@ -24,6 +24,7 @@ const (
 	Block   // block
 	Object  // object
 	Return  // return
+	Super   // super
 
 	Int    // Int
 	Float  // Float

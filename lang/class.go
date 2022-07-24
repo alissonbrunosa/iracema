@@ -75,6 +75,10 @@ func (c *Class) String() string {
 	return c.name
 }
 
+func (c *Class) Super() *Class {
+	return c.super
+}
+
 func NewClass(name string, super *Class) *Class {
 	return &Class{
 		name:    name,

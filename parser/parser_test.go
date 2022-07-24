@@ -599,3 +599,52 @@ func TestParseCodeBlock(t *testing.T) {
 		t.Errorf("expected block to have 0 stmts")
 	}
 }
+
+func Test_ParseSuperExpr(t *testing.T) {
+	table := []struct {
+		scenario string
+		code     string
+		testFun  func(expr *ast.SuperExpr)
+	}{
+		{
+			scenario: "without args",
+			code:     "super",
+			testFun: func(expr *ast.SuperExpr) {
+				if expr.ExplicitArgs {
+					t.Error("expected .ExplictArgs to be false")
+				}
+
+				if len(expr.Arguments) != 0 {
+					t.Errorf("expected .Arguments len to be 0, got %d", len(expr.Arguments))
+				}
+			},
+		},
+		{
+			scenario: "explict empty args",
+			code:     "super()",
+			testFun: func(expr *ast.SuperExpr) {
+				if !expr.ExplicitArgs {
+					t.Error("expected .ExplicitArgs to be true")
+				}
+
+				if len(expr.Arguments) != 0 {
+					t.Errorf("expected .Arguments len to be 0, got %d", len(expr.Arguments))
+				}
+			},
+		},
+	}
+
+	for _, test := range table {
+		t.Run(test.scenario, func(t *testing.T) {
+			stmts := setupTest(t, test.code, 1)
+
+			exprStmt := stmts[0].(*ast.ExprStmt)
+
+			super, ok := exprStmt.Expr.(*ast.SuperExpr)
+			if !ok {
+				t.Errorf("expected first stmt to be *ast.SuperExpr, got %T", exprStmt.Expr)
+			}
+			test.testFun(super)
+		})
+	}
+}

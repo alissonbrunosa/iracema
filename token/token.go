@@ -20,6 +20,7 @@ var keywords = map[string]Type{
 	"block":   Block,
 	"object":  Object,
 	"return":  Return,
+	"super":   Super,
 }
 
 const LowestPrecedence = 0

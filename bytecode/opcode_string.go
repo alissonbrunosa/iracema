@@ -21,19 +21,20 @@ func _() {
 	_ = x[MatchType-11]
 	_ = x[BuildArray-12]
 	_ = x[CallMethod-13]
-	_ = x[SetConstant-14]
-	_ = x[GetConstant-15]
-	_ = x[DefineObject-16]
-	_ = x[DefineFunction-17]
-	_ = x[Jump-18]
-	_ = x[JumpIfFalse-19]
-	_ = x[Iterate-20]
-	_ = x[NewIterator-21]
+	_ = x[CallSuper-14]
+	_ = x[SetConstant-15]
+	_ = x[GetConstant-16]
+	_ = x[DefineObject-17]
+	_ = x[DefineFunction-18]
+	_ = x[Jump-19]
+	_ = x[JumpIfFalse-20]
+	_ = x[Iterate-21]
+	_ = x[NewIterator-22]
 }
 
-const _Opcode_name = "POPPUSHTHROWRETURNPUSH_NONESET_ATTRGET_ATTRPUSH_SELFSET_LOCALGET_LOCALMATCH_TYPEBUILD_ARRAYCALL_METHODSET_CONSTANTGET_CONSTANTDEFINE_OBJECTDEFINE_FUNCTIONJUMPJUMP_IF_FALSEITERATENEWITERATOR"
+const _Opcode_name = "POPPUSHTHROWRETURNPUSH_NONESET_ATTRGET_ATTRPUSH_SELFSET_LOCALGET_LOCALMATCH_TYPEBUILD_ARRAYCALL_METHODCALL_SUPERSET_CONSTANTGET_CONSTANTDEFINE_OBJECTDEFINE_FUNCTIONJUMPJUMP_IF_FALSEITERATENEWITERATOR"
 
-var _Opcode_index = [...]uint8{0, 3, 7, 12, 18, 27, 35, 43, 52, 61, 70, 80, 91, 102, 114, 126, 139, 154, 158, 171, 178, 189}
+var _Opcode_index = [...]uint8{0, 3, 7, 12, 18, 27, 35, 43, 52, 61, 70, 80, 91, 102, 112, 124, 136, 149, 164, 168, 181, 188, 199}
 
 func (i Opcode) String() string {
 	i -= 1

@@ -327,3 +327,13 @@ type GroupExpr struct {
 }
 
 func (g *GroupExpr) String() string { return g.Expr.String() }
+
+type SuperExpr struct {
+	Token        *token.Token
+	Arguments    []Expr
+	ExplicitArgs bool
+
+	expr
+}
+
+func (*SuperExpr) String() string { return "SuperExpr" }
