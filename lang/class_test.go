@@ -156,3 +156,39 @@ func Test_Alloc_WhenSuperClassHasItDefined(t *testing.T) {
 		t.Error("expected super's alloc function to be called")
 	}
 }
+
+func Test_LookupMethod(t *testing.T) {
+	class := NewClass("ClassOne", nil)
+	class.AddGoMethod("method", zeroArgs(func(rt Runtime, recv IrObject) IrObject {
+		return nil
+	}))
+
+	method := class.LookupMethod("method")
+	if method == nil {
+		t.Error("expected not to be nil")
+	}
+}
+
+func Test_LookupMethod_WhenNotDefined(t *testing.T) {
+	class := NewClass("ClassOne", nil)
+
+	method := class.LookupMethod("method")
+	if method != nil {
+		t.Error("expected to be nil")
+	}
+}
+
+func Test_LookupMethod_WhenDefinedInSuper(t *testing.T) {
+	super := NewClass("Super", nil)
+	super.AddGoMethod(
+		"method",
+		zeroArgs(func(rt Runtime, recv IrObject) IrObject { return nil }),
+	)
+
+	class := NewClass("ClassOne", super)
+
+	method := class.LookupMethod("method")
+	if method == nil {
+		t.Error("expected not to be nil")
+	}
+}

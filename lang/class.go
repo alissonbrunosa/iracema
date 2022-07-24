@@ -53,6 +53,16 @@ func (c *Class) AddGoMethod(name string, body Native) {
 	c.methods[name] = NewGoMethod(name, body, arity)
 }
 
+func (c *Class) LookupMethod(name string) *Method {
+	for class := c; class != nil; class = class.super {
+		if method, ok := class.methods[name]; ok {
+			return method
+		}
+	}
+
+	return nil
+}
+
 func (c *Class) AddMethod(name string, fun *Method) {
 	c.methods[name] = fun
 }

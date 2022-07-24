@@ -181,3 +181,7 @@ func (Float) Is(class *Class) bool {
 func (Float) Class() *Class {
 	return FloatClass
 }
+
+func (f Float) String() string {
+	return fmt.Sprintf("%.2f", f)
+}

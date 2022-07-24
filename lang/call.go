@@ -1,7 +1,9 @@
 package lang
 
 func call(rt Runtime, recv IrObject, name string, args ...IrObject) IrObject {
-	method := recv.LookupMethod(name)
+	class := recv.Class()
+
+	method := class.LookupMethod(name)
 	if method == nil {
 		rt.SetError(NewNoMethodError(recv, name))
 		return nil
@@ -11,7 +13,9 @@ func call(rt Runtime, recv IrObject, name string, args ...IrObject) IrObject {
 }
 
 func safeCall(rt Runtime, recv IrObject, name string, args ...IrObject) IrObject {
-	method := recv.LookupMethod(name)
+	class := recv.Class()
+
+	method := class.LookupMethod(name)
 	if method == nil {
 		return nil
 	}

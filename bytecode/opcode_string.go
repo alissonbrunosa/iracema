@@ -11,37 +11,29 @@ func _() {
 	_ = x[Pop-1]
 	_ = x[Push-2]
 	_ = x[Throw-3]
-	_ = x[Add-4]
-	_ = x[Sub-5]
-	_ = x[Mul-6]
-	_ = x[Div-7]
-	_ = x[UnaryNot-8]
-	_ = x[UnaryAdd-9]
-	_ = x[UnarySub-10]
-	_ = x[Compare-11]
-	_ = x[Return-12]
-	_ = x[PushNone-13]
-	_ = x[SetAttr-14]
-	_ = x[GetAttr-15]
-	_ = x[PushSelf-16]
-	_ = x[SetLocal-17]
-	_ = x[GetLocal-18]
-	_ = x[MatchType-19]
-	_ = x[BuildArray-20]
-	_ = x[CallMethod-21]
-	_ = x[SetConstant-22]
-	_ = x[GetConstant-23]
-	_ = x[DefineObject-24]
-	_ = x[DefineFunction-25]
-	_ = x[Jump-26]
-	_ = x[JumpIfFalse-27]
-	_ = x[Iterate-28]
-	_ = x[NewIterator-29]
+	_ = x[Return-4]
+	_ = x[PushNone-5]
+	_ = x[SetAttr-6]
+	_ = x[GetAttr-7]
+	_ = x[PushSelf-8]
+	_ = x[SetLocal-9]
+	_ = x[GetLocal-10]
+	_ = x[MatchType-11]
+	_ = x[BuildArray-12]
+	_ = x[CallMethod-13]
+	_ = x[SetConstant-14]
+	_ = x[GetConstant-15]
+	_ = x[DefineObject-16]
+	_ = x[DefineFunction-17]
+	_ = x[Jump-18]
+	_ = x[JumpIfFalse-19]
+	_ = x[Iterate-20]
+	_ = x[NewIterator-21]
 }
 
-const _Opcode_name = "POPPUSHTHROWADDSUBMULDIVUNARY_NOTUNARY_ADDUNARY_SUBCOMPARERETURNPUSH_NONESET_ATTRGET_ATTRPUSH_SELFSET_LOCALGET_LOCALMATCH_TYPEBUILD_ARRAYCALL_METHODSET_CONSTANTGET_CONSTANTDEFINE_OBJECTDEFINE_FUNCTIONJUMPJUMP_IF_FALSEITERATENEWITERATOR"
+const _Opcode_name = "POPPUSHTHROWRETURNPUSH_NONESET_ATTRGET_ATTRPUSH_SELFSET_LOCALGET_LOCALMATCH_TYPEBUILD_ARRAYCALL_METHODSET_CONSTANTGET_CONSTANTDEFINE_OBJECTDEFINE_FUNCTIONJUMPJUMP_IF_FALSEITERATENEWITERATOR"
 
-var _Opcode_index = [...]uint8{0, 3, 7, 12, 15, 18, 21, 24, 33, 42, 51, 58, 64, 73, 81, 89, 98, 107, 116, 126, 137, 148, 160, 172, 185, 200, 204, 217, 224, 235}
+var _Opcode_index = [...]uint8{0, 3, 7, 12, 18, 27, 35, 43, 52, 61, 70, 80, 91, 102, 114, 126, 139, 154, 158, 171, 178, 189}
 
 func (i Opcode) String() string {
 	i -= 1

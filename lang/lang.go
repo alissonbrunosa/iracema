@@ -56,7 +56,6 @@ func DefineType(name string, class *Class) {
 type IrObject interface {
 	Class() *Class
 	Is(*Class) bool
-	LookupMethod(methodName string) *Method
 }
 
 type Runtime interface {

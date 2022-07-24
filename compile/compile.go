@@ -9,6 +9,24 @@ import (
 	"strconv"
 )
 
+var unaryOps = map[token.Type]string{
+	token.Plus:  "uadd",
+	token.Minus: "usub",
+	token.Not:   "unot",
+}
+
+var binaryOps = map[token.Type]string{
+	token.Plus:       "+",
+	token.Minus:      "-",
+	token.Star:       "*",
+	token.Slash:      "/",
+	token.Equal:      "==",
+	token.Less:       "<",
+	token.LessEqual:  "<=",
+	token.Great:      ">",
+	token.GreatEqual: ">=",
+}
+
 const (
 	FOR_LOOP   = 1
 	WHILE_LOOP = 2
@@ -289,53 +307,13 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) {
 }
 
 func (c *compiler) addUnary(t *token.Token) {
-	switch t.Type {
-	case token.Plus:
-		c.add(bytecode.UnaryAdd, 0)
-
-	case token.Minus:
-		c.add(bytecode.UnarySub, 0)
-
-	case token.Not:
-		c.add(bytecode.UnaryNot, 0)
-
-	default:
-		panic("not a unary operator")
-	}
+	ci := lang.NewCallInfo(unaryOps[t.Type], 0)
+	c.add(bytecode.CallMethod, c.addConstant(ci))
 }
 
 func (c *compiler) addBinary(t *token.Token) {
-	switch t.Type {
-	case token.Plus:
-		c.add(bytecode.Add, 0)
-
-	case token.Minus:
-		c.add(bytecode.Sub, 0)
-
-	case token.Star:
-		c.add(bytecode.Mul, 0)
-
-	case token.Slash:
-		c.add(bytecode.Div, 0)
-
-	case token.Equal:
-		c.add(bytecode.Compare, 0)
-
-	case token.Less:
-		c.add(bytecode.Compare, 1)
-
-	case token.LessEqual:
-		c.add(bytecode.Compare, 2)
-
-	case token.Great:
-		c.add(bytecode.Compare, 3)
-
-	case token.GreatEqual:
-		c.add(bytecode.Compare, 4)
-
-	default:
-		panic("not a binary operator")
-	}
+	ci := lang.NewCallInfo(binaryOps[t.Type], 1)
+	c.add(bytecode.CallMethod, c.addConstant(ci))
 }
 
 func (c *compiler) compileBlock(block *ast.BlockStmt, addReturn bool) {

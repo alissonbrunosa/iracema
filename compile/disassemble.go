@@ -44,8 +44,6 @@ func (c *compiler) Disassemble(file *ast.File) {
 			case bytecode.DefineObject:
 				m := fragment.consts[ins.operand].(*lang.Method)
 				fmt.Fprintf(w, "%-30s%s\n", ins.opcode, m.Name())
-			case bytecode.Compare:
-				fmt.Fprintf(w, "%-30soperator: %q\n", ins.opcode, compareOps[ins.operand])
 			default:
 				fmt.Fprintln(w, ins.opcode)
 			}

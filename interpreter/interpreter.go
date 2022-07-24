@@ -7,19 +7,6 @@ import (
 	"os"
 )
 
-var unaryOps = map[bytecode.Opcode]string{
-	bytecode.UnaryAdd: "uadd",
-	bytecode.UnarySub: "usub",
-	bytecode.UnaryNot: "unot",
-}
-
-var binaryOps = map[bytecode.Opcode]string{
-	bytecode.Add: "+",
-	bytecode.Sub: "-",
-	bytecode.Mul: "*",
-	bytecode.Div: "/",
-}
-
 var compareOps = map[byte]string{
 	0: "==",
 	1: ">",
@@ -114,47 +101,6 @@ func (i *Interpreter) Dispatch() (lang.IrObject, error) {
 				i.JumpTo(operand)
 			}
 			goto next_instr
-
-		case bytecode.Compare:
-			rhs := i.Pop()
-			lhs := i.Pop()
-
-			opname := compareOps[operand]
-			if method := lhs.LookupMethod(opname); method != nil {
-				val := i.Call(lhs, method, rhs)
-				i.Push(val)
-				goto next_instr
-			}
-
-			i.err = lang.NewNoMethodError(lhs, opname)
-			goto fail
-
-		case bytecode.Add, bytecode.Sub, bytecode.Mul, bytecode.Div:
-			rhs := i.Pop()
-			lhs := i.Pop()
-
-			opname := binaryOps[opcode]
-			if method := lhs.LookupMethod(opname); method != nil {
-				val := i.Call(lhs, method, rhs)
-				i.Push(val)
-				goto next_instr
-			}
-
-			i.err = lang.NewNoMethodError(lhs, opname)
-			goto fail
-
-		case bytecode.UnaryNot, bytecode.UnaryAdd, bytecode.UnarySub:
-			recv := i.Pop()
-
-			opname := unaryOps[opcode]
-			if method := recv.LookupMethod(opname); method != nil {
-				val := i.Call(recv, method)
-				i.Push(val)
-				goto next_instr
-			}
-
-			i.err = lang.NewNoMethodError(recv, opname)
-			goto fail
 
 		case bytecode.BuildArray:
 			elements := i.PopN(operand)
@@ -251,43 +197,46 @@ func (i *Interpreter) Dispatch() (lang.IrObject, error) {
 			goto next_instr
 
 		case bytecode.CallMethod:
-			ci := constants[operand].(*lang.CallInfo)
-			recv := i.Top(ci.Argc())
+			info := constants[operand].(*lang.CallInfo)
+			recv := i.Top(info.Argc())
+			class := recv.Class()
+			method := class.LookupMethod(info.Name())
 
-			meth := recv.LookupMethod(ci.Name())
-
-			if meth == nil {
-				err := lang.NewNoMethodError(recv, ci.Name())
-				i.SetError(err)
+			if method == nil {
+				i.err = lang.NewNoMethodError(recv, info.Name())
 				goto fail
 			}
 
-			switch m := meth.Body().(type) {
+			switch m := method.Body().(type) {
 			case lang.Native:
-				args := i.PopN(ci.Argc() + 1) // +1 recv
-				i.PushGoFrame(recv, meth)
+				args := i.PopN(info.Argc() + 1) // +1 recv
+
+				i.PushGoFrame(recv, method)
 				val := m.Invoke(i, recv, args[1:]...)
-				if val == nil {
-					goto fail
+				i.PopFrame()
+				if val != nil {
+					i.Push(val)
+					goto next_instr
 				}
 
-				i.PopFrame()
-				i.Push(val)
-				goto next_instr
+				goto fail
 
 			case []uint16:
-				if ci.Argc() != meth.Arity() {
-					i.err = lang.NewArityError(int(ci.Argc()), int(meth.Arity()))
+				if info.Argc() != method.Arity() {
+					i.err = lang.NewArityError(int(info.Argc()), int(method.Arity()))
 					goto fail
 				}
 
-				i.PushFrame(recv, meth, IRMETHOD_FRAME)
+				i.PushFrame(recv, method, IRMETHOD_FRAME)
 				goto start_frame
+			default:
+				fmt.Println("Damn! That's a bug!")
+				os.Exit(1)
 			}
 
 		default:
-			panic(opcode.String())
-
+			fmt.Printf("Instruction %s is not implemented yet\n", opcode)
+			os.Exit(1)
 		}
 
 	fail:
@@ -346,7 +295,7 @@ func (i *Interpreter) Call(recv lang.IrObject, meth *lang.Method, args ...lang.I
 		i.PushGoFrame(recv, meth)
 		val := m.Invoke(i, recv, args...)
 		if val == nil {
-			panic(i.err)
+			return nil
 		}
 
 		i.PopFrame()
@@ -355,7 +304,7 @@ func (i *Interpreter) Call(recv lang.IrObject, meth *lang.Method, args ...lang.I
 	case []uint16:
 		if byte(len(args)) != meth.Arity() {
 			i.err = lang.NewArityError(len(args), int(meth.Arity()))
-			panic(i.err)
+			return nil
 		}
 
 		i.Push(recv)
@@ -366,11 +315,13 @@ func (i *Interpreter) Call(recv lang.IrObject, meth *lang.Method, args ...lang.I
 		i.PushFrame(recv, meth, SINGLE_FRAME|IRMETHOD_FRAME)
 		ret, err := i.Dispatch()
 		if err != nil {
-			panic("ERROR" + err.Error())
+			i.err = lang.NewError("unkown error:", lang.Error)
+			return nil
 		}
 
 		return ret
 	}
 
+	i.err = lang.NewError("invalid method type", lang.Error)
 	return nil
 }
