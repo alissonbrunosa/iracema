@@ -404,20 +404,7 @@ func TestFunDecl(t *testing.T) {
 	for _, test := range tests {
 		stmts := setupTest(t, test.Code, 1)
 
-		funDecl, ok := stmts[0].(*ast.FunDecl)
-		if !ok {
-			t.Fatalf("expected first stmt to be *ast.FunDecl, got %T", stmts[0])
-		}
-
-		testIdent(t, funDecl.Name, test.ExpectedName)
-
-		if len(funDecl.Parameters) != len(test.ExpectedParams) {
-			t.Fatalf("expected %d params, got %d", len(test.ExpectedParams), len(funDecl.Parameters))
-		}
-
-		for i, param := range funDecl.Parameters {
-			testIdent(t, param, test.ExpectedParams[i])
-		}
+		assertFunDecl(t, stmts[0], test.ExpectedName, test.ExpectedParams...)
 	}
 }
 
@@ -442,10 +429,7 @@ func TestFunDeclWithCatch(t *testing.T) {
 	for _, test := range tests {
 		stmts := setupTest(t, test.Code, 1)
 
-		funDecl, ok := stmts[0].(*ast.FunDecl)
-		if !ok {
-			t.Fatalf("expected first stmt to be *ast.FunDecl, got %T", stmts[0])
-		}
+		funDecl := assertFunDecl(t, stmts[0], "walk")
 
 		for i, catch := range funDecl.Catches {
 			testIdent(t, catch.Ref, test.ExpectedRef)
@@ -491,29 +475,6 @@ func TestUnaryExpr(t *testing.T) {
 		}
 
 		testLit(t, expr.Expr, test.ExpectedValue)
-	}
-}
-
-func TestParseReturnStmt(t *testing.T) {
-	tests := []struct {
-		Code         string
-		ExpectedExpr string
-	}{
-		{
-			Code:         "return true",
-			ExpectedExpr: "true",
-		},
-	}
-
-	for _, test := range tests {
-		stmts := setupTest(t, test.Code, 1)
-
-		returnStmt, ok := stmts[0].(*ast.ReturnStmt)
-		if !ok {
-			t.Errorf("expected first stmt to be *ast.ReturnStmt, got %T", stmts[0])
-		}
-
-		testLit(t, returnStmt.Expr, "true")
 	}
 }
 
@@ -667,4 +628,32 @@ func TestParse_withStmtsInTheSameLine(t *testing.T) {
 
 	testIdent(t, second.Left[0], "b")
 	testLit(t, second.Right[0], "20")
+}
+
+func TestParseReturnStmt(t *testing.T) {
+	stmts := setupTest(t, "fun do_stuff { return 10 }", 1)
+
+	funDecl := assertFunDecl(t, stmts[0], "do_stuff")
+
+	returnStmt, ok := funDecl.Body.Stmts[0].(*ast.ReturnStmt)
+	if !ok {
+		t.Errorf("expected first stmt to be *ast.ReturnStmt, got %T", stmts[0])
+	}
+
+	testLit(t, returnStmt.Value, "10")
+}
+
+func TestParseReturnStmt_withoutValue(t *testing.T) {
+	stmts := setupTest(t, "fun do_stuff { return }", 1)
+
+	funDecl := assertFunDecl(t, stmts[0], "do_stuff")
+
+	returnStmt, ok := funDecl.Body.Stmts[0].(*ast.ReturnStmt)
+	if !ok {
+		t.Errorf("expected first stmt to be *ast.ReturnStmt, got %T", stmts[0])
+	}
+
+	if returnStmt.Value != nil {
+		t.Errorf("expected .Value to be nil, got %T", returnStmt.Value)
+	}
 }

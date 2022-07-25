@@ -108,3 +108,24 @@ func testLit(t *testing.T, expr ast.Expr, expectedValue string) {
 		t.Errorf("expected *ast.BasicLit.Value to be %q, got %q", expectedValue, lit.Value)
 	}
 }
+
+func assertFunDecl(t *testing.T, stmt ast.Stmt, name string, params ...string) *ast.FunDecl {
+	t.Helper()
+
+	funDecl, ok := stmt.(*ast.FunDecl)
+	if !ok {
+		t.Fatalf("expected first stmt to be *ast.FunDecl, got %T", stmt)
+	}
+
+	testIdent(t, funDecl.Name, name)
+
+	if len(funDecl.Parameters) != len(params) {
+		t.Fatalf("FunDecl params size is %d, given %d", len(funDecl.Parameters), len(params))
+	}
+
+	for i, got := range funDecl.Parameters {
+		testIdent(t, got, params[i])
+	}
+
+	return funDecl
+}

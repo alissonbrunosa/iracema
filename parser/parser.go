@@ -278,10 +278,14 @@ func (p *parser) parseNextStmt() ast.Stmt {
 }
 
 func (p *parser) parseReturnStmt() ast.Stmt {
-	return &ast.ReturnStmt{
-		Token: p.expect(token.Return),
-		Expr:  p.parseExpr(),
+	retToken := p.expect(token.Return)
+
+	var value ast.Expr
+	if p.tok.Type != token.NewLine && p.tok.Type != token.RightBrace {
+		value = p.parseExpr()
 	}
+
+	return &ast.ReturnStmt{Token: retToken, Value: value}
 }
 
 func (p *parser) parseParameterList() (list []*ast.Ident) {

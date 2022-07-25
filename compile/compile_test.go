@@ -966,3 +966,40 @@ func TestCompileUnaryOperator(t *testing.T) {
 		}
 	}
 }
+
+func TestCompileReturnStmt(t *testing.T) {
+	methMatches := []Match{
+		expect(bytecode.Push).withOperand(0).toHaveConstant(10),
+		expect(bytecode.Return),
+	}
+
+	top := []Match{
+		expect(bytecode.DefineFunction).toDefine("do_stuff", methMatches),
+		expect(bytecode.PushNone),
+		expect(bytecode.Return),
+	}
+
+	meth := compile("fun do_stuff { return 10 }")
+	for i, instr := range meth.Instrs() {
+		top[i].Match(t, instr, meth.Constants())
+	}
+
+}
+
+func TestCompileReturnStmt_withoutValue(t *testing.T) {
+	methMatches := []Match{
+		expect(bytecode.PushNone),
+		expect(bytecode.Return),
+	}
+
+	top := []Match{
+		expect(bytecode.DefineFunction).toDefine("do_stuff", methMatches),
+		expect(bytecode.PushNone),
+		expect(bytecode.Return),
+	}
+
+	meth := compile("fun do_stuff { return }")
+	for i, instr := range meth.Instrs() {
+		top[i].Match(t, instr, meth.Constants())
+	}
+}
