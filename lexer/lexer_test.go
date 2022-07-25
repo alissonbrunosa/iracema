@@ -341,3 +341,72 @@ func TestStringError(t *testing.T) {
 		})
 	}
 }
+
+func TestSkipComment(t *testing.T) {
+	table := []struct {
+		scenario      string
+		source        string
+		expectedToken []token.Type
+	}{
+		{
+			scenario:      "same line comment",
+			source:        "a = 10 # assing",
+			expectedToken: []token.Type{token.Ident, token.Assign, token.Int, token.Eof},
+		},
+		{
+			scenario: "when line above has a comment",
+			source:   "# top\na = 10 + 10",
+			expectedToken: []token.Type{
+				token.Ident,
+				token.Assign,
+				token.Int,
+				token.Plus,
+				token.Int,
+				token.Eof,
+			},
+		},
+		{
+			scenario: "when line below has a comment",
+			source:   "a = 2 * (10 + 10)\n# bottom",
+			expectedToken: []token.Type{
+				token.Ident,
+				token.Assign,
+				token.Int,
+				token.Star,
+				token.LeftParenthesis,
+				token.Int,
+				token.Plus,
+				token.Int,
+				token.RightParenthesis,
+				token.NewLine,
+				token.Eof,
+			},
+		},
+		{
+			scenario: "surrounded by comments",
+			source:   "# top comment\na = 10 # same line\n# bottom comment",
+			expectedToken: []token.Type{
+				token.Ident,
+				token.Assign,
+				token.Int,
+				token.NewLine,
+				token.Eof,
+			},
+		},
+	}
+
+	for _, test := range table {
+		t.Run(test.scenario, func(t *testing.T) {
+			input := bytes.NewBufferString(test.source)
+			l := New(input, nil)
+
+			for i, want := range test.expectedToken {
+				got := l.NextToken()
+
+				if got.Type != want {
+					t.Errorf("expected  token at %d position to be %s, got %s", i, want, got.Type)
+				}
+			}
+		})
+	}
+}

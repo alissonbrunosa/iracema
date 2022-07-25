@@ -159,9 +159,19 @@ func (l *lexer) skipWhitespace() {
 
 			l.advance()
 
+		case '#':
+			l.skipComment()
+			continue
 		default:
 			return
 		}
+	}
+}
+
+func (l *lexer) skipComment() {
+	l.advance()
+	for l.char > 0 && l.char != '\n' {
+		l.advance()
 	}
 }
 
