@@ -177,7 +177,7 @@ func (e *ExprStmt) String() string {
 
 type ReturnStmt struct {
 	Token *token.Token
-	Expr  Expr
+	Value Expr
 
 	stmt
 }
@@ -185,7 +185,7 @@ type ReturnStmt struct {
 func (r *ReturnStmt) String() string {
 	var buf strings.Builder
 	buf.WriteString("return ")
-	buf.WriteString(r.Expr.String())
+	buf.WriteString(r.Value.String())
 
 	return buf.String()
 }

@@ -207,10 +207,7 @@ func (c *compiler) compileStmt(stmt ast.Stmt) {
 		c.compileBlock(node, false)
 
 	case *ast.ReturnStmt:
-		c.rewindControlFlow(false)
-		c.compileExpr(node.Expr, true)
-		c.add(bytecode.Return, 0)
-		c.block.hasReturn = true
+		c.compileReturnStmt(node)
 
 	case *ast.StopStmt:
 		c.compileStopStmt(node)
@@ -593,7 +590,12 @@ func (c *compiler) rewindControlFlow(inLoop bool) {
 func (c *compiler) compileReturnStmt(ret *ast.ReturnStmt) {
 	c.rewindControlFlow(false)
 
-	c.compileExpr(ret.Expr, true)
+	if ret.Value != nil {
+		c.compileExpr(ret.Value, true)
+	} else {
+		c.add(bytecode.PushNone, 0)
+	}
+
 	c.add(bytecode.Return, 0)
 	c.block.hasReturn = true
 }
