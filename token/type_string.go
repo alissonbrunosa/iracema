@@ -38,27 +38,28 @@ func _() {
 	_ = x[Star-27]
 	_ = x[Dot-28]
 	_ = x[Colon-29]
-	_ = x[Not-30]
-	_ = x[Arrow-31]
-	_ = x[Comma-32]
-	_ = x[Assign-33]
-	_ = x[Equal-34]
-	_ = x[Less-35]
-	_ = x[LessEqual-36]
-	_ = x[Great-37]
-	_ = x[GreatEqual-38]
-	_ = x[Ident-39]
-	_ = x[LeftParenthesis-40]
-	_ = x[RightParenthesis-41]
-	_ = x[LeftBracket-42]
-	_ = x[RightBracket-43]
-	_ = x[LeftBrace-44]
-	_ = x[RightBrace-45]
+	_ = x[NewLine-30]
+	_ = x[Not-31]
+	_ = x[Arrow-32]
+	_ = x[Comma-33]
+	_ = x[Assign-34]
+	_ = x[Equal-35]
+	_ = x[Less-36]
+	_ = x[LessEqual-37]
+	_ = x[Great-38]
+	_ = x[GreatEqual-39]
+	_ = x[Ident-40]
+	_ = x[LeftParenthesis-41]
+	_ = x[RightParenthesis-42]
+	_ = x[LeftBracket-43]
+	_ = x[RightBracket-44]
+	_ = x[LeftBrace-45]
+	_ = x[RightBrace-46]
 }
 
-const _Type_name = "IllegalEOFifisforswitchcasedefaultinstopnextwhileelsefunnonecatchblockobjectreturnsuperIntFloatStringBool-+/*.:!->Comma===<<=>>=Ident()[]{}"
+const _Type_name = "IllegalEOFifisforswitchcasedefaultinstopnextwhileelsefunnonecatchblockobjectreturnsuperIntFloatStringBool-+/*.:\\n!->Comma===<<=>>=Ident()[]{}"
 
-var _Type_index = [...]uint8{0, 7, 10, 12, 14, 17, 23, 27, 34, 36, 40, 44, 49, 53, 56, 60, 65, 70, 76, 82, 87, 90, 95, 101, 105, 106, 107, 108, 109, 110, 111, 112, 114, 119, 120, 122, 123, 125, 126, 128, 133, 134, 135, 136, 137, 138, 139}
+var _Type_index = [...]uint8{0, 7, 10, 12, 14, 17, 23, 27, 34, 36, 40, 44, 49, 53, 56, 60, 65, 70, 76, 82, 87, 90, 95, 101, 105, 106, 107, 108, 109, 110, 111, 113, 114, 116, 121, 122, 124, 125, 127, 128, 130, 135, 136, 137, 138, 139, 140, 141}
 
 func (i Type) String() string {
 	if i >= Type(len(_Type_index)-1) {

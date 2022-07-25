@@ -626,7 +626,7 @@ func TestCompileSwitchStmt(t *testing.T) {
 		},
 		{
 			Scenario: "compile switch stmt multiple cases",
-			Code:     "switch 10 { case 10: puts(10) case 20: puts(20) }",
+			Code:     "switch 10 { case 10: puts(10); case 20: puts(20) }",
 			Matches: []Match{
 				expect(bytecode.Push).toHaveOperand(0).toHaveConstant(10),
 				expect(bytecode.Push).toHaveOperand(1).toHaveConstant(10),
@@ -651,7 +651,7 @@ func TestCompileSwitchStmt(t *testing.T) {
 		},
 		{
 			Scenario: "compile switch stmt full",
-			Code:     `switch 10 { case 10: puts(10) case 20: puts(20) default: puts("default") }`,
+			Code:     `switch 10 { case 10: puts(10); case 20: puts(20); default: puts("default") }`,
 			Matches: []Match{
 				expect(bytecode.Push).toHaveOperand(0).toHaveConstant(10),
 				expect(bytecode.Push).toHaveOperand(1).toHaveConstant(10),

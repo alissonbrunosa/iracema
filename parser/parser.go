@@ -21,9 +21,20 @@ func (p *parser) init(source io.Reader) {
 }
 
 func (p *parser) parse() *ast.File {
-	return &ast.File{
-		Stmts: p.parseStmtList(),
+	var stmts []ast.Stmt
+
+	for p.tok.Type != token.Eof && p.tok.Type != token.RightBrace && p.tok.Type != token.Case && p.tok.Type != token.Default {
+		stmts = append(stmts, p.parseStmt())
+
+		if !p.consume(token.NewLine) && p.tok.Type != token.Eof {
+			err := fmt.Sprintf("unexpected %s, expecting EOF or new line", p.tok)
+			p.addError(p.tok.Position, err)
+			p.advance(startStmt)
+			continue
+		}
 	}
+
+	return &ast.File{Stmts: stmts}
 }
 
 func isLit(stmt ast.Stmt) bool {
@@ -38,12 +49,15 @@ func isLit(stmt ast.Stmt) bool {
 
 func (p *parser) parseStmtList() (list []ast.Stmt) {
 	for p.tok.Type != token.Eof && p.tok.Type != token.RightBrace && p.tok.Type != token.Case && p.tok.Type != token.Default {
-		if len(list) != 0 && isLit(list[0]) {
-			list[0] = p.parseStmt()
+		list = append(list, p.parseStmt())
+
+		if !p.consume(token.NewLine) && p.tok.Type != token.RightBrace {
+			err := fmt.Sprintf("unexpected %s, expecting } or new line", p.tok)
+			p.addError(p.tok.Position, err)
+			p.advance(startStmt)
 			continue
 		}
 
-		list = append(list, p.parseStmt())
 	}
 
 	return
