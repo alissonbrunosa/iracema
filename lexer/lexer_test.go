@@ -232,6 +232,10 @@ func TestNextToken(t *testing.T) {
 			Input:        bytes.NewBufferString("super"),
 			ExpectedType: token.Super,
 		},
+		"Semicolon is new line": {
+			Input:        bytes.NewBufferString(";"),
+			ExpectedType: token.NewLine,
+		},
 	}
 
 	for scenario, test := range tests {
@@ -267,6 +271,7 @@ b = "str"
 		{Line: 2, Column: 1, Kind: token.Ident},
 		{Line: 2, Column: 3, Kind: token.Assign},
 		{Line: 2, Column: 5, Kind: token.Int},
+		{Line: 2, Column: 7, Kind: token.NewLine},
 		{Line: 3, Column: 1, Kind: token.Ident},
 		{Line: 3, Column: 3, Kind: token.Assign},
 		{Line: 3, Column: 5, Kind: token.String},

@@ -36,10 +36,11 @@ const (
 	Slash // /
 	Star  // *
 
-	Dot   // .
-	Colon // :
-	Not   // !
-	Arrow // ->
+	Dot     // .
+	Colon   // :
+	NewLine // \n
+	Not     // !
+	Arrow   // ->
 	Comma
 	Assign           // =
 	Equal            // ==

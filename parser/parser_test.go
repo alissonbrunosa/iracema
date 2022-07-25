@@ -648,3 +648,23 @@ func Test_ParseSuperExpr(t *testing.T) {
 		})
 	}
 }
+
+func TestParse_withStmtsInTheSameLine(t *testing.T) {
+	stmts := setupTest(t, "a = 10; b = 20", 2)
+
+	first, ok := stmts[0].(*ast.AssignStmt)
+	if !ok {
+		t.Fatalf("expected ast.AssignStmt, got %T", stmts[0])
+	}
+
+	testIdent(t, first.Left[0], "a")
+	testLit(t, first.Right[0], "10")
+
+	second, ok := stmts[1].(*ast.AssignStmt)
+	if !ok {
+		t.Fatalf("expected ast.AssignStmt, got %T", stmts[1])
+	}
+
+	testIdent(t, second.Left[0], "b")
+	testLit(t, second.Right[0], "20")
+}
