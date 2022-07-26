@@ -32,7 +32,7 @@ func setupTest(t *testing.T, code string, expectStmts int) []ast.Stmt {
 	}
 
 	if file == nil {
-		t.Error("expected not to be nil")
+		t.Fatalf("expected not to be nil")
 	}
 
 	if len(file.Stmts) != expectStmts {

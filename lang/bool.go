@@ -26,7 +26,7 @@ func InitBool() {
 }
 
 /*
-Represets boolean object
+Represents boolean object
 */
 type Bool bool
 
@@ -45,8 +45,8 @@ func (Bool) LookupMethod(name string) *Method {
 }
 
 func (Bool) Is(class *Class) bool {
-	for class := BoolClass; class != nil; class = class.super {
-		if class == class {
+	for cls := BoolClass; cls != nil; cls = cls.super {
+		if cls == class {
 			return true
 		}
 	}

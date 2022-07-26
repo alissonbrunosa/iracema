@@ -234,7 +234,7 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) {
 		}
 
 		if local := c.resolve(node.Value); local != nil {
-			if local.initialized == false {
+			if !local.initialized {
 				panic("underfined " + local.name)
 			}
 

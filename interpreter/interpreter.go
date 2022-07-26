@@ -7,14 +7,6 @@ import (
 	"os"
 )
 
-var compareOps = map[byte]string{
-	0: "==",
-	1: ">",
-	2: ">=",
-	3: "<",
-	4: "<=",
-}
-
 type Interpreter struct {
 	*frame
 

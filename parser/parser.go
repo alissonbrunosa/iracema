@@ -17,7 +17,7 @@ type parser struct {
 
 func (p *parser) init(source io.Reader) {
 	p.lexer = lexer.New(source, p.addError)
-	p.next()
+	p.advance()
 }
 
 func (p *parser) parse() *ast.File {
@@ -29,22 +29,12 @@ func (p *parser) parse() *ast.File {
 		if !p.consume(token.NewLine) && p.tok.Type != token.Eof {
 			err := fmt.Sprintf("unexpected %s, expecting EOF or new line", p.tok)
 			p.addError(p.tok.Position, err)
-			p.advance(startStmt)
+			p.sync(startStmt)
 			continue
 		}
 	}
 
 	return &ast.File{Stmts: stmts}
-}
-
-func isLit(stmt ast.Stmt) bool {
-	exprStmt, ok := stmt.(*ast.ExprStmt)
-	if !ok {
-		return false
-	}
-
-	_, ok = exprStmt.Expr.(*ast.BasicLit)
-	return ok
 }
 
 func (p *parser) parseStmtList() (list []ast.Stmt) {
@@ -54,7 +44,7 @@ func (p *parser) parseStmtList() (list []ast.Stmt) {
 		if !p.consume(token.NewLine) && p.tok.Type != token.RightBrace {
 			err := fmt.Sprintf("unexpected %s, expecting } or new line", p.tok)
 			p.addError(p.tok.Position, err)
-			p.advance(startStmt)
+			p.sync(startStmt)
 			continue
 		}
 
@@ -81,8 +71,8 @@ var switchStartStmt = map[token.Type]bool{
 	token.RightBrace: true,
 }
 
-func (p *parser) advance(to map[token.Type]bool) {
-	for ; !p.at(token.Eof); p.next() {
+func (p *parser) sync(to map[token.Type]bool) {
+	for ; !p.at(token.Eof); p.advance() {
 		if to[p.tok.Type] {
 			break
 		}
@@ -127,7 +117,7 @@ func (p *parser) parseStmt() ast.Stmt {
 
 	default:
 		p.addError(p.tok.Position, "unknown token")
-		p.advance(startStmt)
+		p.sync(startStmt)
 		return nil
 	}
 }
@@ -201,7 +191,7 @@ func (p *parser) parseIfStmt() ast.Stmt {
 			alternative = p.parseBlockStmt()
 		default:
 			p.addError(p.tok.Position, "expected left brace or if statement")
-			p.next()
+			p.advance()
 		}
 	}
 
@@ -261,7 +251,7 @@ func (p *parser) parseCaseCluase() (*ast.CaseClause, bool) {
 	}
 
 	p.addError(p.tok.Position, "expected case, default or }")
-	p.advance(switchStartStmt)
+	p.sync(switchStartStmt)
 	return nil, false
 }
 
@@ -306,7 +296,7 @@ func (p *parser) parseParameterList() (list []*ast.Ident) {
 			break
 		}
 
-		p.next()
+		p.advance()
 	}
 
 	p.expect(token.RightParenthesis)
@@ -333,7 +323,7 @@ func (p *parser) parseExprList() (list []ast.Expr) {
 	list = append(list, p.parseExpr())
 
 	for p.tok.Type == token.Comma {
-		p.next()
+		p.advance()
 		list = append(list, p.parseExpr())
 	}
 
@@ -399,7 +389,7 @@ func (p *parser) parseOperand() (expr ast.Expr) {
 		token.Int, token.Float, token.String, token.Bool,
 		token.None:
 		expr = &ast.BasicLit{Token: p.tok, Value: p.tok.Literal}
-		p.next()
+		p.advance()
 
 	case token.Block:
 		expr = p.parseBlockExpr()
@@ -421,7 +411,7 @@ func (p *parser) parseOperand() (expr ast.Expr) {
 
 	default:
 		p.addError(p.tok.Position, fmt.Sprintf("no parse implemented for (%q) just yet\n", p.tok.Type))
-		p.next()
+		p.advance()
 	}
 
 	return
@@ -483,7 +473,7 @@ func (p *parser) parseArgumentList() (list []ast.Expr) {
 			break
 		}
 
-		p.next()
+		p.advance()
 	}
 
 	p.expect(token.RightParenthesis)
@@ -501,7 +491,7 @@ func (p *parser) parseArrayLit() *ast.ArrayLit {
 			break
 		}
 
-		p.next()
+		p.advance()
 	}
 
 	rightBracket := p.expect(token.RightBracket)
@@ -525,7 +515,7 @@ func (p *parser) KeyValuePairList() (list []*ast.KeyValueExpr) {
 			break
 		}
 
-		p.next()
+		p.advance()
 	}
 
 	return
@@ -556,7 +546,7 @@ func (p *parser) parseSuperExpr() ast.Expr {
 	}
 }
 
-func (p *parser) next() {
+func (p *parser) advance() {
 	p.tok = p.lexer.NextToken()
 }
 
@@ -578,7 +568,7 @@ func (p *parser) expect(expected token.Type) (tok *token.Token) {
 	}
 
 	tok = p.tok
-	p.next()
+	p.advance()
 	return
 }
 
@@ -592,13 +582,13 @@ func (p *parser) atComma(next token.Type) bool {
 	}
 
 	p.addError(p.tok.Position, "missing ','")
-	p.next() // cosume invalid token
+	p.advance() // cosume invalid token
 	return false
 }
 
 func (p *parser) consume(tok token.Type) bool {
 	if p.tok.Type == tok {
-		p.next()
+		p.advance()
 		return true
 	}
 

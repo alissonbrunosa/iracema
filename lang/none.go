@@ -1,7 +1,5 @@
 package lang
 
-import "fmt"
-
 func noneInspect(rt Runtime, self IrObject) IrObject {
 	return NewString("none")
 }
@@ -24,13 +22,13 @@ func InitNone() {
 }
 
 /*
-Represets nil object
+Represents none object
 */
 
 type none byte
 
 func (none) String() string {
-	return fmt.Sprintf("none")
+	return "none"
 }
 
 func (none) LookupMethod(name string) *Method {
@@ -44,8 +42,8 @@ func (none) LookupMethod(name string) *Method {
 }
 
 func (none) Is(class *Class) bool {
-	for class := NoneClass; class != nil; class = class.super {
-		if class == class {
+	for cls := NoneClass; cls != nil; cls = cls.super {
+		if cls == class {
 			return true
 		}
 	}

@@ -154,7 +154,7 @@ func InitFloat() {
 }
 
 /*
-Represets float numbers
+Represents float numbers
 */
 type Float float64
 
@@ -169,8 +169,8 @@ func (Float) LookupMethod(name string) *Method {
 }
 
 func (Float) Is(class *Class) bool {
-	for class := FloatClass; class != nil; class = class.super {
-		if class == class {
+	for cls := FloatClass; cls != nil; cls = cls.super {
+		if cls == class {
 			return true
 		}
 	}

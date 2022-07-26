@@ -193,7 +193,7 @@ func InitInt() {
 }
 
 /*
-Represets integer numbers
+Represents integer numbers
 */
 type Int int
 
@@ -208,8 +208,8 @@ func (Int) LookupMethod(name string) *Method {
 }
 
 func (Int) Is(class *Class) bool {
-	for class := IntClass; class != nil; class = class.super {
-		if class == class {
+	for cls := IntClass; cls != nil; cls = cls.super {
+		if cls == class {
 			return true
 		}
 	}

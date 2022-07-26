@@ -9,16 +9,12 @@ import (
 	"strings"
 )
 
-var compareOps = map[byte]string{
-	0: "==",
-	1: ">",
-	2: ">=",
-	3: "<",
-	4: "<=",
-}
-
 func (c *compiler) Disassemble(file *ast.File) {
-	c.Compile(file)
+	_, err := c.Compile(file)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	for _, fragment := range c.fragments {
 		header := fragment.name

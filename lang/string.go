@@ -2,19 +2,8 @@ package lang
 
 import (
 	"bytes"
-	"fmt"
 	"strings"
 )
-
-func toString(value IrObject) (*String, *ErrorObject) {
-	if s, ok := value.(*String); ok {
-		return s, nil
-	}
-
-	var mesg = new(strings.Builder)
-	fmt.Fprintf(mesg, "no implicit conversion of %s into Regexp", value.Class())
-	return nil, NewTypeError(mesg.String())
-}
 
 func STRING(obj IrObject) *String {
 	return obj.(*String)
@@ -83,7 +72,7 @@ func InitString() {
 }
 
 /*
-Represets strings object
+Represents strings object
 */
 
 type String struct {

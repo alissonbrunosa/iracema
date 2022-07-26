@@ -141,14 +141,6 @@ func (l *lexer) pushBack() {
 	l.char = l.source[l.readOffset]
 }
 
-func (l *lexer) peek() byte {
-	if l.readOffset < len(l.source) {
-		return l.source[l.readOffset]
-	}
-
-	return 0
-}
-
 func (l *lexer) skipWhitespace() {
 	for {
 		switch l.char {

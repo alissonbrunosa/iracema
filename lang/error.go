@@ -29,7 +29,6 @@ type ErrorObject struct {
 	*base
 
 	message string
-	stack   []string
 }
 
 func (err *ErrorObject) String() string {
