@@ -18,17 +18,17 @@ func Test_objectUnaryNot(t *testing.T) {
 	}
 
 	for _, test := range table {
-		result := objectUnaryNot(runtime, test.input)
+		result := objectUnaryNot(globalTestDummyRuntime, test.input)
 		assertEqual(t, result, test.wantOutput)
 	}
 }
 
 func Test_objectEqual(t *testing.T) {
 	obj := NewObject()
-	result := objectEqual(runtime, obj, obj)
+	result := objectEqual(globalTestDummyRuntime, obj, obj)
 	assertEqual(t, result, True)
 
-	result = objectEqual(runtime, obj, NewObject())
+	result = objectEqual(globalTestDummyRuntime, obj, NewObject())
 	assertEqual(t, result, False)
 }
 
@@ -55,7 +55,7 @@ func Test_objectNotEqual(t *testing.T) {
 
 	for _, test := range table {
 		t.Run(test.scenario, func(t *testing.T) {
-			result := objectNotEqual(runtime, test.lhs, test.rhs)
+			result := objectNotEqual(globalTestDummyRuntime, test.lhs, test.rhs)
 			assertEqual(t, result, test.wantOutput)
 		})
 	}

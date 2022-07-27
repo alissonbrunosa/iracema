@@ -15,7 +15,7 @@ func (rt *dummyRuntime) Call(recv IrObject, method *Method, args ...IrObject) Ir
 	panic("can't call user defined method with dummy runtime")
 }
 
-var runtime = new(dummyRuntime)
+var globalTestDummyRuntime = new(dummyRuntime)
 
 func assertEqual(t *testing.T, got IrObject, expected IrObject) {
 	t.Helper()

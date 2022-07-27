@@ -21,7 +21,7 @@ func Test_floatPlus(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := floatAdd(runtime, test.Left, test.Right)
+		result := floatAdd(globalTestDummyRuntime, test.Left, test.Right)
 		assertEqual(t, result, test.Expected)
 	}
 }
@@ -45,7 +45,7 @@ func Test_floatMinus(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := floatSub(runtime, test.Left, test.Right)
+		result := floatSub(globalTestDummyRuntime, test.Left, test.Right)
 		assertEqual(t, result, test.Expected)
 	}
 }
@@ -69,19 +69,19 @@ func Test_floatMultiply(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := floatMultiply(runtime, test.Left, test.Right)
+		result := floatMultiply(globalTestDummyRuntime, test.Left, test.Right)
 		assertEqual(t, result, test.Expected)
 	}
 }
 
 func Test_floatUnaryMinus(t *testing.T) {
-	result := floatUnarySub(runtime, Float(20.40))
+	result := floatUnarySub(globalTestDummyRuntime, Float(20.40))
 	assertEqual(t, result, Float(-20.40))
 }
 
 func Test_floatUnaryPlus(t *testing.T) {
 	value := Float(20.40)
-	result := floatUnaryAdd(runtime, value)
+	result := floatUnaryAdd(globalTestDummyRuntime, value)
 	assertEqual(t, result, value)
 }
 
@@ -132,7 +132,7 @@ func Test_floatGreat(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.scenario, func(t *testing.T) {
-			result := floatGreat(runtime, test.left, test.right)
+			result := floatGreat(globalTestDummyRuntime, test.left, test.right)
 			assertEqual(t, result, test.expected)
 		})
 	}
@@ -162,7 +162,7 @@ func Test_floatEqual(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := floatEqual(runtime, test.Left, test.Right)
+		result := floatEqual(globalTestDummyRuntime, test.Left, test.Right)
 		assertEqual(t, result, test.Expected)
 	}
 }
@@ -214,7 +214,7 @@ func Test_floatGreatEqual(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.scenario, func(t *testing.T) {
-			result := floatGreatEqual(runtime, test.left, test.right)
+			result := floatGreatEqual(globalTestDummyRuntime, test.left, test.right)
 			assertEqual(t, result, test.expected)
 		})
 	}
@@ -267,7 +267,7 @@ func Test_floatLess(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.scenario, func(t *testing.T) {
-			result := floatLess(runtime, test.left, test.right)
+			result := floatLess(globalTestDummyRuntime, test.left, test.right)
 			assertEqual(t, result, test.expected)
 		})
 	}
@@ -320,14 +320,14 @@ func Test_floatLessEqual(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.scenario, func(t *testing.T) {
-			result := floatLessEqual(runtime, test.left, test.right)
+			result := floatLessEqual(globalTestDummyRuntime, test.left, test.right)
 			assertEqual(t, result, test.expected)
 		})
 	}
 }
 
 func Test_floatInspect(t *testing.T) {
-	result := floatInspect(runtime, Float(2.9010))
+	result := floatInspect(globalTestDummyRuntime, Float(2.9010))
 	assertEqual(t, result, NewString("2.901000"))
 }
 

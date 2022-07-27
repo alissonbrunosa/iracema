@@ -94,7 +94,7 @@ func Test_classNew_CallsInitMethod(t *testing.T) {
 
 	class.AddGoMethod("init", init)
 
-	classNew(runtime, class)
+	classNew(globalTestDummyRuntime, class)
 	if !called {
 		t.Error("expected init to be called")
 	}
@@ -102,7 +102,7 @@ func Test_classNew_CallsInitMethod(t *testing.T) {
 func Test_classNew_ReturnObjectFromTargetClass(t *testing.T) {
 	class := NewClass("Dummy", ObjectClass)
 
-	object := classNew(runtime, class)
+	object := classNew(globalTestDummyRuntime, class)
 
 	if object.Class() != class {
 		t.Errorf("expected class to be %s, got %s", class.name, object.Class().name)

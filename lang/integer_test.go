@@ -57,7 +57,7 @@ func Test_intAdd(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := intAdd(runtime, test.Left, test.Right)
+		result := intAdd(globalTestDummyRuntime, test.Left, test.Right)
 		assertEqual(t, result, test.Expected)
 	}
 }
@@ -81,7 +81,7 @@ func Test_intSub(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := intSub(runtime, test.Left, test.Right)
+		result := intSub(globalTestDummyRuntime, test.Left, test.Right)
 		assertEqual(t, result, test.Expected)
 	}
 }
@@ -105,7 +105,7 @@ func Test_intMultiply(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := intMultiply(runtime, test.Left, test.Right)
+		result := intMultiply(globalTestDummyRuntime, test.Left, test.Right)
 		assertEqual(t, result, test.Expected)
 	}
 }
@@ -145,20 +145,20 @@ func Test_intEqual(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.Scenario, func(t *testing.T) {
-			result := intEqual(runtime, test.Left, test.Right)
+			result := intEqual(globalTestDummyRuntime, test.Left, test.Right)
 			assertEqual(t, result, test.Expected)
 		})
 	}
 }
 
 func Test_intUnarySub(t *testing.T) {
-	result := intUnarySub(runtime, Int(20))
+	result := intUnarySub(globalTestDummyRuntime, Int(20))
 	assertEqual(t, result, Int(-20))
 }
 
 func Test_intUnaryAdd(t *testing.T) {
 	value := Int(20)
-	result := intUnaryAdd(runtime, value)
+	result := intUnaryAdd(globalTestDummyRuntime, value)
 	assertEqual(t, result, value)
 }
 
@@ -209,7 +209,7 @@ func Test_intGreat(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.scenario, func(t *testing.T) {
-			result := intGreat(runtime, test.left, test.right)
+			result := intGreat(globalTestDummyRuntime, test.left, test.right)
 			assertEqual(t, result, test.expected)
 		})
 	}
@@ -262,7 +262,7 @@ func Test_intGreatEqual(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.scenario, func(t *testing.T) {
-			result := intGreatEqual(runtime, test.left, test.right)
+			result := intGreatEqual(globalTestDummyRuntime, test.left, test.right)
 			assertEqual(t, result, test.expected)
 		})
 	}
@@ -315,7 +315,7 @@ func Test_intLess(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.scenario, func(t *testing.T) {
-			result := intLess(runtime, test.left, test.right)
+			result := intLess(globalTestDummyRuntime, test.left, test.right)
 			assertEqual(t, result, test.expected)
 		})
 	}
@@ -368,7 +368,7 @@ func Test_intLessEqual(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.scenario, func(t *testing.T) {
-			result := intLessEqual(runtime, test.left, test.right)
+			result := intLessEqual(globalTestDummyRuntime, test.left, test.right)
 			assertEqual(t, result, test.expected)
 		})
 	}
@@ -393,13 +393,13 @@ func Test_intDivide(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := intDivide(runtime, test.Left, test.Right)
+		result := intDivide(globalTestDummyRuntime, test.Left, test.Right)
 		assertEqual(t, result, test.Expected)
 	}
 }
 
 func Test_intInspect(t *testing.T) {
-	result := intInspect(runtime, Int(2))
+	result := intInspect(globalTestDummyRuntime, Int(2))
 	assertEqual(t, result, NewString("2"))
 }
 

@@ -7,9 +7,9 @@ func Test_hashSize(t *testing.T) {
 
 	key := NewString("int")
 	value := Int(10)
-	hashInsert(runtime, h, key, value)
+	hashInsert(globalTestDummyRuntime, h, key, value)
 
-	if INT(hashSize(runtime, h)) != 1 {
+	if INT(hashSize(globalTestDummyRuntime, h)) != 1 {
 		t.Errorf("expected count to be 1, got %d", h.count)
 	}
 }
@@ -20,7 +20,7 @@ func Test_hashInsert(t *testing.T) {
 	key := NewString("int")
 	value := Int(10)
 
-	if hashInsert(runtime, h, key, value) == False {
+	if hashInsert(globalTestDummyRuntime, h, key, value) == False {
 		t.Fatal("not inserted")
 	}
 }
@@ -31,11 +31,11 @@ func Test_hashLookup(t *testing.T) {
 	key := NewString("int")
 	value := Int(10)
 
-	if hashInsert(runtime, h, key, value) == False {
+	if hashInsert(globalTestDummyRuntime, h, key, value) == False {
 		t.Fatal("not inserted")
 	}
 
-	v := hashLookup(runtime, h, key)
+	v := hashLookup(globalTestDummyRuntime, h, key)
 
 	if v != value {
 		t.Errorf("expected value to be %+v, got %+v", value, v)
@@ -52,13 +52,13 @@ func Test_hashKeys(t *testing.T) {
 	}
 
 	for i, key := range expectedKeys {
-		hashInsert(runtime, h, key, Int(i))
+		hashInsert(globalTestDummyRuntime, h, key, Int(i))
 	}
 
-	keys := hashKeys(runtime, h)
+	keys := hashKeys(globalTestDummyRuntime, h)
 
 	for i, key := range ARRAY(keys).Elements {
-		isSame := stringEqual(runtime, key, expectedKeys[i])
+		isSame := stringEqual(globalTestDummyRuntime, key, expectedKeys[i])
 		if BOOL(isSame) {
 			continue
 		}
@@ -77,17 +77,17 @@ func Test_hashValuesAt(t *testing.T) {
 	}
 
 	for i, key := range keys {
-		hashInsert(runtime, h, key, Int(i))
+		hashInsert(globalTestDummyRuntime, h, key, Int(i))
 	}
 
-	ret := hashValuesAt(runtime, h, keys[1], keys[2])
+	ret := hashValuesAt(globalTestDummyRuntime, h, keys[1], keys[2])
 
 	expected := []IrObject{
 		Int(1),
 		Int(2),
 	}
 
-	if arrayEqual(runtime, ret, NewArray(expected)) == False {
+	if arrayEqual(globalTestDummyRuntime, ret, NewArray(expected)) == False {
 		t.Errorf("expected keys to be %+v, got %+v", keys, ret)
 	}
 }

@@ -15,7 +15,7 @@ func Test_stringEqual(t *testing.T) {
 
 	for _, test := range table {
 		t.Run(test.scenario, func(t *testing.T) {
-			result := stringEqual(runtime, test.lhs, test.rhs)
+			result := stringEqual(globalTestDummyRuntime, test.lhs, test.rhs)
 			assertEqual(t, result, test.wantOutput)
 		})
 	}
@@ -23,13 +23,13 @@ func Test_stringEqual(t *testing.T) {
 
 func Test_stringLength(t *testing.T) {
 	str := NewString("string")
-	length := stringSize(runtime, str)
+	length := stringSize(globalTestDummyRuntime, str)
 	assertEqual(t, length, Int(6))
 }
 
 func Test_stringInspect(t *testing.T) {
 	str := NewString("string")
-	inspect := stringInspect(runtime, str)
+	inspect := stringInspect(globalTestDummyRuntime, str)
 	assertEqual(t, inspect, NewString("string"))
 }
 
@@ -37,8 +37,8 @@ func Test_stringPlus(t *testing.T) {
 	a := NewString("a")
 	b := NewString("b")
 
-	result := stringPlus(runtime, a, b)
-	length := stringSize(runtime, result)
+	result := stringPlus(globalTestDummyRuntime, a, b)
+	length := stringSize(globalTestDummyRuntime, result)
 	assertEqual(t, result, NewString("ab"))
 	assertEqual(t, length, Int(2))
 }
