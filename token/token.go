@@ -33,7 +33,7 @@ type Token struct {
 
 func (t *Token) Precedence() int {
 	switch t.Type {
-	case Equal, Less, LessEqual, Great, GreatEqual:
+	case Equal, NotEqual, Less, LessEqual, Great, GreatEqual:
 		return 2
 	case Minus, Plus:
 		return 3

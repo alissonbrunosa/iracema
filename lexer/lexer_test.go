@@ -61,6 +61,10 @@ func TestNextToken(t *testing.T) {
 			Input:        bytes.NewBufferString("=="),
 			ExpectedType: token.Equal,
 		},
+		"NotEqual": {
+			Input:        bytes.NewBufferString("!="),
+			ExpectedType: token.NotEqual,
+		},
 		"Not": {
 			Input:        bytes.NewBufferString("!"),
 			ExpectedType: token.Not,

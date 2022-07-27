@@ -22,7 +22,7 @@ func stringEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	left := STRING(self)
 	right := STRING(rhs)
 
-	return NewBoolean(bytes.Equal(left.Value, right.Value))
+	return Bool(bytes.Equal(left.Value, right.Value))
 }
 
 func stringPlus(rt Runtime, self IrObject, rhs IrObject) IrObject {

@@ -132,6 +132,13 @@ func TestBinaryExpr(t *testing.T) {
 			ExpectedRightValue: "2",
 		},
 		{
+			Scenario:           "not equal operation",
+			Code:               "10 != 2",
+			ExpectedLeftValue:  "10",
+			ExpectedOperator:   token.NotEqual,
+			ExpectedRightValue: "2",
+		},
+		{
 			Scenario:           "greater than",
 			Code:               "10 > 2",
 			ExpectedLeftValue:  "10",

@@ -74,8 +74,7 @@ func floatEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	case Float:
 		return NewBoolean(left == right)
 	default:
-		err := fmt.Sprintf("can't operate on %T", right)
-		panic(err)
+		return False
 	}
 }
 

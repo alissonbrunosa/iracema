@@ -3,11 +3,21 @@ package lang
 import "testing"
 
 func Test_stringEqual(t *testing.T) {
-	a := NewString("a")
-	b := NewString("a")
+	table := []struct {
+		scenario   string
+		lhs        IrObject
+		rhs        IrObject
+		wantOutput Bool
+	}{
+		{scenario: "equal", lhs: NewString("a"), rhs: NewString("a"), wantOutput: True},
+		{scenario: "not equal", lhs: NewString("a"), rhs: NewString("aa"), wantOutput: False},
+	}
 
-	if stringEqual(runtime, a, b) != True {
-		t.Error("expected to be true")
+	for _, test := range table {
+		t.Run(test.scenario, func(t *testing.T) {
+			result := stringEqual(runtime, test.lhs, test.rhs)
+			assertEqual(t, result, test.wantOutput)
+		})
 	}
 }
 

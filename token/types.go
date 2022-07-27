@@ -44,6 +44,7 @@ const (
 	Comma
 	Assign           // =
 	Equal            // ==
+	NotEqual         // !=
 	Less             // <
 	LessEqual        // <=
 	Great            // >

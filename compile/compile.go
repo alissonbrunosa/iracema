@@ -21,6 +21,7 @@ var binaryOps = map[token.Type]string{
 	token.Star:       "*",
 	token.Slash:      "/",
 	token.Equal:      "==",
+	token.NotEqual:   "!=",
 	token.Less:       "<",
 	token.LessEqual:  "<=",
 	token.Great:      ">",

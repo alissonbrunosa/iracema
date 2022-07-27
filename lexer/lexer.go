@@ -109,6 +109,10 @@ func (l *lexer) NextToken() *token.Token {
 		kind = token.Star
 	case '!':
 		kind = token.Not
+		if l.char == '=' {
+			kind = token.NotEqual
+			l.advance()
+		}
 	case '\n', ';':
 		kind = token.NewLine
 	case 0:
