@@ -44,22 +44,23 @@ func _() {
 	_ = x[Comma-33]
 	_ = x[Assign-34]
 	_ = x[Equal-35]
-	_ = x[Less-36]
-	_ = x[LessEqual-37]
-	_ = x[Great-38]
-	_ = x[GreatEqual-39]
-	_ = x[Ident-40]
-	_ = x[LeftParenthesis-41]
-	_ = x[RightParenthesis-42]
-	_ = x[LeftBracket-43]
-	_ = x[RightBracket-44]
-	_ = x[LeftBrace-45]
-	_ = x[RightBrace-46]
+	_ = x[NotEqual-36]
+	_ = x[Less-37]
+	_ = x[LessEqual-38]
+	_ = x[Great-39]
+	_ = x[GreatEqual-40]
+	_ = x[Ident-41]
+	_ = x[LeftParenthesis-42]
+	_ = x[RightParenthesis-43]
+	_ = x[LeftBracket-44]
+	_ = x[RightBracket-45]
+	_ = x[LeftBrace-46]
+	_ = x[RightBrace-47]
 }
 
-const _Type_name = "IllegalEOFifisforswitchcasedefaultinstopnextwhileelsefunnonecatchblockobjectreturnsuperIntFloatStringBool-+/*.:\\n!->Comma===<<=>>=Ident()[]{}"
+const _Type_name = "IllegalEOFifisforswitchcasedefaultinstopnextwhileelsefunnonecatchblockobjectreturnsuperIntFloatStringBool-+/*.:\\n!->Comma===!=<<=>>=Ident()[]{}"
 
-var _Type_index = [...]uint8{0, 7, 10, 12, 14, 17, 23, 27, 34, 36, 40, 44, 49, 53, 56, 60, 65, 70, 76, 82, 87, 90, 95, 101, 105, 106, 107, 108, 109, 110, 111, 113, 114, 116, 121, 122, 124, 125, 127, 128, 130, 135, 136, 137, 138, 139, 140, 141}
+var _Type_index = [...]uint8{0, 7, 10, 12, 14, 17, 23, 27, 34, 36, 40, 44, 49, 53, 56, 60, 65, 70, 76, 82, 87, 90, 95, 101, 105, 106, 107, 108, 109, 110, 111, 113, 114, 116, 121, 122, 124, 126, 127, 129, 130, 132, 137, 138, 139, 140, 141, 142, 143}
 
 func (i Type) String() string {
 	if i >= Type(len(_Type_index)-1) {
