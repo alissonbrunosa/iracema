@@ -162,121 +162,218 @@ func Test_intUnaryAdd(t *testing.T) {
 	assertEqual(t, result, value)
 }
 
-func Test_intGreatThan(t *testing.T) {
+func Test_intGreat(t *testing.T) {
 	tests := []struct {
-		Left     IrObject
-		Right    IrObject
-		Expected IrObject
+		scenario string
+		left     IrObject
+		right    IrObject
+		expected IrObject
 	}{
 		{
-			Left:     Int(2),
-			Right:    Int(2),
-			Expected: False,
+			scenario: "lhs(Int) > rhs(Int)",
+			left:     Int(20),
+			right:    Int(2),
+			expected: True,
 		},
 		{
-			Left:     Int(3),
-			Right:    Int(2),
-			Expected: True,
+			scenario: "lhs(Int) > rhs(Float)",
+			left:     Int(20),
+			right:    Float(2.0),
+			expected: True,
 		},
 		{
-			Left:     Int(2),
-			Right:    Float(1.0),
-			Expected: True,
+			scenario: "lhs(Int) > rhs(Int) are equal",
+			left:     Int(2),
+			right:    Int(2),
+			expected: False,
+		},
+		{
+			scenario: "lhs(Int) > rhs(Float) are equal",
+			left:     Int(2),
+			right:    Float(2.0),
+			expected: False,
+		},
+		{
+			scenario: "lhs(Int) > rhs(Int): when left is smaller",
+			left:     Int(1),
+			right:    Int(2),
+			expected: False,
+		},
+		{
+			scenario: "lhs(Int) > rhs(Float): when left is smaller",
+			left:     Int(1),
+			right:    Float(2.0),
+			expected: False,
 		},
 	}
 
 	for _, test := range tests {
-		result := intGreatThan(runtime, test.Left, test.Right)
-		assertEqual(t, result, test.Expected)
+		t.Run(test.scenario, func(t *testing.T) {
+			result := intGreat(runtime, test.left, test.right)
+			assertEqual(t, result, test.expected)
+		})
 	}
 }
 
-func Test_intGreatThanOrEqual(t *testing.T) {
+func Test_intGreatEqual(t *testing.T) {
 	tests := []struct {
-		Left     IrObject
-		Right    IrObject
-		Expected IrObject
+		scenario string
+		left     IrObject
+		right    IrObject
+		expected IrObject
 	}{
 		{
-			Left:     Int(2),
-			Right:    Int(2),
-			Expected: True,
+			scenario: "lhs(Int) >= rhs(Int)",
+			left:     Int(20),
+			right:    Int(2),
+			expected: True,
 		},
 		{
-			Left:     Int(3),
-			Right:    Int(2),
-			Expected: True,
+			scenario: "lhs(Int) >= rhs(Float)",
+			left:     Int(20),
+			right:    Float(2.0),
+			expected: True,
 		},
 		{
-			Left:     Int(2),
-			Right:    Float(2.0),
-			Expected: True,
+			scenario: "lhs(Int) >= rhs(Int) are equal",
+			left:     Int(2),
+			right:    Int(2),
+			expected: True,
+		},
+		{
+			scenario: "lhs(Int) >= rhs(Float) are equal",
+			left:     Int(2),
+			right:    Float(2.0),
+			expected: True,
+		},
+		{
+			scenario: "lhs(Int) >= rhs(Int): when left is smaller",
+			left:     Int(1),
+			right:    Int(2),
+			expected: False,
+		},
+		{
+			scenario: "lhs(Int) >= rhs(Float): when left is smaller",
+			left:     Int(1),
+			right:    Float(2.0),
+			expected: False,
 		},
 	}
 
 	for _, test := range tests {
-		result := intGreaterThanOrEqual(runtime, test.Left, test.Right)
-		assertEqual(t, result, test.Expected)
+		t.Run(test.scenario, func(t *testing.T) {
+			result := intGreatEqual(runtime, test.left, test.right)
+			assertEqual(t, result, test.expected)
+		})
 	}
 }
 
-func Test_intLessThan(t *testing.T) {
+func Test_intLess(t *testing.T) {
 	tests := []struct {
-		Left     IrObject
-		Right    IrObject
-		Expected IrObject
+		scenario string
+		left     IrObject
+		right    IrObject
+		expected IrObject
 	}{
 		{
-			Left:     Int(2),
-			Right:    Int(3),
-			Expected: True,
+			scenario: "lhs(Int) < rhs(Int)",
+			left:     Int(2),
+			right:    Int(20),
+			expected: True,
 		},
 		{
-			Left:     Int(3),
-			Right:    Int(2),
-			Expected: False,
+			scenario: "lhs(Int) < rhs(Float)",
+			left:     Int(2),
+			right:    Float(20.0),
+			expected: True,
 		},
 		{
-			Left:     Int(2),
-			Right:    Float(1.0),
-			Expected: False,
+			scenario: "lhs(Int) < rhs(Int) are equal",
+			left:     Int(2),
+			right:    Int(2),
+			expected: False,
+		},
+		{
+			scenario: "lhs(Int) < rhs(Float) are equal",
+			left:     Int(2),
+			right:    Float(2.0),
+			expected: False,
+		},
+		{
+			scenario: "lhs(Int) < rhs(Int): when left is bigger",
+			left:     Int(10),
+			right:    Int(2),
+			expected: False,
+		},
+		{
+			scenario: "lhs(Int) < rhs(Float): when left is bigger",
+			left:     Int(10),
+			right:    Float(2.0),
+			expected: False,
 		},
 	}
 
 	for _, test := range tests {
-		result := intLessThan(runtime, test.Left, test.Right)
-		assertEqual(t, result, test.Expected)
+		t.Run(test.scenario, func(t *testing.T) {
+			result := intLess(runtime, test.left, test.right)
+			assertEqual(t, result, test.expected)
+		})
 	}
 }
 
-func Test_intLessThanOrEqual(t *testing.T) {
+func Test_intLessEqual(t *testing.T) {
 	tests := []struct {
-		Left     IrObject
-		Right    IrObject
-		Expected IrObject
+		scenario string
+		left     IrObject
+		right    IrObject
+		expected IrObject
 	}{
 		{
-			Left:     Int(3),
-			Right:    Int(3),
-			Expected: True,
+			scenario: "lhs(Int) <= rhs(Int)",
+			left:     Int(2),
+			right:    Int(20),
+			expected: True,
 		},
 		{
-			Left:     Int(5),
-			Right:    Int(2),
-			Expected: False,
+			scenario: "lhs(Int) <= rhs(Float)",
+			left:     Int(2),
+			right:    Float(20.0),
+			expected: True,
 		},
 		{
-			Left:     Int(2),
-			Right:    Float(2.0),
-			Expected: True,
+			scenario: "lhs(Int) <= rhs(Int) are equal",
+			left:     Int(2),
+			right:    Int(2),
+			expected: True,
+		},
+		{
+			scenario: "lhs(Int) <= rhs(Float) are equal",
+			left:     Int(2),
+			right:    Float(2.0),
+			expected: True,
+		},
+		{
+			scenario: "lhs(Int) <= rhs(Int): when left is bigger",
+			left:     Int(10),
+			right:    Int(2),
+			expected: False,
+		},
+		{
+			scenario: "lhs(Int) <= rhs(Float): when left is bigger",
+			left:     Int(10),
+			right:    Float(2.0),
+			expected: False,
 		},
 	}
 
 	for _, test := range tests {
-		result := intLessThanOrEqual(runtime, test.Left, test.Right)
-		assertEqual(t, result, test.Expected)
+		t.Run(test.scenario, func(t *testing.T) {
+			result := intLessEqual(runtime, test.left, test.right)
+			assertEqual(t, result, test.expected)
+		})
 	}
 }
+
 func Test_intDivide(t *testing.T) {
 	tests := []struct {
 		Left     IrObject
@@ -359,32 +456,32 @@ func TestIntOperationWithInvalidOperand(t *testing.T) {
 			Scenario:      "compare(>) with a non numeric",
 			Left:          Int(5),
 			Right:         False,
-			operation:     intGreatThan,
-			ExpectedMesg:  "invalid comparison between 'Int' and 'Bool'",
+			operation:     intGreat,
+			ExpectedMesg:  "invalid comparison (>) between 'Int' and 'Bool'",
 			ExpectedError: TypeError,
 		},
 		{
 			Scenario:      "compare(>=) with a non numeric",
 			Left:          Int(5),
 			Right:         True,
-			operation:     intGreaterThanOrEqual,
-			ExpectedMesg:  "invalid comparison between 'Int' and 'Bool'",
+			operation:     intGreatEqual,
+			ExpectedMesg:  "invalid comparison (>=) between 'Int' and 'Bool'",
 			ExpectedError: TypeError,
 		},
 		{
 			Scenario:      "compare(<) with a non numeric",
 			Left:          Int(5),
 			Right:         NewString("5"),
-			operation:     intLessThan,
-			ExpectedMesg:  "invalid comparison between 'Int' and 'String'",
+			operation:     intLess,
+			ExpectedMesg:  "invalid comparison (<) between 'Int' and 'String'",
 			ExpectedError: TypeError,
 		},
 		{
 			Scenario:      "compare(<=) with a non numeric",
 			Left:          Int(5),
 			Right:         NewString("5"),
-			operation:     intLessThanOrEqual,
-			ExpectedMesg:  "invalid comparison between 'Int' and 'String'",
+			operation:     intLessEqual,
+			ExpectedMesg:  "invalid comparison (<=) between 'Int' and 'String'",
 			ExpectedError: TypeError,
 		},
 	}

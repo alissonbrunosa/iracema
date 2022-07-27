@@ -13,13 +13,14 @@ func floatAdd(rt Runtime, lhs IrObject, rhs IrObject) IrObject {
 	left := FLOAT(lhs)
 
 	switch right := rhs.(type) {
-	case Int:
-		return left + Float(right)
 	case Float:
 		return left + right
+	case Int:
+		return left + Float(right)
 	default:
-		err := fmt.Sprintf("can't operate on %T", right)
-		panic(err)
+		err := NewTypeError("unsupported operand type(s): '%s' + '%s'", FloatClass, right.Class())
+		rt.SetError(err)
+		return nil
 	}
 }
 
@@ -27,13 +28,14 @@ func floatSub(rt Runtime, lhs IrObject, rhs IrObject) IrObject {
 	left := FLOAT(lhs)
 
 	switch right := rhs.(type) {
-	case Int:
-		return left - Float(right)
 	case Float:
 		return left - right
+	case Int:
+		return left - Float(right)
 	default:
-		err := fmt.Sprintf("can't operate on %T", right)
-		panic(err)
+		err := NewTypeError("unsupported operand type(s): '%s' - '%s'", FloatClass, right.Class())
+		rt.SetError(err)
+		return nil
 	}
 }
 
@@ -41,13 +43,14 @@ func floatMultiply(rt Runtime, lhs IrObject, rhs IrObject) IrObject {
 	left := FLOAT(lhs)
 
 	switch right := rhs.(type) {
-	case Int:
-		return left * Float(right)
 	case Float:
 		return left * right
+	case Int:
+		return left * Float(right)
 	default:
-		err := fmt.Sprintf("can't operate on %T", right)
-		panic(err)
+		err := NewTypeError("unsupported operand type(s): '%s' * '%s'", FloatClass, right.Class())
+		rt.SetError(err)
+		return nil
 	}
 }
 
@@ -55,13 +58,14 @@ func floatDivide(rt Runtime, lhs, rhs IrObject) IrObject {
 	left := FLOAT(lhs)
 
 	switch right := rhs.(type) {
-	case Int:
-		return left / Float(right)
 	case Float:
 		return left / right
+	case Int:
+		return left / Float(right)
 	default:
-		err := fmt.Sprintf("can't operate on %T", right)
-		panic(err)
+		err := NewTypeError("unsupported operand type(s): '%s' / '%s'", FloatClass, right.Class())
+		rt.SetError(err)
+		return nil
 	}
 }
 
@@ -69,12 +73,71 @@ func floatEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	left := FLOAT(self)
 
 	switch right := rhs.(type) {
-	case Int:
-		return NewBoolean(left == Float(right))
 	case Float:
-		return NewBoolean(left == right)
+		return Bool(left == right)
+	case Int:
+		return Bool(left == Float(right))
 	default:
 		return False
+	}
+}
+
+func floatGreat(rt Runtime, lhs IrObject, rhs IrObject) IrObject {
+	left := FLOAT(lhs)
+
+	switch right := rhs.(type) {
+	case Float:
+		return Bool(left > right)
+	case Int:
+		return Bool(left > Float(right))
+	default:
+		err := NewTypeError("invalid comparison (>) between '%s' and '%s'", FloatClass, right.Class())
+		rt.SetError(err)
+		return nil
+	}
+}
+func floatGreatEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
+	left := FLOAT(self)
+
+	switch right := rhs.(type) {
+	case Float:
+		return Bool(left >= right)
+	case Int:
+		return Bool(left >= Float(right))
+	default:
+		err := NewTypeError("invalid comparison (>=) between '%s' and '%s'", FloatClass, right.Class())
+		rt.SetError(err)
+		return nil
+	}
+}
+
+func floatLess(rt Runtime, lhs IrObject, rhs IrObject) IrObject {
+	left := FLOAT(lhs)
+
+	switch right := rhs.(type) {
+	case Float:
+		return Bool(left < right)
+	case Int:
+		return Bool(left < Float(right))
+	default:
+		err := NewTypeError("invalid comparison (<) between '%s' and '%s'", FloatClass, right.Class())
+		rt.SetError(err)
+		return nil
+	}
+}
+
+func floatLessEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
+	left := FLOAT(self)
+
+	switch right := rhs.(type) {
+	case Float:
+		return Bool(left <= right)
+	case Int:
+		return Bool(left <= Float(right))
+	default:
+		err := NewTypeError("invalid comparison (<=) between '%s' and '%s'", FloatClass, right.Class())
+		rt.SetError(err)
+		return nil
 	}
 }
 
@@ -84,34 +147,6 @@ func floatUnaryAdd(rt Runtime, self IrObject) IrObject {
 
 func floatUnarySub(rt Runtime, self IrObject) IrObject {
 	return -FLOAT(self)
-}
-
-func floatGreatThan(rt Runtime, lhs IrObject, rhs IrObject) IrObject {
-	left := FLOAT(lhs)
-
-	switch right := rhs.(type) {
-	case Int:
-		return NewBoolean(left > Float(right))
-	case Float:
-		return NewBoolean(left > right)
-	default:
-		err := fmt.Sprintf("can't operate on %T", right)
-		panic(err)
-	}
-}
-
-func floatLessThan(rt Runtime, lhs IrObject, rhs IrObject) IrObject {
-	left := FLOAT(lhs)
-
-	switch right := rhs.(type) {
-	case Int:
-		return NewBoolean(left < Float(right))
-	case Float:
-		return NewBoolean(left < right)
-	default:
-		err := fmt.Sprintf("can't operate on %T", right)
-		panic(err)
-	}
 }
 
 func floatInspect(rt Runtime, self IrObject) IrObject {
@@ -145,8 +180,10 @@ func InitFloat() {
 	FloatClass.AddGoMethod("multiply", oneArg(floatMultiply))
 	FloatClass.AddGoMethod("/", oneArg(floatDivide))
 	FloatClass.AddGoMethod("divide", oneArg(floatDivide))
-	FloatClass.AddGoMethod(">", oneArg(floatGreatThan))
-	FloatClass.AddGoMethod("<", oneArg(floatLessThan))
+	FloatClass.AddGoMethod(">", oneArg(floatGreat))
+	FloatClass.AddGoMethod(">=", oneArg(floatGreatEqual))
+	FloatClass.AddGoMethod("<", oneArg(floatLess))
+	FloatClass.AddGoMethod("<=", oneArg(floatLessEqual))
 	FloatClass.AddGoMethod("inspect", zeroArgs(floatInspect))
 	FloatClass.AddGoMethod("uadd", zeroArgs(floatUnaryAdd))
 	FloatClass.AddGoMethod("usub", zeroArgs(floatUnarySub))

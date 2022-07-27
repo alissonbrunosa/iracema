@@ -87,9 +87,9 @@ func NewRegexpError(mesg string) *ErrorObject {
 	}
 }
 
-func NewTypeError(mesg string) *ErrorObject {
+func NewTypeError(mesg string, args ...any) *ErrorObject {
 	return &ErrorObject{
-		message: mesg,
+		message: fmt.Sprintf(mesg, args...),
 		base:    &base{class: TypeError},
 	}
 }

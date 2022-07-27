@@ -27,8 +27,8 @@ func intAdd(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	case Float:
 		return Float(left) + right
 	default:
-		err := fmt.Sprintf("unsupported operand type(s): '%s' + '%s'", left.Class(), right.Class())
-		rt.SetError(NewTypeError(err))
+		err := NewTypeError("unsupported operand type(s): '%s' + '%s'", IntClass, right.Class())
+		rt.SetError(err)
 		return nil
 	}
 }
@@ -41,8 +41,8 @@ func intSub(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	case Float:
 		return Float(left) - right
 	default:
-		err := fmt.Sprintf("unsupported operand type(s): '%s' - '%s'", left.Class(), right.Class())
-		rt.SetError(NewTypeError(err))
+		err := NewTypeError("unsupported operand type(s): '%s' - '%s'", IntClass, right.Class())
+		rt.SetError(err)
 		return nil
 	}
 }
@@ -55,8 +55,8 @@ func intMultiply(rt Runtime, lhs, rhs IrObject) IrObject {
 	case Float:
 		return Float(left) * right
 	default:
-		err := fmt.Sprintf("unsupported operand type(s): '%s' * '%s'", left.Class(), right.Class())
-		rt.SetError(NewTypeError(err))
+		err := NewTypeError("unsupported operand type(s): '%s' * '%s'", IntClass, right.Class())
+		rt.SetError(err)
 		return nil
 	}
 }
@@ -74,8 +74,8 @@ func intDivide(rt Runtime, lhs, rhs IrObject) IrObject {
 	case Float:
 		return Float(left) / right
 	default:
-		err := fmt.Sprintf("unsupported operand type(s): '%s' / '%s'", left.Class(), right.Class())
-		rt.SetError(NewTypeError(err))
+		err := NewTypeError("unsupported operand type(s): '%s' / '%s'", IntClass, right.Class())
+		rt.SetError(err)
 		return nil
 	}
 }
@@ -92,7 +92,7 @@ func intEqual(rt Runtime, lhs, rhs IrObject) IrObject {
 	}
 }
 
-func intGreatThan(rt Runtime, self IrObject, rhs IrObject) IrObject {
+func intGreat(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	left := INT(self)
 	switch right := rhs.(type) {
 	case Int:
@@ -100,13 +100,13 @@ func intGreatThan(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	case Float:
 		return NewBoolean(left > Int(right))
 	default:
-		err := fmt.Sprintf("invalid comparison between '%s' and '%s'", left.Class(), right.Class())
-		rt.SetError(NewTypeError(err))
+		err := NewTypeError("invalid comparison (>) between '%s' and '%s'", IntClass, right.Class())
+		rt.SetError(err)
 		return nil
 	}
 }
 
-func intGreaterThanOrEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
+func intGreatEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	left := INT(self)
 	switch right := rhs.(type) {
 	case Int:
@@ -114,27 +114,13 @@ func intGreaterThanOrEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	case Float:
 		return NewBoolean(left >= Int(right))
 	default:
-		err := fmt.Sprintf("invalid comparison between '%s' and '%s'", left.Class(), right.Class())
-		rt.SetError(NewTypeError(err))
+		err := NewTypeError("invalid comparison (>=) between '%s' and '%s'", IntClass, right.Class())
+		rt.SetError(err)
 		return nil
 	}
 }
 
-func intLessThanOrEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
-	left := INT(self)
-	switch right := rhs.(type) {
-	case Int:
-		return NewBoolean(left <= right)
-	case Float:
-		return NewBoolean(left <= Int(right))
-	default:
-		err := fmt.Sprintf("invalid comparison between '%s' and '%s'", left.Class(), right.Class())
-		rt.SetError(NewTypeError(err))
-		return nil
-	}
-}
-
-func intLessThan(rt Runtime, self IrObject, rhs IrObject) IrObject {
+func intLess(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	left := INT(self)
 	switch right := rhs.(type) {
 	case Int:
@@ -142,8 +128,22 @@ func intLessThan(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	case Float:
 		return NewBoolean(left < Int(right))
 	default:
-		err := fmt.Sprintf("invalid comparison between '%s' and '%s'", left.Class(), right.Class())
-		rt.SetError(NewTypeError(err))
+		err := NewTypeError("invalid comparison (<) between '%s' and '%s'", IntClass, right.Class())
+		rt.SetError(err)
+		return nil
+	}
+}
+
+func intLessEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
+	left := INT(self)
+	switch right := rhs.(type) {
+	case Int:
+		return NewBoolean(left <= right)
+	case Float:
+		return NewBoolean(left <= Int(right))
+	default:
+		err := NewTypeError("invalid comparison (<=) between '%s' and '%s'", IntClass, right.Class())
+		rt.SetError(err)
 		return nil
 	}
 }
@@ -183,10 +183,10 @@ func InitInt() {
 	IntClass.AddGoMethod("multiply", oneArg(intMultiply))
 	IntClass.AddGoMethod("/", oneArg(intDivide))
 	IntClass.AddGoMethod("divide", oneArg(intDivide))
-	IntClass.AddGoMethod(">", oneArg(intGreatThan))
-	IntClass.AddGoMethod(">=", oneArg(intGreaterThanOrEqual))
-	IntClass.AddGoMethod("<", oneArg(intLessThan))
-	IntClass.AddGoMethod("<=", oneArg(intLessThanOrEqual))
+	IntClass.AddGoMethod(">", oneArg(intGreat))
+	IntClass.AddGoMethod(">=", oneArg(intGreatEqual))
+	IntClass.AddGoMethod("<", oneArg(intLess))
+	IntClass.AddGoMethod("<=", oneArg(intLessEqual))
 	IntClass.AddGoMethod("inspect", zeroArgs(intInspect))
 	IntClass.AddGoMethod("uadd", zeroArgs(intUnaryAdd))
 	IntClass.AddGoMethod("usub", zeroArgs(intUnarySub))
