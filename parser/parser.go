@@ -9,6 +9,24 @@ import (
 	"strings"
 )
 
+var startStmt = map[token.Type]bool{
+	token.Object: true,
+	token.Fun:    true,
+	token.If:     true,
+	token.For:    true,
+	token.While:  true,
+	token.Switch: true,
+	token.Stop:   true,
+	token.Return: true,
+}
+
+var switchStartStmt = map[token.Type]bool{
+	token.Case:       true,
+	token.Colon:      true,
+	token.Default:    true,
+	token.RightBrace: true,
+}
+
 type parser struct {
 	lexer  lexer.Lexer
 	tok    *token.Token
@@ -51,24 +69,6 @@ func (p *parser) parseStmtList() (list []ast.Stmt) {
 	}
 
 	return
-}
-
-var startStmt = map[token.Type]bool{
-	token.Object: true,
-	token.Fun:    true,
-	token.If:     true,
-	token.For:    true,
-	token.While:  true,
-	token.Switch: true,
-	token.Stop:   true,
-	token.Return: true,
-}
-
-var switchStartStmt = map[token.Type]bool{
-	token.Case:       true,
-	token.Colon:      true,
-	token.Default:    true,
-	token.RightBrace: true,
 }
 
 func (p *parser) sync(to map[token.Type]bool) {

@@ -26,6 +26,8 @@ var binaryOps = map[token.Type]string{
 	token.LessEqual:  "<=",
 	token.Great:      ">",
 	token.GreatEqual: ">=",
+	token.Or:         "or",
+	token.And:        "and",
 }
 
 const (
@@ -257,9 +259,7 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) {
 		c.addUnary(node.Operator)
 
 	case *ast.BinaryExpr:
-		c.compileExpr(node.Left, true)
-		c.compileExpr(node.Right, true)
-		c.addBinary(node.Operator)
+		c.compileBinaryExpr(node)
 
 		if !isEvaluated {
 			c.add(bytecode.Pop, 0)
@@ -333,11 +333,6 @@ func (c *compiler) addUnary(t *token.Token) {
 	c.add(bytecode.CallMethod, c.addConstant(ci))
 }
 
-func (c *compiler) addBinary(t *token.Token) {
-	ci := lang.NewCallInfo(binaryOps[t.Type], 1)
-	c.add(bytecode.CallMethod, c.addConstant(ci))
-}
-
 func (c *compiler) compileBlock(block *ast.BlockStmt, addReturn bool) {
 	for _, stmt := range block.Stmts {
 		c.compileStmt(stmt)
@@ -358,8 +353,7 @@ func (c *compiler) compileWhileStmt(node *ast.WhileStmt) {
 	defer c.popControlFlow()
 
 	c.useBlock(loop)
-	c.compileExpr(node.Cond, true)
-	c.jumpToBlock(bytecode.JumpIfFalse, exit)
+	c.compileConditional(node.Cond, exit)
 	c.compileBlock(node.Body, false)
 	c.jumpToBlock(bytecode.Jump, loop)
 	c.useBlock(exit)
@@ -431,8 +425,7 @@ func (c *compiler) compileIfStmt(node *ast.IfStmt) {
 		endBlock = new(codeblock)
 	}
 
-	c.compileExpr(node.Cond, true)
-	c.jumpToBlock(bytecode.JumpIfFalse, elseBlock)
+	c.compileConditional(node.Cond, elseBlock)
 	c.compileBlock(node.Then, false)
 
 	if node.Else != nil {
@@ -562,6 +555,42 @@ func (c *compiler) compileLiteral(lit *ast.BasicLit) {
 	}
 
 	c.add(bytecode.Push, c.addConstant(val))
+}
+
+func (c *compiler) compileConditional(expr ast.Expr, next *codeblock) {
+	switch x := expr.(type) {
+	case *ast.BinaryExpr:
+		switch x.Operator.Type {
+		case token.And:
+			c.compileExpr(x.Left, true)
+			c.jumpToBlock(bytecode.JumpIfFalse, next)
+			c.compileExpr(x.Right, true)
+			c.jumpToBlock(bytecode.JumpIfFalse, next)
+
+		case token.Or:
+			body := new(codeblock)
+			c.compileExpr(x.Left, true)
+			c.jumpToBlock(bytecode.JumpIfTrue, body)
+			c.compileExpr(x.Right, true)
+			c.jumpToBlock(bytecode.JumpIfFalse, next)
+			c.useBlock(body)
+
+		default:
+			c.compileBinaryExpr(x)
+			c.jumpToBlock(bytecode.JumpIfFalse, next)
+		}
+
+	default:
+		c.compileExpr(x, true)
+		c.jumpToBlock(bytecode.JumpIfFalse, next)
+	}
+}
+
+func (c *compiler) compileBinaryExpr(expr *ast.BinaryExpr) {
+	c.compileExpr(expr.Left, true)
+	c.compileExpr(expr.Right, true)
+	ci := lang.NewCallInfo(binaryOps[expr.Operator.Type], 1)
+	c.add(bytecode.CallMethod, c.addConstant(ci))
 }
 
 func (c *compiler) cleanControlFlow() {

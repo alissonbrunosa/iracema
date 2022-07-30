@@ -1003,3 +1003,43 @@ func TestCompileReturnStmt_withoutValue(t *testing.T) {
 		top[i].Match(t, instr, meth.Constants())
 	}
 }
+
+func TestCompile_LogicalOperator_Or(t *testing.T) {
+	top := []Match{
+		expect(bytecode.Push).withOperand(0).toHaveConstant(10),
+		expect(bytecode.Push).withOperand(1).toHaveConstant(5),
+		expect(bytecode.CallMethod).withOperand(2).toBeMethodCall(">", 1),
+		expect(bytecode.JumpIfTrue).withOperand(8),
+		expect(bytecode.Push).withOperand(3).toHaveConstant(10),
+		expect(bytecode.Push).withOperand(4).toHaveConstant(9),
+		expect(bytecode.CallMethod).withOperand(5).toBeMethodCall(">", 1),
+		expect(bytecode.JumpIfFalse).withOperand(8),
+		expect(bytecode.PushNone),
+		expect(bytecode.Return),
+	}
+
+	meth := compile("if 10 > 5 or 10 > 9 {}")
+	for i, instr := range meth.Instrs() {
+		top[i].Match(t, instr, meth.Constants())
+	}
+}
+
+func TestCompile_LogicalOperator_And(t *testing.T) {
+	top := []Match{
+		expect(bytecode.Push).withOperand(0).toHaveConstant(10),
+		expect(bytecode.Push).withOperand(1).toHaveConstant(5),
+		expect(bytecode.CallMethod).withOperand(2).toBeMethodCall(">", 1),
+		expect(bytecode.JumpIfFalse).withOperand(8),
+		expect(bytecode.Push).withOperand(3).toHaveConstant(10),
+		expect(bytecode.Push).withOperand(4).toHaveConstant(9),
+		expect(bytecode.CallMethod).withOperand(5).toBeMethodCall(">", 1),
+		expect(bytecode.JumpIfFalse).withOperand(8),
+		expect(bytecode.PushNone),
+		expect(bytecode.Return),
+	}
+
+	meth := compile("if 10 > 5 and 10 > 9 {}")
+	for i, instr := range meth.Instrs() {
+		top[i].Match(t, instr, meth.Constants())
+	}
+}

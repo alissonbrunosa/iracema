@@ -25,6 +25,8 @@ const (
 	Object  // object
 	Return  // return
 	Super   // super
+	Or      // or
+	And     // and
 
 	Int    // Int
 	Float  // Float

@@ -25,6 +25,7 @@ const (
 	DefineFunction        // DEFINE_FUNCTION
 	Jump                  // JUMP
 	JumpIfFalse           // JUMP_IF_FALSE
+	JumpIfTrue            // JUMP_IF_TRUE
 	Iterate               // ITERATE
 	NewIterator           // NEWITERATOR
 )

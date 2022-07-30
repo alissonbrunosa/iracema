@@ -21,6 +21,8 @@ var keywords = map[string]Type{
 	"object":  Object,
 	"return":  Return,
 	"super":   Super,
+	"or":      Or,
+	"and":     And,
 }
 
 const LowestPrecedence = 0
@@ -33,12 +35,14 @@ type Token struct {
 
 func (t *Token) Precedence() int {
 	switch t.Type {
-	case Equal, NotEqual, Less, LessEqual, Great, GreatEqual:
+	case And, Or:
 		return 2
-	case Minus, Plus:
+	case Equal, NotEqual, Less, LessEqual, Great, GreatEqual:
 		return 3
-	case Slash, Star:
+	case Minus, Plus:
 		return 4
+	case Slash, Star:
+		return 5
 	}
 
 	return LowestPrecedence

@@ -92,6 +92,14 @@ func (i *Interpreter) Dispatch() (lang.IrObject, error) {
 			if !lang.IsTruthy(i.Pop()) {
 				i.JumpTo(operand)
 			}
+
+			goto next_instr
+
+		case bytecode.JumpIfTrue:
+			if lang.IsTruthy(i.Pop()) {
+				i.JumpTo(operand)
+			}
+
 			goto next_instr
 
 		case bytecode.BuildArray:
