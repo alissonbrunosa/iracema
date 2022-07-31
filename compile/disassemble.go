@@ -32,7 +32,7 @@ func (c *compiler) Disassemble(file *ast.File) {
 				fmt.Fprintf(w, "%-30s%s\n", ins.opcode, fragment.consts[ins.operand])
 			case bytecode.CallMethod, bytecode.CallSuper:
 				ci := fragment.consts[ins.operand].(*lang.CallInfo)
-				fmt.Fprintf(w, "%-30sname: %s argc:%d\n", ins.opcode, ci.Name(), ci.Argc())
+				fmt.Fprintf(w, "%-30sname: %s argc: %d\n", ins.opcode, ci.Name(), ci.Argc())
 			case bytecode.SetLocal, bytecode.GetLocal:
 				fmt.Fprintf(w, "%-30s%s\n", ins.opcode, fragment.locals[ins.operand])
 			case bytecode.JumpIfFalse, bytecode.Jump, bytecode.JumpIfTrue:
@@ -40,6 +40,8 @@ func (c *compiler) Disassemble(file *ast.File) {
 			case bytecode.DefineObject:
 				m := fragment.consts[ins.operand].(*lang.Method)
 				fmt.Fprintf(w, "%-30s%s\n", ins.opcode, m.Name())
+			case bytecode.BuildArray:
+				fmt.Fprintf(w, "%-30ssize: %d\n", ins.opcode, ins.operand)
 			default:
 				fmt.Fprintln(w, ins.opcode)
 			}

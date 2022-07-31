@@ -1,6 +1,7 @@
 package compile
 
 import (
+	"errors"
 	"fmt"
 	"iracema/ast"
 	"iracema/bytecode"
@@ -101,7 +102,10 @@ func (c *compiler) init() {
 }
 
 func (c *compiler) Compile(file *ast.File) (*lang.Method, error) {
-	c.compileStmt(file)
+	if err := c.compileStmt(file); err != nil {
+		return nil, err
+	}
+
 	return c.assemble(), nil
 }
 
@@ -135,17 +139,19 @@ func (c *compiler) patchJumps() {
 	}
 }
 
-func (c *compiler) compileStmt(stmt ast.Stmt) {
+func (c *compiler) compileStmt(stmt ast.Stmt) error {
 	switch node := stmt.(type) {
 	case *ast.File:
 		if len(node.Stmts) == 0 {
 			c.add(bytecode.PushNone, 0)
 			c.add(bytecode.Return, 0)
-			return
+			return nil
 		}
 
 		for _, stmt := range node.Stmts {
-			c.compileStmt(stmt)
+			if err := c.compileStmt(stmt); err != nil {
+				return err
+			}
 		}
 
 		if !c.block.hasReturn {
@@ -154,7 +160,7 @@ func (c *compiler) compileStmt(stmt ast.Stmt) {
 		}
 
 	case *ast.ExprStmt:
-		c.compileExpr(node.Expr, false)
+		return c.compileExpr(node.Expr, false)
 
 	case *ast.AssignStmt:
 		for i, value := range node.Right {
@@ -167,14 +173,25 @@ func (c *compiler) compileStmt(stmt ast.Stmt) {
 				}
 
 				local := c.defineLocal(lhs.Value, false)
-				c.compileExpr(value, true)
+				if err := c.compileExpr(value, true); err != nil {
+					return err
+				}
 				local.initialized = true
 				c.add(bytecode.SetLocal, local.index)
 
 			case *ast.IndexExpr:
-				c.compileExpr(lhs.Expr, true)
-				c.compileExpr(lhs.Index, true)
-				c.compileExpr(value, true)
+				if err := c.compileExpr(lhs.Expr, true); err != nil {
+					return err
+				}
+
+				if err := c.compileExpr(lhs.Index, true); err != nil {
+					return err
+				}
+
+				if err := c.compileExpr(value, true); err != nil {
+					return err
+				}
+
 				ci := lang.NewCallInfo("insert", 2)
 				c.add(bytecode.CallMethod, c.addConstant(ci))
 				c.add(bytecode.Pop, 0)
@@ -182,67 +199,59 @@ func (c *compiler) compileStmt(stmt ast.Stmt) {
 		}
 
 	case *ast.WhileStmt:
-		c.compileWhileStmt(node)
+		return c.compileWhileStmt(node)
 
 	case *ast.ForStmt:
-		c.compileForStmt(node)
+		return c.compileForStmt(node)
 
 	case *ast.SwitchStmt:
-		c.compileSwitchStmt(node)
+		return c.compileSwitchStmt(node)
 
 	case *ast.ObjectDecl:
-		object := c.compileObjectDecl(node)
-
-		if node.Parent != nil {
-			c.add(bytecode.GetConstant, c.addConstant(node.Parent.Value))
-		} else {
-			c.add(bytecode.PushNone, 0)
-		}
-
-		c.add(bytecode.DefineObject, c.addConstant(object))
-		c.add(bytecode.Pop, 0)
+		return c.compileObjectDecl(node)
 
 	case *ast.FunDecl:
-		fun := c.compileFunDecl(node)
-		c.add(bytecode.DefineFunction, c.addConstant(fun))
+		return c.compileFunDecl(node)
 
 	case *ast.BlockStmt:
-		c.compileBlock(node, false)
+		return c.compileBlock(node, false)
 
 	case *ast.ReturnStmt:
-		c.compileReturnStmt(node)
+		return c.compileReturnStmt(node)
 
 	case *ast.StopStmt:
-		c.compileStopStmt(node)
+		return c.compileStopStmt(node)
 
 	case *ast.NextStmt:
-		c.compileNextStmt(node)
+		return c.compileNextStmt(node)
 
 	case *ast.IfStmt:
-		c.compileIfStmt(node)
+		return c.compileIfStmt(node)
 	}
+
+	return nil
 }
 
-func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) {
+func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) error {
 	switch node := expr.(type) {
 	case *ast.Ident:
 		if node.IsAttr() {
 			c.add(bytecode.GetAttr, c.addConstant(node.Value))
-			return
+			return nil
 		}
 
 		if node.IsConstant() {
 			c.add(bytecode.GetConstant, c.addConstant(node.Value))
-			return
+			return nil
 		}
 
 		if local := c.resolve(node.Value); local != nil {
 			if !local.initialized {
-				panic("underfined " + local.name)
+				return errors.New("underfined " + local.name)
 			}
 
 			c.add(bytecode.GetLocal, local.index)
-			return
+			return nil
 		}
 
 		c.add(bytecode.PushSelf, 0)
@@ -251,32 +260,44 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) {
 
 	case *ast.BasicLit:
 		if isEvaluated {
-			c.compileLiteral(node)
+			if err := c.compileLiteral(node); err != nil {
+				return err
+			}
 		}
 
 	case *ast.UnaryExpr:
-		c.compileExpr(node.Expr, true)
+		if err := c.compileExpr(node.Expr, true); err != nil {
+			return err
+		}
 		c.addUnary(node.Operator)
 
 	case *ast.BinaryExpr:
-		c.compileBinaryExpr(node)
+		if err := c.compileBinaryExpr(node); err != nil {
+			return err
+		}
 
 		if !isEvaluated {
 			c.add(bytecode.Pop, 0)
 		}
 
 	case *ast.ArrayLit:
-		c.compileArrayLireral(node)
+		return c.compileArrayLireral(node)
 
 	case *ast.GroupExpr:
-		c.compileExpr(node.Expr, isEvaluated)
+		return c.compileExpr(node.Expr, isEvaluated)
 
 	case *ast.BlockExpr:
-		panic("not implemented")
+		return errors.New("not implemented")
 
 	case *ast.IndexExpr:
-		c.compileExpr(node.Expr, true)
-		c.compileExpr(node.Index, true)
+		if err := c.compileExpr(node.Expr, true); err != nil {
+			return err
+		}
+
+		if err := c.compileExpr(node.Index, true); err != nil {
+			return err
+		}
+
 		ci := lang.NewCallInfo("get", 1)
 		c.add(bytecode.CallMethod, c.addConstant(ci))
 		if !isEvaluated {
@@ -285,13 +306,17 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) {
 
 	case *ast.CallExpr:
 		if node.Receiver != nil {
-			c.compileExpr(node.Receiver, true)
+			if err := c.compileExpr(node.Receiver, true); err != nil {
+				return err
+			}
 		} else {
 			c.add(bytecode.PushSelf, 0)
 		}
 
 		for _, arg := range node.Arguments {
-			c.compileExpr(arg, true)
+			if err := c.compileExpr(arg, true); err != nil {
+				return err
+			}
 		}
 
 		ci := lang.NewCallInfo(node.Method.Value, byte(len(node.Arguments)))
@@ -308,7 +333,9 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) {
 			ci = lang.NewCallInfo(c.name, byte(len(node.Arguments)))
 
 			for _, arg := range node.Arguments {
-				c.compileExpr(arg, true)
+				if err := c.compileExpr(arg, true); err != nil {
+					return err
+				}
 			}
 		} else {
 			ci = lang.NewCallInfo(c.name, byte(len(c.paramIndices)))
@@ -324,8 +351,10 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) {
 		}
 
 	default:
-		return
+		return errors.New("unknown expr")
 	}
+
+	return nil
 }
 
 func (c *compiler) addUnary(t *token.Token) {
@@ -333,9 +362,11 @@ func (c *compiler) addUnary(t *token.Token) {
 	c.add(bytecode.CallMethod, c.addConstant(ci))
 }
 
-func (c *compiler) compileBlock(block *ast.BlockStmt, addReturn bool) {
+func (c *compiler) compileBlock(block *ast.BlockStmt, addReturn bool) error {
 	for _, stmt := range block.Stmts {
-		c.compileStmt(stmt)
+		if err := c.compileStmt(stmt); err != nil {
+			return err
+		}
 	}
 
 	if addReturn && !c.block.hasReturn {
@@ -343,9 +374,11 @@ func (c *compiler) compileBlock(block *ast.BlockStmt, addReturn bool) {
 		c.add(bytecode.Return, 0)
 		c.block.hasReturn = true
 	}
+
+	return nil
 }
 
-func (c *compiler) compileWhileStmt(node *ast.WhileStmt) {
+func (c *compiler) compileWhileStmt(node *ast.WhileStmt) error {
 	exit := new(codeblock)
 	loop := new(codeblock)
 
@@ -353,13 +386,21 @@ func (c *compiler) compileWhileStmt(node *ast.WhileStmt) {
 	defer c.popControlFlow()
 
 	c.useBlock(loop)
-	c.compileConditional(node.Cond, exit)
-	c.compileBlock(node.Body, false)
+	if err := c.compileConditional(node.Cond, exit); err != nil {
+		return err
+	}
+
+	if err := c.compileBlock(node.Body, false); err != nil {
+		return err
+	}
+
 	c.jumpToBlock(bytecode.Jump, loop)
 	c.useBlock(exit)
+
+	return nil
 }
 
-func (c *compiler) compileForStmt(node *ast.ForStmt) {
+func (c *compiler) compileForStmt(node *ast.ForStmt) error {
 	exit := new(codeblock)
 	setup := new(codeblock)
 	loop := new(codeblock)
@@ -368,7 +409,9 @@ func (c *compiler) compileForStmt(node *ast.ForStmt) {
 	defer c.popControlFlow()
 
 	c.useBlock(setup)
-	c.compileExpr(node.Iterable, true)
+	if err := c.compileExpr(node.Iterable, true); err != nil {
+		return err
+	}
 	c.add(bytecode.NewIterator, 0)
 
 	c.useBlock(loop)
@@ -378,27 +421,38 @@ func (c *compiler) compileForStmt(node *ast.ForStmt) {
 	local := c.defineLocal(node.Element.Value, true)
 	c.add(bytecode.SetLocal, local.index)
 
-	c.compileBlock(node.Body, false)
-	c.jumpToBlock(bytecode.Jump, loop)
+	if err := c.compileBlock(node.Body, false); err != nil {
+		return err
+	}
 
+	c.jumpToBlock(bytecode.Jump, loop)
 	c.useBlock(exit)
+
+	return nil
 }
 
-func (c *compiler) compileSwitchStmt(node *ast.SwitchStmt) {
+func (c *compiler) compileSwitchStmt(node *ast.SwitchStmt) error {
 	endBlock := new(codeblock)
 
 	lenCases := len(node.Cases) - 1
 	for i, caseClause := range node.Cases {
 		nextCaseBlock := new(codeblock)
 
-		c.compileExpr(node.Key, true)
-		c.compileExpr(caseClause.Value, true)
+		if err := c.compileExpr(node.Key, true); err != nil {
+			return err
+		}
+
+		if err := c.compileExpr(caseClause.Value, true); err != nil {
+			return err
+		}
 
 		callInfo := lang.NewCallInfo("==", 1)
 		c.add(bytecode.CallMethod, c.addConstant(callInfo))
 
 		c.jumpToBlock(bytecode.JumpIfFalse, nextCaseBlock)
-		c.compileBlock(caseClause.Body, false)
+		if err := c.compileBlock(caseClause.Body, false); err != nil {
+			return err
+		}
 
 		if i != lenCases || node.Default != nil {
 			c.jumpToBlock(bytecode.Jump, endBlock)
@@ -408,13 +462,16 @@ func (c *compiler) compileSwitchStmt(node *ast.SwitchStmt) {
 	}
 
 	if node.Default != nil {
-		c.compileBlock(node.Default.Body, false)
+		if err := c.compileBlock(node.Default.Body, false); err != nil {
+			return err
+		}
 	}
 
 	c.useBlock(endBlock)
+	return nil
 }
 
-func (c *compiler) compileIfStmt(node *ast.IfStmt) {
+func (c *compiler) compileIfStmt(node *ast.IfStmt) error {
 	var elseBlock, endBlock *codeblock
 
 	if node.Else == nil {
@@ -425,16 +482,24 @@ func (c *compiler) compileIfStmt(node *ast.IfStmt) {
 		endBlock = new(codeblock)
 	}
 
-	c.compileConditional(node.Cond, elseBlock)
-	c.compileBlock(node.Then, false)
+	if err := c.compileConditional(node.Cond, elseBlock); err != nil {
+		return err
+	}
+
+	if err := c.compileBlock(node.Then, false); err != nil {
+		return err
+	}
 
 	if node.Else != nil {
 		c.jumpToBlock(bytecode.Jump, endBlock)
 		c.useBlock(elseBlock)
-		c.compileStmt(node.Else)
+		if err := c.compileStmt(node.Else); err != nil {
+			return err
+		}
 	}
 
 	c.useBlock(endBlock)
+	return nil
 }
 
 func (c *compiler) jumpToBlock(op bytecode.Opcode, target *codeblock) {
@@ -460,17 +525,29 @@ func (c *compiler) closeScope() {
 	c.fragment = c.fragment.previous
 }
 
-func (c *compiler) compileObjectDecl(node *ast.ObjectDecl) *lang.Method {
-	c.openScope(node.Name.Value)
-	defer c.closeScope()
+func (c *compiler) compileObjectDecl(obj *ast.ObjectDecl) error {
+	if obj.Parent != nil {
+		c.add(bytecode.GetConstant, c.addConstant(obj.Parent.Value))
+	} else {
+		c.add(bytecode.PushNone, 0)
+	}
 
-	c.compileBlock(node.Body, true)
-	return c.assemble()
+	c.openScope(obj.Name.Value)
+	if err := c.compileBlock(obj.Body, true); err != nil {
+		return err
+	}
+
+	objBody := c.assemble()
+	c.closeScope()
+
+	c.add(bytecode.DefineObject, c.addConstant(objBody))
+	c.add(bytecode.Pop, 0)
+
+	return nil
 }
 
-func (c *compiler) compileFunDecl(node *ast.FunDecl) *lang.Method {
+func (c *compiler) compileFunDecl(node *ast.FunDecl) error {
 	c.openScope(node.Name.Value)
-	defer c.closeScope()
 
 	c.argc = byte(len(node.Parameters))
 	for _, param := range node.Parameters {
@@ -478,7 +555,9 @@ func (c *compiler) compileFunDecl(node *ast.FunDecl) *lang.Method {
 		c.paramIndices = append(c.paramIndices, p.index)
 	}
 
-	c.compileBlock(node.Body, true)
+	if err := c.compileBlock(node.Body, true); err != nil {
+		return err
+	}
 
 	end := new(codeblock)
 	if len(node.Catches) != 0 {
@@ -497,7 +576,9 @@ func (c *compiler) compileFunDecl(node *ast.FunDecl) *lang.Method {
 				c.add(bytecode.SetLocal, local.index)
 			}
 
-			c.compileBlock(ch.Body, true)
+			if err := c.compileBlock(ch.Body, true); err != nil {
+				return err
+			}
 		}
 
 		c.useBlock(end)
@@ -505,19 +586,25 @@ func (c *compiler) compileFunDecl(node *ast.FunDecl) *lang.Method {
 		c.block.hasReturn = true
 	}
 
-	return c.assemble()
+	fun := c.assemble()
+	c.closeScope()
+	c.add(bytecode.DefineFunction, c.addConstant(fun))
+	return nil
 }
 
-func (c *compiler) compileArrayLireral(node *ast.ArrayLit) {
+func (c *compiler) compileArrayLireral(node *ast.ArrayLit) error {
 	size := len(node.Elements)
 	for _, el := range node.Elements {
-		c.compileExpr(el, true)
+		if err := c.compileExpr(el, true); err != nil {
+			return err
+		}
 	}
 
 	c.add(bytecode.BuildArray, byte(size))
+	return nil
 }
 
-func (c *compiler) compileLiteral(lit *ast.BasicLit) {
+func (c *compiler) compileLiteral(lit *ast.BasicLit) error {
 	var val lang.IrObject
 
 	switch lit.Type() {
@@ -527,70 +614,94 @@ func (c *compiler) compileLiteral(lit *ast.BasicLit) {
 	case token.Bool:
 		value, err := strconv.ParseBool(lit.Value)
 		if err != nil {
-			panic("invalid boolean literal")
+			return err
 		}
 		val = lang.Bool(value)
 
 	case token.Int:
 		value, err := strconv.Atoi(lit.Value)
 		if err != nil {
-			panic("invalid integer literal")
+			return err
 		}
 		val = lang.Int(value)
 
 	case token.Float:
 		value, err := strconv.ParseFloat(lit.Value, 64)
 		if err != nil {
-			panic("invalid float literal")
+			return err
 		}
 		val = lang.Float(value)
 
 	case token.None:
 		c.add(bytecode.PushNone, 0)
-		return
+		return nil
 
 	default:
-		fmt.Printf("DEFAULT %T, %q, %q\n", lit, lit.Value, lit.Token.Type)
-		panic("invalid literal")
+		return errors.New("invalid literal")
 	}
 
 	c.add(bytecode.Push, c.addConstant(val))
+	return nil
 }
 
-func (c *compiler) compileConditional(expr ast.Expr, next *codeblock) {
+func (c *compiler) compileConditional(expr ast.Expr, next *codeblock) error {
 	switch x := expr.(type) {
 	case *ast.BinaryExpr:
 		switch x.Operator.Type {
 		case token.And:
-			c.compileExpr(x.Left, true)
+			if err := c.compileExpr(x.Left, true); err != nil {
+				return err
+			}
 			c.jumpToBlock(bytecode.JumpIfFalse, next)
-			c.compileExpr(x.Right, true)
+
+			if err := c.compileExpr(x.Right, true); err != nil {
+				return err
+			}
 			c.jumpToBlock(bytecode.JumpIfFalse, next)
 
 		case token.Or:
 			body := new(codeblock)
-			c.compileExpr(x.Left, true)
+			if err := c.compileExpr(x.Left, true); err != nil {
+				return err
+			}
 			c.jumpToBlock(bytecode.JumpIfTrue, body)
-			c.compileExpr(x.Right, true)
+
+			if err := c.compileExpr(x.Right, true); err != nil {
+				return err
+			}
+
 			c.jumpToBlock(bytecode.JumpIfFalse, next)
 			c.useBlock(body)
 
 		default:
-			c.compileBinaryExpr(x)
+			if err := c.compileBinaryExpr(x); err != nil {
+				return err
+			}
 			c.jumpToBlock(bytecode.JumpIfFalse, next)
 		}
 
 	default:
-		c.compileExpr(x, true)
+		if err := c.compileExpr(x, true); err != nil {
+			return err
+		}
 		c.jumpToBlock(bytecode.JumpIfFalse, next)
 	}
+
+	return nil
 }
 
-func (c *compiler) compileBinaryExpr(expr *ast.BinaryExpr) {
-	c.compileExpr(expr.Left, true)
-	c.compileExpr(expr.Right, true)
+func (c *compiler) compileBinaryExpr(expr *ast.BinaryExpr) error {
+	if err := c.compileExpr(expr.Left, true); err != nil {
+		return err
+	}
+
+	if err := c.compileExpr(expr.Right, true); err != nil {
+		return err
+	}
+
 	ci := lang.NewCallInfo(binaryOps[expr.Operator.Type], 1)
 	c.add(bytecode.CallMethod, c.addConstant(ci))
+	return nil
 }
 
 func (c *compiler) cleanControlFlow() {
@@ -617,38 +728,46 @@ func (c *compiler) rewindControlFlow(inLoop bool) {
 	}
 }
 
-func (c *compiler) compileReturnStmt(ret *ast.ReturnStmt) {
+func (c *compiler) compileReturnStmt(ret *ast.ReturnStmt) error {
 	c.rewindControlFlow(false)
 
 	if ret.Value != nil {
-		c.compileExpr(ret.Value, true)
+		if err := c.compileExpr(ret.Value, true); err != nil {
+			return err
+		}
 	} else {
 		c.add(bytecode.PushNone, 0)
 	}
 
 	c.add(bytecode.Return, 0)
 	c.block.hasReturn = true
+
+	return nil
 }
 
-func (c *compiler) compileStopStmt(_stop *ast.StopStmt) {
+func (c *compiler) compileStopStmt(_stop *ast.StopStmt) error {
 	c.rewindControlFlow(true)
 
 	if c.control == nil {
-		panic("STOP OUTSIDE LOOP")
+		return errors.New("STOP OUTSIDE LOOP")
 	}
 
 	c.cleanControlFlow()
 	c.jumpToBlock(bytecode.Jump, c.control.exit)
+
+	return nil
 }
 
-func (c *compiler) compileNextStmt(_next *ast.NextStmt) {
+func (c *compiler) compileNextStmt(_next *ast.NextStmt) error {
 	c.rewindControlFlow(true)
 
 	if c.control == nil {
-		panic("NEXT OUTSIDE LOOP")
+		return errors.New("NEXT OUTSIDE LOOP")
 	}
 
 	c.jumpToBlock(bytecode.Jump, c.control.start)
+
+	return nil
 }
 
 func (c *compiler) defineLocal(name string, initialized bool) *local {
