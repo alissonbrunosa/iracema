@@ -15,7 +15,7 @@ type Interpreter struct {
 }
 
 func (i *Interpreter) Init(top *lang.Method) {
-	i.PushFrame(lang.NewObject(), top, TOP_FRAME)
+	i.PushFrame(lang.NewScript(), top, TOP_FRAME)
 }
 
 func (i *Interpreter) Dispatch() (lang.IrObject, error) {
@@ -170,7 +170,7 @@ func (i *Interpreter) Dispatch() (lang.IrObject, error) {
 			goto start_frame
 
 		case bytecode.DefineFunction:
-			class := self.(*lang.Class)
+			class := i.class
 			meth := constants[operand].(*lang.Method)
 			class.AddMethod(meth.Name(), meth)
 			goto next_instr

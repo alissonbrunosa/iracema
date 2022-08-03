@@ -13,6 +13,7 @@ func init() {
 	InitBool()
 	InitHash()
 	InitArray()
+	InitScript()
 
 	classes = map[string]*Class{
 		"Object":  ObjectClass,
@@ -62,4 +63,8 @@ type IrObject interface {
 type Runtime interface {
 	SetError(*ErrorObject)
 	Call(IrObject, *Method, ...IrObject) IrObject
+}
+
+func NewScript() IrObject {
+	return ScriptClass.Alloc()
 }

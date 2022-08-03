@@ -34,6 +34,10 @@ var binaryOps = map[token.Type]string{
 const (
 	FOR_LOOP   = 1
 	WHILE_LOOP = 2
+
+	TOP_SCOPE = 1 << iota
+	CLASS_SCOPE
+	METHOD_SCOPE
 )
 
 type controlflow struct {
@@ -66,6 +70,7 @@ func (i *instr) hasTarget() bool {
 
 type fragment struct {
 	name         string
+	scope        int
 	argc         byte
 	consts       []lang.IrObject
 	paramIndices []byte
@@ -94,6 +99,7 @@ func (c *compiler) init() {
 	blk := new(basicblock)
 	c.fragment = &fragment{
 		name:       "main",
+		scope:      TOP_SCOPE,
 		block:      blk,
 		entrypoint: blk,
 	}
@@ -801,10 +807,11 @@ func (c *compiler) addJump(op bytecode.Opcode, target *basicblock) {
 	c.block.instrs = append(c.block.instrs, &instr{opcode: op, target: target})
 }
 
-func (c *compiler) openScope(name string) {
+func (c *compiler) openScope(name string, scope int) {
 	blk := new(basicblock)
 	c.fragment = &fragment{
 		name:       name,
+		scope:      scope,
 		previous:   c.fragment,
 		block:      blk,
 		entrypoint: blk,
@@ -818,13 +825,17 @@ func (c *compiler) closeScope() {
 }
 
 func (c *compiler) compileObjectDecl(obj *ast.ObjectDecl) error {
+	if c.scope != TOP_SCOPE {
+		return errors.New("can only there declare object in the top most scope")
+	}
+
 	if obj.Parent != nil {
 		c.add(bytecode.GetConstant, c.addConstant(obj.Parent.Value))
 	} else {
 		c.add(bytecode.PushNone, 0)
 	}
 
-	c.openScope(obj.Name.Value)
+	c.openScope(obj.Name.Value, CLASS_SCOPE)
 	if err := c.compileBlock(obj.Body, true); err != nil {
 		return err
 	}
@@ -839,7 +850,11 @@ func (c *compiler) compileObjectDecl(obj *ast.ObjectDecl) error {
 }
 
 func (c *compiler) compileFunDecl(fun *ast.FunDecl) error {
-	c.openScope(fun.Name.Value)
+	if c.scope == METHOD_SCOPE {
+		return errors.New("can not declare a method inside of a method")
+	}
+
+	c.openScope(fun.Name.Value, METHOD_SCOPE)
 
 	var catch *basicblock
 	if len(fun.Catches) != 0 {

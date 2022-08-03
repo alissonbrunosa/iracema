@@ -17,6 +17,7 @@ type frame struct {
 	name         string
 	method       *lang.Method
 	self         lang.IrObject
+	class        *lang.Class
 	instrs       []uint16
 	constants    []lang.IrObject
 	instrPointer int
@@ -34,6 +35,7 @@ func TopFrame(self lang.IrObject, meth *lang.Method) *frame {
 		name:         "top",
 		method:       meth,
 		self:         self,
+		class:        self.Class(),
 		stack:        make([]lang.IrObject, STACK_SIZE),
 		instrs:       meth.Instrs(),
 		constants:    meth.Constants(),
@@ -63,6 +65,7 @@ func (f *frame) NewObjectFrame(self lang.IrObject, meth *lang.Method) *frame {
 		name:         meth.Name(),
 		method:       meth,
 		self:         self,
+		class:        self.(*lang.Class),
 		stack:        f.stack[f.stackPointer:],
 		instrs:       meth.Instrs(),
 		constants:    meth.Constants(),
@@ -79,6 +82,7 @@ func (f *frame) NewFrame(self lang.IrObject, meth *lang.Method, flags byte) *fra
 		flags:        flags,
 		method:       meth,
 		self:         self,
+		class:        self.Class(),
 		stack:        f.stack[f.stackPointer:],
 		name:         meth.Name(),
 		instrs:       meth.Instrs(),
@@ -92,8 +96,6 @@ func (f *frame) NewFrame(self lang.IrObject, meth *lang.Method, flags byte) *fra
 
 	return frame
 }
-
-func (f *frame) Self() lang.IrObject { return f.self }
 
 func (f *frame) SetLocal(index byte, value lang.IrObject) {
 	f.stack[index] = value
