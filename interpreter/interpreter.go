@@ -37,6 +37,9 @@ func (i *Interpreter) Dispatch() (lang.IrObject, error) {
 		i.instrPointer++
 
 		switch opcode {
+		case bytecode.Nop:
+			goto next_instr
+
 		case bytecode.Push:
 			value := constants[operand]
 			i.Push(value)

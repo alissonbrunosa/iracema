@@ -446,8 +446,7 @@ func TestCompileWhileStmt(t *testing.T) {
 				expect(bytecode.Push).withOperand(0).toHaveConstant(0),
 				expect(bytecode.Push).withOperand(1).toHaveConstant(0),
 				expect(bytecode.CallMethod).withOperand(2).toBeMethodCall("==", 1),
-				expect(bytecode.JumpIfFalse).toHaveOperand(6),
-				expect(bytecode.Jump).toHaveOperand(0),
+				expect(bytecode.JumpIfFalse).toHaveOperand(5),
 				expect(bytecode.Jump).toHaveOperand(0),
 				expect(bytecode.PushNone),
 				expect(bytecode.Return),
@@ -555,9 +554,8 @@ func TestCompileForStmt(t *testing.T) {
 				expect(bytecode.BuildArray).toHaveOperand(0),
 				expect(bytecode.NewIterator),
 				expect(bytecode.Iterate),
-				expect(bytecode.JumpIfFalse).toHaveOperand(7),
+				expect(bytecode.JumpIfFalse).toHaveOperand(6),
 				expect(bytecode.SetLocal).toHaveOperand(0),
-				expect(bytecode.Jump).toHaveOperand(2),
 				expect(bytecode.Jump).toHaveOperand(2),
 				expect(bytecode.PushNone),
 				expect(bytecode.Return),
@@ -767,6 +765,7 @@ func TestCompileObjectDecl_Empty_WithParent(t *testing.T) {
 
 func TestCompileFunDecl(t *testing.T) {
 	methMatches := []Match{
+		expect(bytecode.Nop),
 		expect(bytecode.GetLocal).toHaveOperand(0),
 		expect(bytecode.GetLocal).toHaveOperand(1),
 		expect(bytecode.CallMethod).withOperand(0).toBeMethodCall("/", 1),
@@ -774,7 +773,7 @@ func TestCompileFunDecl(t *testing.T) {
 		expect(bytecode.PushNone),
 		expect(bytecode.Return),
 		expect(bytecode.MatchType).withOperand(1).toHaveConstant("ZeroDivisionError"),
-		expect(bytecode.JumpIfFalse).toHaveOperand(15),
+		expect(bytecode.JumpIfFalse).toHaveOperand(16),
 		expect(bytecode.SetLocal).toHaveOperand(2),
 		expect(bytecode.PushSelf),
 		expect(bytecode.GetLocal).toHaveOperand(2),
@@ -870,13 +869,14 @@ func TestCompileFunDecl_withCallSuperExplicitArgs(t *testing.T) {
 
 func TestCompileFunDecl_withMultipleCatches(t *testing.T) {
 	methMatches := []Match{
+		expect(bytecode.Nop),
 		expect(bytecode.PushSelf),
 		expect(bytecode.CallMethod).withOperand(0).toBeMethodCall("explode", 0),
 		expect(bytecode.Pop),
 		expect(bytecode.PushNone),
 		expect(bytecode.Return),
 		expect(bytecode.MatchType).withOperand(1).toHaveConstant("Error"),
-		expect(bytecode.JumpIfFalse).toHaveOperand(14),
+		expect(bytecode.JumpIfFalse).toHaveOperand(15),
 		expect(bytecode.SetLocal).toHaveOperand(0),
 		expect(bytecode.PushSelf),
 		expect(bytecode.GetLocal).toHaveOperand(0),
@@ -885,7 +885,7 @@ func TestCompileFunDecl_withMultipleCatches(t *testing.T) {
 		expect(bytecode.PushNone),
 		expect(bytecode.Return),
 		expect(bytecode.MatchType).withOperand(3).toHaveConstant("ExplodeError"),
-		expect(bytecode.JumpIfFalse).toHaveOperand(23),
+		expect(bytecode.JumpIfFalse).toHaveOperand(24),
 		expect(bytecode.SetLocal).toHaveOperand(0),
 		expect(bytecode.PushSelf),
 		expect(bytecode.Push).withOperand(4).toHaveConstant(1),

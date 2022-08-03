@@ -24,26 +24,28 @@ func (c *compiler) Disassemble(file *ast.File) {
 		fmt.Println("== disasm:", header, str)
 		i := 0
 		w := os.Stdout
-		for _, ins := range fragment.instrs {
-			fmt.Printf("%04d ", i)
-			i += 2
-			switch ins.opcode {
-			case bytecode.Push, bytecode.MatchType, bytecode.GetConstant:
-				fmt.Fprintf(w, "%-30s%s\n", ins.opcode, fragment.consts[ins.operand])
-			case bytecode.CallMethod, bytecode.CallSuper:
-				ci := fragment.consts[ins.operand].(*lang.CallInfo)
-				fmt.Fprintf(w, "%-30sname: %s argc: %d\n", ins.opcode, ci.Name(), ci.Argc())
-			case bytecode.SetLocal, bytecode.GetLocal:
-				fmt.Fprintf(w, "%-30s%s\n", ins.opcode, fragment.locals[ins.operand])
-			case bytecode.JumpIfFalse, bytecode.Jump, bytecode.JumpIfTrue:
-				fmt.Fprintf(w, "%-30s%d\n", ins.opcode, ins.operand*2)
-			case bytecode.DefineObject:
-				m := fragment.consts[ins.operand].(*lang.Method)
-				fmt.Fprintf(w, "%-30s%s\n", ins.opcode, m.Name())
-			case bytecode.BuildArray:
-				fmt.Fprintf(w, "%-30ssize: %d\n", ins.opcode, ins.operand)
-			default:
-				fmt.Fprintln(w, ins.opcode)
+		for block := fragment.entrypoint; block != nil; block = block.next {
+			for _, ins := range block.instrs {
+				fmt.Printf("%04d ", i)
+				i += 2
+				switch ins.opcode {
+				case bytecode.Push, bytecode.MatchType, bytecode.GetConstant:
+					fmt.Fprintf(w, "%-30s%s\n", ins.opcode, fragment.consts[ins.operand])
+				case bytecode.CallMethod, bytecode.CallSuper:
+					ci := fragment.consts[ins.operand].(*lang.CallInfo)
+					fmt.Fprintf(w, "%-30sname: %s argc: %d\n", ins.opcode, ci.Name(), ci.Argc())
+				case bytecode.SetLocal, bytecode.GetLocal:
+					fmt.Fprintf(w, "%-30s%s\n", ins.opcode, fragment.locals[ins.operand])
+				case bytecode.JumpIfFalse, bytecode.Jump, bytecode.JumpIfTrue:
+					fmt.Fprintf(w, "%-30s%d\n", ins.opcode, ins.operand*2)
+				case bytecode.DefineObject:
+					m := fragment.consts[ins.operand].(*lang.Method)
+					fmt.Fprintf(w, "%-30s%s\n", ins.opcode, m.Name())
+				case bytecode.BuildArray:
+					fmt.Fprintf(w, "%-30ssize: %d\n", ins.opcode, ins.operand)
+				default:
+					fmt.Fprintln(w, ins.opcode)
+				}
 			}
 		}
 		fmt.Printf("\n")

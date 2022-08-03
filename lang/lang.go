@@ -25,6 +25,7 @@ func init() {
 		"Array":   ArrayClass,
 
 		"Error":             Error,
+		"NameError":         NameError,
 		"RuntimeError":      RuntimeError,
 		"ArgumentError":     ArgumentError,
 		"NoMethodError":     NoMethodError,

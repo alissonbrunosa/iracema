@@ -108,26 +108,6 @@ type methoCallMatch struct {
 	argc byte
 }
 
-func (b *bodyMatch) Match(t *testing.T, instr uint16, consts []lang.IrObject) {
-	t.Helper()
-
-	opcode := bytecode.Opcode(instr >> 8)
-	operand := byte(instr & 255)
-
-	if b.opcode != opcode {
-		t.Errorf("expected bytecode.Opcode to be %s, got %s", b.opcode, opcode)
-	}
-
-	fun, ok := consts[operand].(*lang.Method)
-	if !ok {
-		t.Errorf("expected const for %s to be *lang.CompiledFunction, got %T", b.opcode, consts[operand])
-	}
-
-	for i, instr := range fun.Instrs() {
-		b.matchers[i].Match(t, instr, fun.Constants())
-	}
-}
-
 func (m *methoCallMatch) Match(t *testing.T, instr uint16, consts []lang.IrObject) {
 	t.Helper()
 
@@ -160,6 +140,31 @@ type bodyMatch struct {
 
 	name     string
 	matchers []Match
+}
+
+func (b *bodyMatch) Match(t *testing.T, instr uint16, consts []lang.IrObject) {
+	t.Helper()
+
+	opcode := bytecode.Opcode(instr >> 8)
+	operand := byte(instr & 255)
+
+	if b.opcode != opcode {
+		t.Errorf("expected bytecode.Opcode to be %s, got %s", b.opcode, opcode)
+	}
+
+	fun, ok := consts[operand].(*lang.Method)
+	if !ok {
+		t.Errorf("expected const for %s to be *lang.Method, got %T", b.opcode, consts[operand])
+	}
+
+	instrs := fun.Instrs()
+	if len(instrs) != len(b.matchers) {
+		t.Fatalf("expected instrs size(%d) to be equal to matchers(%d)", len(instrs), len(b.matchers))
+	}
+
+	for i, instr := range instrs {
+		b.matchers[i].Match(t, instr, fun.Constants())
+	}
 }
 
 func expect(opcode bytecode.Opcode) *singleByteMatch {
