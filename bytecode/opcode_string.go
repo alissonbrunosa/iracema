@@ -8,6 +8,7 @@ func _() {
 	// An "invalid array index" compiler error signifies that the constant values have changed.
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
+	_ = x[Nop-0]
 	_ = x[Pop-1]
 	_ = x[Push-2]
 	_ = x[Throw-3]
@@ -31,16 +32,16 @@ func _() {
 	_ = x[JumpIfTrue-21]
 	_ = x[Iterate-22]
 	_ = x[NewIterator-23]
+	_ = x[WithCatch-24]
 }
 
-const _Opcode_name = "POPPUSHTHROWRETURNPUSH_NONESET_ATTRGET_ATTRPUSH_SELFSET_LOCALGET_LOCALMATCH_TYPEBUILD_ARRAYCALL_METHODCALL_SUPERSET_CONSTANTGET_CONSTANTDEFINE_OBJECTDEFINE_FUNCTIONJUMPJUMP_IF_FALSEJUMP_IF_TRUEITERATENEWITERATOR"
+const _Opcode_name = "NOPPOPPUSHTHROWRETURNPUSH_NONESET_ATTRGET_ATTRPUSH_SELFSET_LOCALGET_LOCALMATCH_TYPEBUILD_ARRAYCALL_METHODCALL_SUPERSET_CONSTANTGET_CONSTANTDEFINE_OBJECTDEFINE_FUNCTIONJUMPJUMP_IF_FALSEJUMP_IF_TRUEITERATENEWITERATORWITH_CATCH"
 
-var _Opcode_index = [...]uint8{0, 3, 7, 12, 18, 27, 35, 43, 52, 61, 70, 80, 91, 102, 112, 124, 136, 149, 164, 168, 181, 193, 200, 211}
+var _Opcode_index = [...]uint8{0, 3, 6, 10, 15, 21, 30, 38, 46, 55, 64, 73, 83, 94, 105, 115, 127, 139, 152, 167, 171, 184, 196, 203, 214, 224}
 
 func (i Opcode) String() string {
-	i -= 1
 	if i >= Opcode(len(_Opcode_index)-1) {
-		return "Opcode(" + strconv.FormatInt(int64(i+1), 10) + ")"
+		return "Opcode(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
 	return _Opcode_name[_Opcode_index[i]:_Opcode_index[i+1]]
 }

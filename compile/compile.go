@@ -38,8 +38,8 @@ const (
 
 type controlflow struct {
 	loop  int
-	start *codeblock
-	exit  *codeblock
+	start *basicblock
+	exit  *basicblock
 
 	next *controlflow
 }
@@ -54,15 +54,14 @@ func (l *local) String() string {
 	return fmt.Sprintf("%s@%d", l.name, l.index)
 }
 
-type codeblock struct {
-	startAt   byte
-	hasReturn bool
-}
-
 type instr struct {
 	opcode  bytecode.Opcode
 	operand byte
-	target  *codeblock
+	target  *basicblock
+}
+
+func (i *instr) hasTarget() bool {
+	return i.target != nil
 }
 
 type fragment struct {
@@ -71,13 +70,12 @@ type fragment struct {
 	consts       []lang.IrObject
 	paramIndices []byte
 	locals       []*local
-	instrs       []*instr
-	jumps        []int
 	catchOffset  int
 
-	control  *controlflow
-	block    *codeblock
-	previous *fragment
+	control    *controlflow
+	entrypoint *basicblock // ref to first block
+	block      *basicblock
+	previous   *fragment
 }
 
 type compiler struct {
@@ -93,9 +91,11 @@ func New() *compiler {
 }
 
 func (c *compiler) init() {
+	blk := new(basicblock)
 	c.fragment = &fragment{
-		name:  "main",
-		block: new(codeblock),
+		name:       "main",
+		block:      blk,
+		entrypoint: blk,
 	}
 
 	c.fragments = append(c.fragments, c.fragment)
@@ -111,11 +111,14 @@ func (c *compiler) Compile(file *ast.File) (*lang.Method, error) {
 
 func (c *compiler) assemble() *lang.Method {
 	var bytecode []uint16
+	markReachable(c.entrypoint)
 	c.patchJumps()
 
-	for _, instr := range c.instrs {
-		code := uint16(instr.opcode)<<8 | uint16(instr.operand)
-		bytecode = append(bytecode, code)
+	for block := c.entrypoint; block != nil; block = block.next {
+		for _, instr := range block.instrs {
+			code := uint16(instr.opcode)<<8 | uint16(instr.operand)
+			bytecode = append(bytecode, code)
+		}
 	}
 
 	return lang.NewIrMethod(
@@ -128,14 +131,114 @@ func (c *compiler) assemble() *lang.Method {
 	)
 }
 
-func (c *compiler) patchJumps() {
-	if len(c.jumps) == 0 {
+type stack []*basicblock
+
+func (s *stack) Push(block *basicblock) {
+	*s = append(*s, block)
+}
+
+func (s *stack) Pop() *basicblock {
+	i := len(*s) - 1
+	elem := (*s)[i]
+	*s = (*s)[:i]
+	return elem
+}
+
+func (s *stack) Empty() bool { return len(*s) == 0 }
+
+func skipEmptyBlocks(entrypoint *basicblock) {
+	// eliminate empty blocks
+	for block := entrypoint; block != nil; block = block.next {
+		next := block.next
+		if next == nil {
+			break
+		}
+
+		for len(next.instrs) == 0 && next.next != nil {
+			next = next.next
+		}
+
+		block.next = next
+	}
+
+	for block := entrypoint; block != nil; block = block.next {
+		if len(block.instrs) == 0 {
+			continue
+		}
+
+		for _, ins := range block.instrs {
+			if ins.opcode == bytecode.Jump || ins.opcode == bytecode.JumpIfTrue || ins.opcode == bytecode.JumpIfFalse {
+				for len(ins.target.instrs) == 0 {
+					ins.target = ins.target.next
+				}
+			}
+		}
+	}
+}
+
+func markReachable(entrypoint *basicblock) {
+	if entrypoint == nil {
 		return
 	}
 
-	for _, index := range c.jumps {
-		ins := c.instrs[index]
-		ins.operand = ins.target.startAt
+	skipEmptyBlocks(entrypoint)
+	defer skipEmptyBlocks(entrypoint)
+
+	//mark rachable
+	s := new(stack)
+
+	entrypoint.reachable = true
+	s.Push(entrypoint)
+
+	for !s.Empty() {
+		block := s.Pop()
+		block.visited = true
+
+		if block.next != nil && block.hasFallthrough() {
+			if next := block.next; !next.visited {
+				next.reachable = true
+				s.Push(next)
+			}
+		}
+
+		for _, ins := range block.instrs {
+			if ins.hasTarget() {
+				if target := ins.target; !target.visited {
+					target.reachable = true
+					s.Push(target)
+				}
+			}
+		}
+	}
+
+	for block := entrypoint; block != nil; block = block.next {
+		if block.reachable {
+			continue
+		}
+
+		block.instrs = nil
+	}
+}
+
+func (c *compiler) patchJumps() {
+	var start int
+	for block := c.entrypoint; block != nil; block = block.next {
+		block.offset = start
+		start += len(block.instrs)
+	}
+
+	for block := c.entrypoint; block != nil; block = block.next {
+		for _, ins := range block.instrs {
+			if ins.hasTarget() {
+				if ins.opcode == bytecode.WithCatch {
+					ins.opcode = bytecode.Nop
+					c.catchOffset = ins.target.offset
+					continue
+				}
+
+				ins.operand = byte(ins.target.offset)
+			}
+		}
 	}
 }
 
@@ -154,10 +257,8 @@ func (c *compiler) compileStmt(stmt ast.Stmt) error {
 			}
 		}
 
-		if !c.block.hasReturn {
-			c.add(bytecode.PushNone, 0)
-			c.add(bytecode.Return, 0)
-		}
+		c.add(bytecode.PushNone, 0)
+		c.add(bytecode.Return, 0)
 
 	case *ast.ExprStmt:
 		return c.compileExpr(node.Expr, false)
@@ -378,32 +479,112 @@ func (c *compiler) compileBlock(block *ast.BlockStmt, addReturn bool) error {
 	return nil
 }
 
-func (c *compiler) compileWhileStmt(node *ast.WhileStmt) error {
-	exit := new(codeblock)
-	loop := new(codeblock)
+/*
+* CFG for the following snippet
+*
+* a = 100
+* while a > 0 {
+*   puts(a)
+*
+*   a = a - 1
+* }
+*
+*      ┌───────────────────────────────────────────────┐
+* ┌────►  0000 PUSH                100                 │
+* │    │  0002 SET_LOCAL           a@0                 │
+* │    │  0004 GET_LOCAL           a@0                 │
+* │    │  0006 PUSH                0                   │
+* │    │  0008 CALL_METHOD         name: > argc: 1     │
+* │    │  0010 JUMP_IF_FALSE       30                  ├────┐
+* │    └──────────────────────┬────────────────────────┘    │
+* │                           │                             │
+* │                          next                           │
+* │                           │                             │
+* │    ┌──────────────────────▼────────────────────────┐    │
+* │    │  0012 PUSH_SELF                               │    │
+* │    │  0014 GET_LOCAL           a@0                 │    │
+* │    │  0016 CALL_METHOD         name: puts argc: 1  │    │
+* │    │  0018 POP                                     │    │
+* │    │  0020 GET_LOCAL           a@0                 │    │
+* │    │  0022 PUSH                1                   │    │
+* │    │  0024 CALL_METHOD         name: - argc: 1     │    │
+* │    │  0026 SET_LOCAL           a@0                 │    │
+* └────┤  0028 JUMP                4                   │    │
+*      └──────────────────────┬────────────────────────┘    │
+*                             │                             │
+*                            next                           │
+*                             │                             │
+*      ┌──────────────────────▼────────────────────────┐    │
+*      │  0030 PUSH_NONE                               ◄────┘
+*      │  0032 RETURN                                  │
+*      └───────────────────────────────────────────────┘
+* */
 
-	c.pushControlFlow(WHILE_LOOP, loop, exit)
+func (c *compiler) compileWhileStmt(node *ast.WhileStmt) error {
+	cond := new(basicblock)
+	loop := new(basicblock)
+	exit := new(basicblock)
+
+	c.pushControlFlow(WHILE_LOOP, cond, exit)
 	defer c.popControlFlow()
 
-	c.useBlock(loop)
+	c.useBlock(cond)
 	if err := c.compileConditional(node.Cond, exit); err != nil {
 		return err
 	}
 
+	c.useBlock(loop)
 	if err := c.compileBlock(node.Body, false); err != nil {
 		return err
 	}
 
-	c.jumpToBlock(bytecode.Jump, loop)
+	c.addJump(bytecode.Jump, cond)
 	c.useBlock(exit)
 
 	return nil
 }
 
+/*
+* CFG for the following snippet
+*
+* for el in [1,2,3] {
+*   puts(el)
+* }
+*
+*
+*       ┌──────────────────────────────────────────────┐
+* ┌─────►  0000 PUSH               1                   │
+* │     │  0002 PUSH               2                   │
+* │     │  0004 PUSH               3                   │
+* │     │  0006 BUILD_ARRAY        size: 3             │
+* │     │  0012 NEWITERATOR                            │
+* │     │  0014 ITERATE                                │
+* │     │  0016 JUMP_IF_FALSE      30                  ├────┐
+* │     └─────────────────────┬────────────────────────┘    │
+* │                           │                             │
+* │                          next                           │
+* │                           │                             │
+* │     ┌─────────────────────▼────────────────────────┐    │
+* │     │  0018 SET_LOCAL          el@1                │    │
+* │     │  0020 PUSH_SELF                              │    │
+* │     │  0022 GET_LOCAL          el@1                │    │
+* │     │  0024 CALL_METHOD        name: puts argc: 1  │    │
+* │     │  0026 POP                                    │    │
+* └─────┤  0028 JUMP               14                  │    │
+*       └─────────────────────┬────────────────────────┘    │
+*                             │                             │
+*                            next                           │
+*                             │                             │
+*       ┌─────────────────────▼────────────────────────┐    │
+*       │  0030 PUSH_NONE                              ◄────┘
+*       │  0032 RETURN                                 │
+*       └──────────────────────────────────────────────┘
+**/
+
 func (c *compiler) compileForStmt(node *ast.ForStmt) error {
-	exit := new(codeblock)
-	setup := new(codeblock)
-	loop := new(codeblock)
+	exit := new(basicblock)
+	setup := new(basicblock)
+	loop := new(basicblock)
 
 	c.pushControlFlow(FOR_LOOP, loop, exit)
 	defer c.popControlFlow()
@@ -416,7 +597,7 @@ func (c *compiler) compileForStmt(node *ast.ForStmt) error {
 
 	c.useBlock(loop)
 	c.add(bytecode.Iterate, 0)
-	c.jumpToBlock(bytecode.JumpIfFalse, exit)
+	c.addJump(bytecode.JumpIfFalse, exit)
 
 	local := c.defineLocal(node.Element.Value, true)
 	c.add(bytecode.SetLocal, local.index)
@@ -425,18 +606,82 @@ func (c *compiler) compileForStmt(node *ast.ForStmt) error {
 		return err
 	}
 
-	c.jumpToBlock(bytecode.Jump, loop)
+	c.addJump(bytecode.Jump, loop)
 	c.useBlock(exit)
 
 	return nil
 }
 
+/*
+* CFG for the following snippet
+*
+* n = 10
+* switch n {
+* case 10: puts(10)
+* case 20: puts(20)
+* default: puts("DEFAULT")
+* }
+*          ┌───────────────────────────────────────────────┐
+*          │  0000 PUSH                10                  │
+*          │  0002 SET_LOCAL           n@0                 │
+*          │  0004 GET_LOCAL           n@0                 │
+*          │  0006 PUSH                10                  │
+*          │  0008 CALL_METHOD         name: == argc: 1    │
+*          │  0010 JUMP_IF_FALSE       22                  ├───┐
+*          └─────────────────────┬─────────────────────────┘   │
+*                                │                             │
+*                               next                           │
+*                                │                             │
+*          ┌─────────────────────▼─────────────────────────┐   │
+*          │  0012 PUSH_SELF                               │   │
+*          │  0014 PUSH                10                  │   │
+*          │  0016 CALL_METHOD         name: puts argc: 1  │   │
+*          │  0018 POP                                     │   │
+* ┌────────┤  0020 JUMP                48                  │   │
+* │        └─────────────────────┬─────────────────────────┘   │
+* │                              │                             │
+* │                             next                           │
+* │                              │                             │
+* │        ┌─────────────────────▼─────────────────────────┐   │
+* │        │  0022 GET_LOCAL           n@0                 ◄───┘
+* │        │  0024 PUSH                20                  │
+* │        │  0026 CALL_METHOD         name: == argc: 1    │
+* │        │  0028 JUMP_IF_FALSE       40                  ├───┐
+* │        └─────────────────────┬─────────────────────────┘   │
+* │                              │                             │
+* │                             next                           │
+* │                              │                             │
+* │        ┌─────────────────────▼─────────────────────────┐   │
+* │        │  0030 PUSH_SELF                               │   │
+* │        │  0032 PUSH                20                  │   │
+* │        │  0034 CALL_METHOD         name: puts argc: 1  │   │
+* │        │  0036 POP                                     │   │
+* │  ┌─────┤  0038 JUMP                48                  │   │
+* │  │     └─────────────────────┬─────────────────────────┘   │
+* │  │                           │                             │
+* │  │                          next                           │
+* │  │                           │                             │
+* │  │     ┌─────────────────────▼─────────────────────────┐   │
+* │  │     │  0040 PUSH_SELF                               ◄───┘
+* │  │     │  0042 PUSH                "DEFAULT"           │
+* │  │     │  0044 CALL_METHOD         name: puts argc: 1  │
+* │  │     │  0046 POP                                     │
+* │  │     └─────────────────────┬─────────────────────────┘
+* │  │                           │
+* │  │                          next
+* │  │                           │
+* │  │     ┌─────────────────────▼─────────────────────────┐
+* └──┴─────►  0048 PUSH_NONE                               │
+*          │  0050 RETURN                                  │
+*          └───────────────────────────────────────────────┘
+**/
+
 func (c *compiler) compileSwitchStmt(node *ast.SwitchStmt) error {
-	endBlock := new(codeblock)
+	endBlock := new(basicblock)
 
 	lenCases := len(node.Cases) - 1
 	for i, caseClause := range node.Cases {
-		nextCaseBlock := new(codeblock)
+		nextCase := new(basicblock)
 
 		if err := c.compileExpr(node.Key, true); err != nil {
 			return err
@@ -449,16 +694,16 @@ func (c *compiler) compileSwitchStmt(node *ast.SwitchStmt) error {
 		callInfo := lang.NewCallInfo("==", 1)
 		c.add(bytecode.CallMethod, c.addConstant(callInfo))
 
-		c.jumpToBlock(bytecode.JumpIfFalse, nextCaseBlock)
+		c.addJump(bytecode.JumpIfFalse, nextCase)
 		if err := c.compileBlock(caseClause.Body, false); err != nil {
 			return err
 		}
 
 		if i != lenCases || node.Default != nil {
-			c.jumpToBlock(bytecode.Jump, endBlock)
+			c.addJump(bytecode.Jump, endBlock)
 		}
 
-		c.useBlock(nextCaseBlock)
+		c.useBlock(nextCase)
 	}
 
 	if node.Default != nil {
@@ -471,15 +716,61 @@ func (c *compiler) compileSwitchStmt(node *ast.SwitchStmt) error {
 	return nil
 }
 
+/*
+* CFG for the following snippet
+*
+* a = 100
+* if a > 10 {
+* 	puts("BIGGER")
+* } else {
+* 	puts("SMALLER")
+* }
+*
+*         ┌───────────────────────────────────────────────┐
+*         │ 0000  PUSH                100                 │
+*         │ 0002  SET_LOCAL           a@1                 │
+*         │ 0004  GET_LOCAL           a@1                 │
+*         │ 0006  PUSH                10                  │
+*         │ 0008  CALL_METHOD         name: > argc: 1     │
+*         │ 0010  JUMP_IF_FALSE       22                  ├─────┐
+*         └──────────────────────┬────────────────────────┘     │
+*                                │                              │
+*                              next                             │
+*                                │                              │
+*         ┌──────────────────────▼────────────────────────┐     │
+*         │ 0012  PUSH_SELF                               │     │
+*         │ 0014  PUSH                "BIGGER"            │     │
+*         │ 0016  CALL_METHOD         name: puts argc: 1  │     │
+*         │ 0018  POP                                     │     │
+*    ┌────┤ 0020  JUMP                30                  │     │
+*    │    └──────────────────────┬────────────────────────┘     │
+*    │                           │                              │
+*    │                         next                             │
+*    │                           │                              │
+*    │    ┌──────────────────────▼────────────────────────┐     │
+*    │    │ 0022  PUSH_SELF                               ◄─────┘
+*    │    │ 0024  PUSH                "SMALLER"           │
+*    │    │ 0026  CALL_METHOD         name: puts argc: 1  │
+*    │    │ 0028  POP                                     │
+*    │    └──────────────────────┬────────────────────────┘
+*    │                           │
+*    │                         next
+*    │                           │
+*    │    ┌──────────────────────▼────────────────────────┐
+*    └────► 0030 PUSH_NONE                                │
+*         │ 0032 RETURN                                   │
+*         └───────────────────────────────────────────────┘
+* */
+
 func (c *compiler) compileIfStmt(node *ast.IfStmt) error {
-	var elseBlock, endBlock *codeblock
+	var elseBlock, endBlock *basicblock
 
 	if node.Else == nil {
-		endBlock = new(codeblock)
+		endBlock = new(basicblock)
 		elseBlock = endBlock
 	} else {
-		elseBlock = new(codeblock)
-		endBlock = new(codeblock)
+		elseBlock = new(basicblock)
+		endBlock = new(basicblock)
 	}
 
 	if err := c.compileConditional(node.Cond, elseBlock); err != nil {
@@ -491,7 +782,7 @@ func (c *compiler) compileIfStmt(node *ast.IfStmt) error {
 	}
 
 	if node.Else != nil {
-		c.jumpToBlock(bytecode.Jump, endBlock)
+		c.addJump(bytecode.Jump, endBlock)
 		c.useBlock(elseBlock)
 		if err := c.compileStmt(node.Else); err != nil {
 			return err
@@ -502,20 +793,21 @@ func (c *compiler) compileIfStmt(node *ast.IfStmt) error {
 	return nil
 }
 
-func (c *compiler) jumpToBlock(op bytecode.Opcode, target *codeblock) {
-	if c.block.hasReturn {
-		return
+func (c *compiler) addJump(op bytecode.Opcode, target *basicblock) {
+	if !c.block.hasFallthrough() {
+		c.useBlock(new(basicblock))
 	}
 
-	c.jumps = append(c.jumps, len(c.instrs))
-	c.instrs = append(c.instrs, &instr{opcode: op, target: target})
+	c.block.instrs = append(c.block.instrs, &instr{opcode: op, target: target})
 }
 
 func (c *compiler) openScope(name string) {
+	blk := new(basicblock)
 	c.fragment = &fragment{
-		name:     name,
-		previous: c.fragment,
-		block:    new(codeblock),
+		name:       name,
+		previous:   c.fragment,
+		block:      blk,
+		entrypoint: blk,
 	}
 
 	c.fragments = append(c.fragments, c.fragment)
@@ -546,30 +838,32 @@ func (c *compiler) compileObjectDecl(obj *ast.ObjectDecl) error {
 	return nil
 }
 
-func (c *compiler) compileFunDecl(node *ast.FunDecl) error {
-	c.openScope(node.Name.Value)
+func (c *compiler) compileFunDecl(fun *ast.FunDecl) error {
+	c.openScope(fun.Name.Value)
 
-	c.argc = byte(len(node.Parameters))
-	for _, param := range node.Parameters {
+	var catch *basicblock
+	if len(fun.Catches) != 0 {
+		catch = new(basicblock)
+		c.addJump(bytecode.WithCatch, catch)
+	}
+
+	c.argc = byte(len(fun.Parameters))
+	for _, param := range fun.Parameters {
 		p := c.defineLocal(param.Value, true)
 		c.paramIndices = append(c.paramIndices, p.index)
 	}
 
-	if err := c.compileBlock(node.Body, true); err != nil {
+	if err := c.compileBlock(fun.Body, true); err != nil {
 		return err
 	}
 
-	end := new(codeblock)
-	if len(node.Catches) != 0 {
-		c.catchOffset = len(c.instrs)
+	if catch != nil {
+		c.useBlock(catch)
+		for _, ch := range fun.Catches {
+			catch = new(basicblock)
 
-		for _, ch := range node.Catches {
-			catch := end
-			end = new(codeblock)
-
-			c.useBlock(catch)
 			c.add(bytecode.MatchType, c.addConstant(ch.Type.Value))
-			c.jumpToBlock(bytecode.JumpIfFalse, end)
+			c.addJump(bytecode.JumpIfFalse, catch)
 
 			if ch.Ref != nil {
 				local := c.defineLocal(ch.Ref.Value, true)
@@ -579,16 +873,17 @@ func (c *compiler) compileFunDecl(node *ast.FunDecl) error {
 			if err := c.compileBlock(ch.Body, true); err != nil {
 				return err
 			}
+
+			c.useBlock(catch)
 		}
 
-		c.useBlock(end)
 		c.add(bytecode.Throw, 0)
 		c.block.hasReturn = true
 	}
 
-	fun := c.assemble()
+	method := c.assemble()
 	c.closeScope()
-	c.add(bytecode.DefineFunction, c.addConstant(fun))
+	c.add(bytecode.DefineFunction, c.addConstant(method))
 	return nil
 }
 
@@ -644,7 +939,7 @@ func (c *compiler) compileLiteral(lit *ast.BasicLit) error {
 	return nil
 }
 
-func (c *compiler) compileConditional(expr ast.Expr, next *codeblock) error {
+func (c *compiler) compileConditional(expr ast.Expr, next *basicblock) error {
 	switch x := expr.(type) {
 	case *ast.BinaryExpr:
 		switch x.Operator.Type {
@@ -652,39 +947,39 @@ func (c *compiler) compileConditional(expr ast.Expr, next *codeblock) error {
 			if err := c.compileExpr(x.Left, true); err != nil {
 				return err
 			}
-			c.jumpToBlock(bytecode.JumpIfFalse, next)
+			c.addJump(bytecode.JumpIfFalse, next)
 
 			if err := c.compileExpr(x.Right, true); err != nil {
 				return err
 			}
-			c.jumpToBlock(bytecode.JumpIfFalse, next)
+			c.addJump(bytecode.JumpIfFalse, next)
 
 		case token.Or:
-			body := new(codeblock)
+			body := new(basicblock)
 			if err := c.compileExpr(x.Left, true); err != nil {
 				return err
 			}
-			c.jumpToBlock(bytecode.JumpIfTrue, body)
+			c.addJump(bytecode.JumpIfTrue, body)
 
 			if err := c.compileExpr(x.Right, true); err != nil {
 				return err
 			}
 
-			c.jumpToBlock(bytecode.JumpIfFalse, next)
+			c.addJump(bytecode.JumpIfFalse, next)
 			c.useBlock(body)
 
 		default:
 			if err := c.compileBinaryExpr(x); err != nil {
 				return err
 			}
-			c.jumpToBlock(bytecode.JumpIfFalse, next)
+			c.addJump(bytecode.JumpIfFalse, next)
 		}
 
 	default:
 		if err := c.compileExpr(x, true); err != nil {
 			return err
 		}
-		c.jumpToBlock(bytecode.JumpIfFalse, next)
+		c.addJump(bytecode.JumpIfFalse, next)
 	}
 
 	return nil
@@ -753,7 +1048,7 @@ func (c *compiler) compileStopStmt(_stop *ast.StopStmt) error {
 	}
 
 	c.cleanControlFlow()
-	c.jumpToBlock(bytecode.Jump, c.control.exit)
+	c.addJump(bytecode.Jump, c.control.exit)
 
 	return nil
 }
@@ -765,7 +1060,7 @@ func (c *compiler) compileNextStmt(_next *ast.NextStmt) error {
 		return errors.New("NEXT OUTSIDE LOOP")
 	}
 
-	c.jumpToBlock(bytecode.Jump, c.control.start)
+	c.addJump(bytecode.Jump, c.control.start)
 
 	return nil
 }
@@ -791,13 +1086,18 @@ func (c *compiler) resolve(name string) *local {
 	return nil
 }
 
-func (c *compiler) useBlock(b *codeblock) {
-	b.startAt = byte(len(c.instrs))
-	c.block = b
+func (c *compiler) useBlock(next *basicblock) {
+	c.block.next = next
+	c.block = next
 }
 
 func (c *compiler) add(opcode bytecode.Opcode, operand byte) {
-	c.instrs = append(c.instrs, &instr{opcode: opcode, operand: operand})
+	if !c.block.hasFallthrough() {
+		c.useBlock(new(basicblock))
+	}
+
+	ins := &instr{opcode: opcode, operand: operand}
+	c.block.instrs = append(c.block.instrs, ins)
 }
 
 func (c *compiler) addConstant(arg interface{}) byte {
@@ -813,7 +1113,7 @@ func (c *compiler) addConstant(arg interface{}) byte {
 	return byte(len(c.consts) - 1)
 }
 
-func (c *compiler) pushControlFlow(loop int, start, exit *codeblock) {
+func (c *compiler) pushControlFlow(loop int, start, exit *basicblock) {
 	if c.control == nil {
 		c.control = &controlflow{
 			loop:  loop,
