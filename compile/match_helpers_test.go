@@ -157,7 +157,7 @@ func (b *bodyMatch) Match(t *testing.T, instr uint16, consts []lang.IrObject) {
 		t.Errorf("expected const for %s to be *lang.Method, got %T", b.opcode, consts[operand])
 	}
 
-	instrs := fun.Body().([]uint16)
+	instrs := fun.Instrs()
 	if len(instrs) != len(b.matchers) {
 		t.Fatalf("expected instrs size(%d) to be equal to matchers(%d)", len(instrs), len(b.matchers))
 	}
