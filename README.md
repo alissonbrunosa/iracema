@@ -40,7 +40,10 @@ The following list shows a few of the reserved words in Iracema. These reserved 
     <td>catch</td>
     <td>return</td>
     <td>stop</td>
-     <td>next</td>
+    <td>next</td>
+    <td>switch</td>
+    <td>super</td>
+    <td>and</td>
   </tr>
   <tr>
     <td>if</td>
@@ -48,7 +51,10 @@ The following list shows a few of the reserved words in Iracema. These reserved 
     <td>while</td>
     <td>true</td>
     <td>false</td>
-     <td>nil</td>
+    <td>nil</td>
+    <td>case</td>
+    <td>default</td>
+    <td>or</td>
   </tr>
 </tbody>
 </table>
