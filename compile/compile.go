@@ -274,7 +274,9 @@ func (c *compiler) compileStmt(stmt ast.Stmt) error {
 			switch lhs := node.Left[i].(type) {
 			case *ast.Ident:
 				if lhs.IsAttr() {
-					c.compileExpr(value, true)
+					if err := c.compileExpr(value, true); err != nil {
+						return err
+					}
 					c.add(bytecode.SetAttr, c.addConstant(lhs.Value))
 					continue
 				}
@@ -800,7 +802,7 @@ func (c *compiler) compileIfStmt(node *ast.IfStmt) error {
 }
 
 func (c *compiler) addJump(op bytecode.Opcode, target *basicblock) {
-	if !c.block.hasFallthrough() {
+	if c.block.isDone() {
 		c.useBlock(new(basicblock))
 	}
 
@@ -1111,7 +1113,7 @@ func (c *compiler) useBlock(next *basicblock) {
 }
 
 func (c *compiler) add(opcode bytecode.Opcode, operand byte) {
-	if !c.block.hasFallthrough() {
+	if c.block.isDone() {
 		c.useBlock(new(basicblock))
 	}
 

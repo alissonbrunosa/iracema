@@ -41,11 +41,11 @@ type basicblock struct {
 }
 
 func (b *basicblock) isDone() bool {
-	index := len(b.instrs) - 1
-	if index < 0 {
+	if len(b.instrs) == 0 {
 		return false
 	}
 
+	index := len(b.instrs) - 1
 	ins := b.instrs[index]
 	return ins.opcode == bytecode.Jump ||
 		ins.opcode == bytecode.JumpIfTrue ||
