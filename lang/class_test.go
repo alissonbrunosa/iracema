@@ -65,9 +65,14 @@ func Test_AddGoMethod(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.scenario, func(t *testing.T) {
-			class.AddGoMethod(test.expectedName, test.method)
+			defer func() {
+				if err := recover(); err != nil {
+					t.Fatal(err)
+				}
+			}()
 
-			method := class.methods[test.expectedName]
+			class.AddGoMethod(test.expectedName, test.method)
+			method := class.LookupMethod(test.expectedName)
 			if method.Name() != test.expectedName {
 				t.Errorf("expected mathod name to be '%s', got '%s'", test.expectedName, method.Name())
 			}
@@ -76,9 +81,7 @@ func Test_AddGoMethod(t *testing.T) {
 				t.Errorf("expected mathod arity to be %d, got '%d'", test.expectedArity, method.Arity())
 			}
 
-			if _, ok := method.Body().(Native); !ok {
-				t.Errorf("expected body to be Native type, got %T", method.Body())
-			}
+			_ = method.Native()
 		})
 	}
 }

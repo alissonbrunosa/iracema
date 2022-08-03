@@ -8,11 +8,7 @@ type dummyRuntime struct {
 
 func (rt *dummyRuntime) SetError(err *ErrorObject) { rt.err = err }
 func (rt *dummyRuntime) Call(recv IrObject, method *Method, args ...IrObject) IrObject {
-	if meth, ok := method.Body().(Native); ok {
-		return meth.Invoke(rt, recv, args...)
-	}
-
-	panic("can't call user defined method with dummy runtime")
+	return method.Native().Invoke(rt, recv, args...)
 }
 
 var globalTestDummyRuntime = new(dummyRuntime)

@@ -3,7 +3,7 @@ package lang
 type MethodType byte
 
 const (
-	GoMethod MethodType = 1 << iota
+	GoFunction MethodType = 1 << iota
 	IrMethod
 )
 
@@ -21,7 +21,7 @@ type Method struct {
 
 func (m *Method) Name() string           { return m.name }
 func (m *Method) Arity() byte            { return m.arity }
-func (m *Method) Body() interface{}      { return m.body }
+func (m *Method) Native() Native         { return m.body.(Native) }
 func (m *Method) Instrs() []uint16       { return m.body.([]uint16) }
 func (m *Method) MethodType() MethodType { return m.methodType }
 func (m *Method) Constants() []IrObject  { return m.constants }
@@ -30,7 +30,7 @@ func (m *Method) CatchOffset() int       { return m.catchOffset }
 
 func NewGoMethod(name string, body Native, arity byte) *Method {
 	return &Method{
-		methodType: GoMethod,
+		methodType: GoFunction,
 		name:       name,
 		arity:      arity,
 		body:       body,

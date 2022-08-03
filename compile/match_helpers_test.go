@@ -123,8 +123,7 @@ func (b *bodyMatch) Match(t *testing.T, instr uint16, consts []lang.IrObject) {
 		t.Errorf("expected const for %s to be *lang.CompiledFunction, got %T", b.opcode, consts[operand])
 	}
 
-	instrs := fun.Body().([]uint16)
-	for i, instr := range instrs {
+	for i, instr := range fun.Instrs() {
 		b.matchers[i].Match(t, instr, fun.Constants())
 	}
 }

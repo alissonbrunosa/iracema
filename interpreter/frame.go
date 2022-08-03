@@ -29,15 +29,13 @@ type frame struct {
 const STACK_SIZE = 1024
 
 func TopFrame(self lang.IrObject, meth *lang.Method) *frame {
-	instrs := meth.Body().([]uint16)
-
 	return &frame{
 		flags:        TOP_FRAME,
 		name:         "top",
 		method:       meth,
 		self:         self,
 		stack:        make([]lang.IrObject, STACK_SIZE),
-		instrs:       instrs,
+		instrs:       meth.Instrs(),
 		constants:    meth.Constants(),
 		stackPointer: meth.LocalCount(),
 		catchOffset:  -1,
@@ -60,15 +58,13 @@ func (f *frame) NewGoFrame(self lang.IrObject, meth *lang.Method) *frame {
 }
 
 func (f *frame) NewObjectFrame(self lang.IrObject, meth *lang.Method) *frame {
-	instrs := meth.Body().([]uint16)
-
 	return &frame{
 		flags:        OBJECT_FRAME,
 		name:         meth.Name(),
 		method:       meth,
 		self:         self,
 		stack:        f.stack[f.stackPointer:],
-		instrs:       instrs,
+		instrs:       meth.Instrs(),
 		constants:    meth.Constants(),
 		stackPointer: meth.LocalCount(),
 		catchOffset:  -1,
@@ -78,7 +74,6 @@ func (f *frame) NewObjectFrame(self lang.IrObject, meth *lang.Method) *frame {
 
 func (f *frame) NewFrame(self lang.IrObject, meth *lang.Method, flags byte) *frame {
 	f.stackPointer -= meth.Arity()
-	instrs := meth.Body().([]uint16)
 
 	frame := &frame{
 		flags:        flags,
@@ -86,7 +81,7 @@ func (f *frame) NewFrame(self lang.IrObject, meth *lang.Method, flags byte) *fra
 		self:         self,
 		stack:        f.stack[f.stackPointer:],
 		name:         meth.Name(),
-		instrs:       instrs,
+		instrs:       meth.Instrs(),
 		constants:    meth.Constants(),
 		stackPointer: meth.LocalCount(),
 		catchOffset:  meth.CatchOffset(),

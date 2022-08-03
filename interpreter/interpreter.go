@@ -207,12 +207,12 @@ func (i *Interpreter) Dispatch() (lang.IrObject, error) {
 				goto fail
 			}
 
-			switch m := method.Body().(type) {
-			case lang.Native:
+			switch method.MethodType() {
+			case lang.GoFunction:
 				args := i.PopN(info.Argc() + 1) // +1 recv
 
 				i.PushGoFrame(recv, method)
-				val := m.Invoke(i, recv, args[1:]...)
+				val := method.Native().Invoke(i, recv, args[1:]...)
 				i.PopFrame()
 				if val != nil {
 					i.Push(val)
@@ -221,7 +221,7 @@ func (i *Interpreter) Dispatch() (lang.IrObject, error) {
 
 				goto fail
 
-			case []uint16:
+			case lang.IrMethod:
 				if info.Argc() != method.Arity() {
 					i.err = lang.NewArityError(int(info.Argc()), int(method.Arity()))
 					goto fail
@@ -255,12 +255,12 @@ func (i *Interpreter) Dispatch() (lang.IrObject, error) {
 				goto fail
 			}
 
-			switch m := method.Body().(type) {
-			case lang.Native:
+			switch method.MethodType() {
+			case lang.GoFunction:
 				args := i.PopN(info.Argc() + 1)
 
 				i.PushGoFrame(recv, method)
-				val := m.Invoke(i, recv, args...)
+				val := method.Native().Invoke(i, recv, args...)
 				i.PopFrame()
 				if val != nil {
 					i.Push(val)
@@ -269,7 +269,7 @@ func (i *Interpreter) Dispatch() (lang.IrObject, error) {
 
 				goto fail
 
-			case []uint16:
+			case lang.IrMethod:
 				if info.Argc() != method.Arity() {
 					i.err = lang.NewArityError(int(info.Argc()), int(method.Arity()))
 					goto fail
@@ -338,10 +338,10 @@ func (i *Interpreter) SetError(err *lang.ErrorObject) {
 }
 
 func (i *Interpreter) Call(recv lang.IrObject, meth *lang.Method, args ...lang.IrObject) lang.IrObject {
-	switch m := meth.Body().(type) {
-	case lang.Native:
+	switch meth.MethodType() {
+	case lang.GoFunction:
 		i.PushGoFrame(recv, meth)
-		val := m.Invoke(i, recv, args...)
+		val := meth.Native().Invoke(i, recv, args...)
 		if val == nil {
 			return nil
 		}
@@ -349,7 +349,7 @@ func (i *Interpreter) Call(recv lang.IrObject, meth *lang.Method, args ...lang.I
 		i.PopFrame()
 		return val
 
-	case []uint16:
+	case lang.IrMethod:
 		if byte(len(args)) != meth.Arity() {
 			i.err = lang.NewArityError(len(args), int(meth.Arity()))
 			return nil
