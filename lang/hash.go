@@ -20,8 +20,8 @@ func retrieveHashCode(rt Runtime, obj IrObject) Int {
 	return INT(hash)
 }
 
-func hashLookup(rt Runtime, self IrObject, key IrObject) IrObject {
-	h := HASH(self)
+func hashLookup(rt Runtime, this IrObject, key IrObject) IrObject {
+	h := HASH(this)
 
 	hashCode := retrieveHashCode(rt, key)
 	length := Int(len(h.table))
@@ -40,8 +40,8 @@ func hashLookup(rt Runtime, self IrObject, key IrObject) IrObject {
 	return nil
 }
 
-func hashInsert(rt Runtime, self IrObject, key IrObject, value IrObject) IrObject {
-	h := HASH(self)
+func hashInsert(rt Runtime, this IrObject, key IrObject, value IrObject) IrObject {
+	h := HASH(this)
 
 	hashCode := retrieveHashCode(rt, key)
 	length := Int(len(h.table))
@@ -63,8 +63,8 @@ func hashInsert(rt Runtime, self IrObject, key IrObject, value IrObject) IrObjec
 	return True
 }
 
-func hashKeys(rt Runtime, self IrObject) IrObject {
-	h := HASH(self)
+func hashKeys(rt Runtime, this IrObject) IrObject {
+	h := HASH(this)
 
 	var keys []IrObject
 	for _, entry := range h.table {
@@ -80,8 +80,8 @@ func hashKeys(rt Runtime, self IrObject) IrObject {
 	return NewArray(keys)
 }
 
-func hashValues(rt Runtime, self IrObject) IrObject {
-	h := HASH(self)
+func hashValues(rt Runtime, this IrObject) IrObject {
+	h := HASH(this)
 
 	var values []IrObject
 	for _, entry := range h.table {
@@ -97,17 +97,17 @@ func hashValues(rt Runtime, self IrObject) IrObject {
 	return NewArray(values)
 }
 
-func hashSize(rt Runtime, self IrObject) IrObject {
-	return HASH(self).count
+func hashSize(rt Runtime, this IrObject) IrObject {
+	return HASH(this).count
 }
 
-func hashValuesAt(rt Runtime, self IrObject, keys ...IrObject) IrObject {
+func hashValuesAt(rt Runtime, this IrObject, keys ...IrObject) IrObject {
 	result := make([]IrObject, len(keys))
 	if len(keys) == 0 {
 		return NewArray(result)
 	}
 
-	h := HASH(self)
+	h := HASH(this)
 	for i, key := range keys {
 		result[i] = hashLookup(rt, h, key)
 	}
@@ -115,8 +115,8 @@ func hashValuesAt(rt Runtime, self IrObject, keys ...IrObject) IrObject {
 	return NewArray(result)
 }
 
-func hashHasKey(rt Runtime, self, key IrObject) IrObject {
-	h := HASH(self)
+func hashHasKey(rt Runtime, this, key IrObject) IrObject {
+	h := HASH(this)
 
 	hashCode := retrieveHashCode(rt, key)
 	length := Int(len(h.table))

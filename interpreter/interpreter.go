@@ -28,7 +28,7 @@ func (i *Interpreter) Dispatch() (lang.IrObject, error) {
 	resume_frame:
 		instrs := i.instrs
 		constants := i.constants
-		self := i.self
+		this := i.this
 
 	next_instr:
 		instr := instrs[i.instrPointer]
@@ -49,8 +49,8 @@ func (i *Interpreter) Dispatch() (lang.IrObject, error) {
 			i.Push(lang.None)
 			goto next_instr
 
-		case bytecode.PushSelf:
-			i.Push(self)
+		case bytecode.PushThis:
+			i.Push(this)
 			goto next_instr
 
 		case bytecode.Pop:
@@ -125,7 +125,7 @@ func (i *Interpreter) Dispatch() (lang.IrObject, error) {
 			attr := constants[operand]
 			value := i.Pop()
 
-			if err := lang.SetAttr(self, attr, value); err != nil {
+			if err := lang.SetAttr(this, attr, value); err != nil {
 				i.SetError(err)
 				goto fail
 			}
@@ -135,7 +135,7 @@ func (i *Interpreter) Dispatch() (lang.IrObject, error) {
 		case bytecode.GetAttr:
 			attr := constants[operand]
 
-			value, err := lang.GetAttr(self, attr)
+			value, err := lang.GetAttr(this, attr)
 			if err != nil {
 				i.SetError(err)
 				goto fail
@@ -307,21 +307,21 @@ func (i *Interpreter) Dispatch() (lang.IrObject, error) {
 	return nil, nil
 }
 
-func (i *Interpreter) PushObjectFrame(self lang.IrObject, fun *lang.Method) {
-	i.frame = i.NewObjectFrame(self, fun)
+func (i *Interpreter) PushObjectFrame(this lang.IrObject, fun *lang.Method) {
+	i.frame = i.NewObjectFrame(this, fun)
 	i.frameCount++
 }
 
-func (i *Interpreter) PushGoFrame(self lang.IrObject, meth *lang.Method) {
-	i.frame = i.NewGoFrame(self, meth)
+func (i *Interpreter) PushGoFrame(this lang.IrObject, meth *lang.Method) {
+	i.frame = i.NewGoFrame(this, meth)
 	i.frameCount++
 }
 
-func (i *Interpreter) PushFrame(self lang.IrObject, fun *lang.Method, flags byte) {
+func (i *Interpreter) PushFrame(this lang.IrObject, fun *lang.Method, flags byte) {
 	if i.frame == nil {
-		i.frame = TopFrame(self, fun)
+		i.frame = TopFrame(this, fun)
 	} else {
-		i.frame = i.NewFrame(self, fun, flags)
+		i.frame = i.NewFrame(this, fun, flags)
 	}
 	i.frameCount++
 }

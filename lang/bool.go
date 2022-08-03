@@ -11,8 +11,8 @@ var BoolClass *Class
 var True Bool = true
 var False Bool = false
 
-func boolInspect(rt Runtime, self IrObject) IrObject {
-	inspect := BOOL(self).String()
+func boolInspect(rt Runtime, this IrObject) IrObject {
+	inspect := BOOL(this).String()
 	return NewString(inspect)
 }
 

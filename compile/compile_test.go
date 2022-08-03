@@ -97,7 +97,7 @@ func TestCompile_SimpleExpr(t *testing.T) {
 			Scenario: "compile method call",
 			Code:     "method()",
 			Matchs: []Match{
-				expect(bytecode.PushSelf),
+				expect(bytecode.PushThis),
 				expect(bytecode.CallMethod).withOperand(0).toBeMethodCall("method", 0),
 				expect(bytecode.Pop),
 				expect(bytecode.PushNone),
@@ -161,7 +161,7 @@ func TestCompile_SimpleExpr(t *testing.T) {
 			Scenario: "compile index expr assign",
 			Code:     "a[1] = 3.1415",
 			Matchs: []Match{
-				expect(bytecode.PushSelf),
+				expect(bytecode.PushThis),
 				expect(bytecode.CallMethod).withOperand(0).toBeMethodCall("a", 0),
 				expect(bytecode.Push).withOperand(1).toHaveConstant(1),
 				expect(bytecode.Push).withOperand(2).toHaveConstant(3.1415),
@@ -197,7 +197,7 @@ func TestCompile_SimpleExpr(t *testing.T) {
 			Scenario: "compile assign with method call",
 			Code:     "val = method()",
 			Matchs: []Match{
-				expect(bytecode.PushSelf),
+				expect(bytecode.PushThis),
 				expect(bytecode.CallMethod).withOperand(0).toBeMethodCall("method", 0),
 				expect(bytecode.SetLocal).toHaveOperand(0),
 				expect(bytecode.PushNone),
@@ -208,7 +208,7 @@ func TestCompile_SimpleExpr(t *testing.T) {
 			Scenario: "compile method call with args",
 			Code:     "plus(1, 2)",
 			Matchs: []Match{
-				expect(bytecode.PushSelf),
+				expect(bytecode.PushThis),
 				expect(bytecode.Push).withOperand(0).toHaveConstant(1),
 				expect(bytecode.Push).withOperand(1).toHaveConstant(2),
 				expect(bytecode.CallMethod).withOperand(2).toBeMethodCall("plus", 2),
@@ -522,7 +522,7 @@ func TestCompileForStmt(t *testing.T) {
 				expect(bytecode.Iterate),
 				expect(bytecode.JumpIfFalse).toHaveOperand(11),
 				expect(bytecode.SetLocal).toHaveOperand(0),
-				expect(bytecode.PushSelf),
+				expect(bytecode.PushThis),
 				expect(bytecode.GetLocal).toHaveOperand(0),
 				expect(bytecode.CallMethod).withOperand(1).toBeMethodCall("puts", 1),
 				expect(bytecode.Pop),
@@ -579,7 +579,7 @@ func TestCompileForStmt(t *testing.T) {
 				expect(bytecode.JumpIfFalse).toHaveOperand(11),
 				expect(bytecode.Pop),
 				expect(bytecode.Jump).toHaveOperand(16),
-				expect(bytecode.PushSelf),
+				expect(bytecode.PushThis),
 				expect(bytecode.GetLocal).toHaveOperand(0),
 				expect(bytecode.CallMethod).withOperand(2).toBeMethodCall("puts", 1),
 				expect(bytecode.Pop),
@@ -614,7 +614,7 @@ func TestCompileSwitchStmt(t *testing.T) {
 				expect(bytecode.Push).toHaveOperand(1).toHaveConstant(10),
 				expect(bytecode.CallMethod).withOperand(2).toBeMethodCall("==", 1),
 				expect(bytecode.JumpIfFalse).toHaveOperand(8),
-				expect(bytecode.PushSelf),
+				expect(bytecode.PushThis),
 				expect(bytecode.Push).toHaveOperand(3).toHaveConstant(10),
 				expect(bytecode.CallMethod).withOperand(4).toBeMethodCall("puts", 1),
 				expect(bytecode.Pop),
@@ -630,7 +630,7 @@ func TestCompileSwitchStmt(t *testing.T) {
 				expect(bytecode.Push).toHaveOperand(1).toHaveConstant(10),
 				expect(bytecode.CallMethod).withOperand(2).toBeMethodCall("==", 1),
 				expect(bytecode.JumpIfFalse).toHaveOperand(9),
-				expect(bytecode.PushSelf),
+				expect(bytecode.PushThis),
 				expect(bytecode.Push).toHaveOperand(3).toHaveConstant(10),
 				expect(bytecode.CallMethod).withOperand(4).toBeMethodCall("puts", 1),
 				expect(bytecode.Pop),
@@ -639,7 +639,7 @@ func TestCompileSwitchStmt(t *testing.T) {
 				expect(bytecode.Push).toHaveOperand(6).toHaveConstant(20),
 				expect(bytecode.CallMethod).withOperand(7).toBeMethodCall("==", 1),
 				expect(bytecode.JumpIfFalse).toHaveOperand(17),
-				expect(bytecode.PushSelf),
+				expect(bytecode.PushThis),
 				expect(bytecode.Push).toHaveOperand(8).toHaveConstant(20),
 				expect(bytecode.CallMethod).withOperand(9).toBeMethodCall("puts", 1),
 				expect(bytecode.Pop),
@@ -655,7 +655,7 @@ func TestCompileSwitchStmt(t *testing.T) {
 				expect(bytecode.Push).toHaveOperand(1).toHaveConstant(10),
 				expect(bytecode.CallMethod).withOperand(2).toBeMethodCall("==", 1),
 				expect(bytecode.JumpIfFalse).toHaveOperand(9),
-				expect(bytecode.PushSelf),
+				expect(bytecode.PushThis),
 				expect(bytecode.Push).toHaveOperand(3).toHaveConstant(10),
 				expect(bytecode.CallMethod).withOperand(4).toBeMethodCall("puts", 1),
 				expect(bytecode.Pop),
@@ -664,12 +664,12 @@ func TestCompileSwitchStmt(t *testing.T) {
 				expect(bytecode.Push).toHaveOperand(6).toHaveConstant(20),
 				expect(bytecode.CallMethod).withOperand(7).toBeMethodCall("==", 1),
 				expect(bytecode.JumpIfFalse).toHaveOperand(18),
-				expect(bytecode.PushSelf),
+				expect(bytecode.PushThis),
 				expect(bytecode.Push).toHaveOperand(8).toHaveConstant(20),
 				expect(bytecode.CallMethod).withOperand(9).toBeMethodCall("puts", 1),
 				expect(bytecode.Pop),
 				expect(bytecode.Jump).toHaveOperand(22),
-				expect(bytecode.PushSelf),
+				expect(bytecode.PushThis),
 				expect(bytecode.Push).toHaveOperand(10).toHaveConstant("default"),
 				expect(bytecode.CallMethod).withOperand(11).toBeMethodCall("puts", 1),
 				expect(bytecode.Pop),
@@ -775,7 +775,7 @@ func TestCompileFunDecl(t *testing.T) {
 		expect(bytecode.MatchType).withOperand(1).toHaveConstant("ZeroDivisionError"),
 		expect(bytecode.JumpIfFalse).toHaveOperand(16),
 		expect(bytecode.SetLocal).toHaveOperand(2),
-		expect(bytecode.PushSelf),
+		expect(bytecode.PushThis),
 		expect(bytecode.GetLocal).toHaveOperand(2),
 		expect(bytecode.CallMethod).withOperand(2).toBeMethodCall("puts", 1),
 		expect(bytecode.Pop),
@@ -800,7 +800,7 @@ func TestCompileFunDecl(t *testing.T) {
 
 func TestCompileFunDecl_withCallSuperImplictArgs(t *testing.T) {
 	methMatches := []Match{
-		expect(bytecode.PushSelf),
+		expect(bytecode.PushThis),
 		expect(bytecode.GetLocal).toHaveOperand(0),
 		expect(bytecode.GetLocal).toHaveOperand(1),
 		expect(bytecode.CallSuper),
@@ -823,7 +823,7 @@ func TestCompileFunDecl_withCallSuperImplictArgs(t *testing.T) {
 
 func TestCompileFunDecl_withCallSuperImplicitArgs(t *testing.T) {
 	methMatches := []Match{
-		expect(bytecode.PushSelf),
+		expect(bytecode.PushThis),
 		expect(bytecode.GetLocal).toHaveOperand(0),
 		expect(bytecode.GetLocal).toHaveOperand(1),
 		expect(bytecode.CallSuper),
@@ -846,7 +846,7 @@ func TestCompileFunDecl_withCallSuperImplicitArgs(t *testing.T) {
 
 func TestCompileFunDecl_withCallSuperExplicitArgs(t *testing.T) {
 	methMatches := []Match{
-		expect(bytecode.PushSelf),
+		expect(bytecode.PushThis),
 		expect(bytecode.GetLocal),
 		expect(bytecode.Push).withOperand(0).toHaveConstant(10),
 		expect(bytecode.CallSuper),
@@ -870,7 +870,7 @@ func TestCompileFunDecl_withCallSuperExplicitArgs(t *testing.T) {
 func TestCompileFunDecl_withMultipleCatches(t *testing.T) {
 	methMatches := []Match{
 		expect(bytecode.Nop),
-		expect(bytecode.PushSelf),
+		expect(bytecode.PushThis),
 		expect(bytecode.CallMethod).withOperand(0).toBeMethodCall("explode", 0),
 		expect(bytecode.Pop),
 		expect(bytecode.PushNone),
@@ -878,7 +878,7 @@ func TestCompileFunDecl_withMultipleCatches(t *testing.T) {
 		expect(bytecode.MatchType).withOperand(1).toHaveConstant("Error"),
 		expect(bytecode.JumpIfFalse).toHaveOperand(15),
 		expect(bytecode.SetLocal).toHaveOperand(0),
-		expect(bytecode.PushSelf),
+		expect(bytecode.PushThis),
 		expect(bytecode.GetLocal).toHaveOperand(0),
 		expect(bytecode.CallMethod).withOperand(2).toBeMethodCall("puts", 1),
 		expect(bytecode.Pop),
@@ -887,7 +887,7 @@ func TestCompileFunDecl_withMultipleCatches(t *testing.T) {
 		expect(bytecode.MatchType).withOperand(3).toHaveConstant("ExplodeError"),
 		expect(bytecode.JumpIfFalse).toHaveOperand(24),
 		expect(bytecode.SetLocal).toHaveOperand(0),
-		expect(bytecode.PushSelf),
+		expect(bytecode.PushThis),
 		expect(bytecode.Push).withOperand(4).toHaveConstant(1),
 		expect(bytecode.CallMethod).withOperand(5).toBeMethodCall("exit", 1),
 		expect(bytecode.Pop),

@@ -20,8 +20,8 @@ func ERROR(obj IrObject) *ErrorObject {
 	return obj.(*ErrorObject)
 }
 
-func errMessage(rt Runtime, self IrObject) IrObject {
-	err := ERROR(self)
+func errMessage(rt Runtime, this IrObject) IrObject {
+	err := ERROR(this)
 	return NewString(err.message)
 }
 

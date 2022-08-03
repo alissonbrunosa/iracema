@@ -5,11 +5,11 @@ import (
 	"reflect"
 )
 
-func returnFalse(rt Runtime, self IrObject) IrObject {
+func returnFalse(rt Runtime, this IrObject) IrObject {
 	return False
 }
 
-func objectPuts(rt Runtime, self IrObject, args ...IrObject) IrObject {
+func objectPuts(rt Runtime, this IrObject, args ...IrObject) IrObject {
 	for _, arg := range args {
 		inspect := call(rt, arg, "inspect")
 		if inspect == nil {
@@ -22,29 +22,29 @@ func objectPuts(rt Runtime, self IrObject, args ...IrObject) IrObject {
 	return None
 }
 
-func objectId(rt Runtime, self IrObject) IrObject {
-	ptr := reflect.ValueOf(self).Pointer()
+func objectId(rt Runtime, this IrObject) IrObject {
+	ptr := reflect.ValueOf(this).Pointer()
 	return Int(ptr)
 }
 
-func objectEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
-	return Bool(self == rhs)
+func objectEqual(rt Runtime, this IrObject, rhs IrObject) IrObject {
+	return Bool(this == rhs)
 }
 
-func objectNotEqual(rt Runtime, self IrObject, other IrObject) IrObject {
-	result := call(rt, self, "==", other)
+func objectNotEqual(rt Runtime, this IrObject, other IrObject) IrObject {
+	result := call(rt, this, "==", other)
 	return !IsTruthy(result)
 }
 
-func objectInspect(rt Runtime, self IrObject) IrObject {
-	id := objectId(rt, self)
-	str := fmt.Sprintf("#<%s:0x%x>", self.Class(), INT(id))
+func objectInspect(rt Runtime, this IrObject) IrObject {
+	id := objectId(rt, this)
+	str := fmt.Sprintf("#<%s:0x%x>", this.Class(), INT(id))
 
 	return NewString(str)
 }
 
-func objectUnaryNot(rt Runtime, self IrObject) IrObject {
-	return !IsTruthy(self)
+func objectUnaryNot(rt Runtime, this IrObject) IrObject {
+	return !IsTruthy(this)
 }
 
 func objectAlloc(class *Class) IrObject {

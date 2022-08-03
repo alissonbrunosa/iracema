@@ -1,10 +1,10 @@
 package lang
 
-func noneInspect(rt Runtime, self IrObject) IrObject {
+func noneInspect(rt Runtime, this IrObject) IrObject {
 	return NewString("none")
 }
 
-func noneCheck(rt Runtime, self IrObject) IrObject {
+func noneCheck(rt Runtime, this IrObject) IrObject {
 	return True
 }
 

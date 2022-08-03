@@ -4,8 +4,8 @@ func CLASS(obj IrObject) *Class {
 	return obj.(*Class)
 }
 
-func classNew(rt Runtime, self IrObject, args ...IrObject) IrObject {
-	c := CLASS(self)
+func classNew(rt Runtime, this IrObject, args ...IrObject) IrObject {
+	c := CLASS(this)
 	object := c.Alloc()
 	safeCall(rt, object, "init", args...)
 	return object

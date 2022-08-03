@@ -27,6 +27,7 @@ const (
 	Super   // super
 	Or      // or
 	And     // and
+	This    // this
 
 	Int    // Int
 	Float  // Float

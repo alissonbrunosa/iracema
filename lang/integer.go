@@ -19,8 +19,8 @@ func toInt(value IrObject) (Int, *ErrorObject) {
 	return 0, NewError(mesg.String(), TypeError)
 }
 
-func intAdd(rt Runtime, self IrObject, rhs IrObject) IrObject {
-	left := INT(self)
+func intAdd(rt Runtime, this IrObject, rhs IrObject) IrObject {
+	left := INT(this)
 	switch right := rhs.(type) {
 	case Int:
 		return left + right
@@ -33,8 +33,8 @@ func intAdd(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	}
 }
 
-func intSub(rt Runtime, self IrObject, rhs IrObject) IrObject {
-	left := INT(self)
+func intSub(rt Runtime, this IrObject, rhs IrObject) IrObject {
+	left := INT(this)
 	switch right := rhs.(type) {
 	case Int:
 		return left - right
@@ -92,8 +92,8 @@ func intEqual(rt Runtime, lhs, rhs IrObject) IrObject {
 	}
 }
 
-func intGreat(rt Runtime, self IrObject, rhs IrObject) IrObject {
-	left := INT(self)
+func intGreat(rt Runtime, this IrObject, rhs IrObject) IrObject {
+	left := INT(this)
 	switch right := rhs.(type) {
 	case Int:
 		return NewBoolean(left > right)
@@ -106,8 +106,8 @@ func intGreat(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	}
 }
 
-func intGreatEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
-	left := INT(self)
+func intGreatEqual(rt Runtime, this IrObject, rhs IrObject) IrObject {
+	left := INT(this)
 	switch right := rhs.(type) {
 	case Int:
 		return NewBoolean(left >= right)
@@ -120,8 +120,8 @@ func intGreatEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	}
 }
 
-func intLess(rt Runtime, self IrObject, rhs IrObject) IrObject {
-	left := INT(self)
+func intLess(rt Runtime, this IrObject, rhs IrObject) IrObject {
+	left := INT(this)
 	switch right := rhs.(type) {
 	case Int:
 		return NewBoolean(left < right)
@@ -134,8 +134,8 @@ func intLess(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	}
 }
 
-func intLessEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
-	left := INT(self)
+func intLessEqual(rt Runtime, this IrObject, rhs IrObject) IrObject {
+	left := INT(this)
 	switch right := rhs.(type) {
 	case Int:
 		return NewBoolean(left <= right)
@@ -148,21 +148,21 @@ func intLessEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	}
 }
 
-func intUnaryAdd(rt Runtime, self IrObject) IrObject {
-	return self
+func intUnaryAdd(rt Runtime, this IrObject) IrObject {
+	return this
 }
 
-func intUnarySub(rt Runtime, self IrObject) IrObject {
-	return -INT(self)
+func intUnarySub(rt Runtime, this IrObject) IrObject {
+	return -INT(this)
 }
 
-func intInspect(rt Runtime, self IrObject) IrObject {
-	inspect := fmt.Sprintf("%d", INT(self))
+func intInspect(rt Runtime, this IrObject) IrObject {
+	inspect := fmt.Sprintf("%d", INT(this))
 	return NewString(inspect)
 }
 
-func intHash(rt Runtime, self IrObject) IrObject {
-	return self
+func intHash(rt Runtime, this IrObject) IrObject {
+	return this
 }
 
 var IntClass *Class

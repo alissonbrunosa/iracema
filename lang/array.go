@@ -31,8 +31,8 @@ func ARRAY(obj IrObject) *Array {
 	return obj.(*Array)
 }
 
-func arrayInspect(rt Runtime, self IrObject) IrObject {
-	array := ARRAY(self)
+func arrayInspect(rt Runtime, this IrObject) IrObject {
+	array := ARRAY(this)
 
 	if len(array.Elements) == 0 {
 		return NewString("[]")
@@ -55,8 +55,8 @@ func arrayInspect(rt Runtime, self IrObject) IrObject {
 	return NewString(buf.String())
 }
 
-func arrayInsert(rt Runtime, self, index, element IrObject) IrObject {
-	array := ARRAY(self)
+func arrayInsert(rt Runtime, this, index, element IrObject) IrObject {
+	array := ARRAY(this)
 
 	idx := INT(index)
 	size := len(array.Elements)
@@ -71,8 +71,8 @@ func arrayInsert(rt Runtime, self, index, element IrObject) IrObject {
 	return element
 }
 
-func arrayAt(rt Runtime, self IrObject, index IrObject) IrObject {
-	array := ARRAY(self)
+func arrayAt(rt Runtime, this IrObject, index IrObject) IrObject {
+	array := ARRAY(this)
 
 	idx := INT(index)
 	size := len(array.Elements)
@@ -86,14 +86,14 @@ func arrayAt(rt Runtime, self IrObject, index IrObject) IrObject {
 	return array.Elements[pos]
 }
 
-func arrayPush(rt Runtime, self IrObject, elements ...IrObject) IrObject {
-	array := ARRAY(self)
+func arrayPush(rt Runtime, this IrObject, elements ...IrObject) IrObject {
+	array := ARRAY(this)
 	array.Elements = append(array.Elements, elements...)
 	return array
 }
 
-func arrayFlatten(rt Runtime, self IrObject) IrObject {
-	array := ARRAY(self)
+func arrayFlatten(rt Runtime, this IrObject) IrObject {
+	array := ARRAY(this)
 
 	var result []IrObject
 	for _, element := range array.Elements {
@@ -109,8 +109,8 @@ func arrayFlatten(rt Runtime, self IrObject) IrObject {
 	return NewArray(result)
 }
 
-func arrayReverse(rt Runtime, self IrObject) IrObject {
-	array := ARRAY(self)
+func arrayReverse(rt Runtime, this IrObject) IrObject {
+	array := ARRAY(this)
 	length := len(array.Elements)
 	elements := make([]IrObject, length)
 
@@ -121,14 +121,14 @@ func arrayReverse(rt Runtime, self IrObject) IrObject {
 	return NewArray(elements)
 }
 
-func arrayLength(rt Runtime, self IrObject) IrObject {
-	array := ARRAY(self)
+func arrayLength(rt Runtime, this IrObject) IrObject {
+	array := ARRAY(this)
 	length := len(array.Elements)
 	return Int(length)
 }
 
-func arrayValuesAt(rt Runtime, self IrObject, indices ...IrObject) IrObject {
-	array := ARRAY(self)
+func arrayValuesAt(rt Runtime, this IrObject, indices ...IrObject) IrObject {
+	array := ARRAY(this)
 	elements := make([]IrObject, len(indices))
 
 	for i, index := range indices {
@@ -138,8 +138,8 @@ func arrayValuesAt(rt Runtime, self IrObject, indices ...IrObject) IrObject {
 	return NewArray(elements)
 }
 
-func arrayHash(rt Runtime, self IrObject) IrObject {
-	array := ARRAY(self)
+func arrayHash(rt Runtime, this IrObject) IrObject {
+	array := ARRAY(this)
 
 	hash := Int(1)
 	for _, el := range array.Elements {
@@ -149,8 +149,8 @@ func arrayHash(rt Runtime, self IrObject) IrObject {
 
 	return hash
 }
-func arrayUniq(rt Runtime, self IrObject) IrObject {
-	ary := ARRAY(self)
+func arrayUniq(rt Runtime, this IrObject) IrObject {
+	ary := ARRAY(this)
 	if len(ary.Elements) <= 1 {
 		newEls := make([]IrObject, len(ary.Elements))
 		copy(newEls, ary.Elements)
@@ -165,8 +165,8 @@ func arrayUniq(rt Runtime, self IrObject) IrObject {
 	return hashValues(rt, hash)
 }
 
-func arrayShift(rt Runtime, self IrObject, size IrObject) IrObject {
-	ary := ARRAY(self)
+func arrayShift(rt Runtime, this IrObject, size IrObject) IrObject {
+	ary := ARRAY(this)
 	n, err := toInt(size)
 	if err != nil {
 		return nil
@@ -200,8 +200,8 @@ func arrayShift(rt Runtime, self IrObject, size IrObject) IrObject {
 	return NewArray(result)
 }
 
-func arrayEqual(rt Runtime, self IrObject, other IrObject) IrObject {
-	if self == other {
+func arrayEqual(rt Runtime, this IrObject, other IrObject) IrObject {
+	if this == other {
 		return True
 	}
 
@@ -211,7 +211,7 @@ func arrayEqual(rt Runtime, self IrObject, other IrObject) IrObject {
 		return nil
 	}
 
-	x := ARRAY(self)
+	x := ARRAY(this)
 	if len(x.Elements) != len(y.Elements) {
 		return False
 	}
@@ -226,14 +226,14 @@ func arrayEqual(rt Runtime, self IrObject, other IrObject) IrObject {
 	return True
 }
 
-func arrayPlus(rt Runtime, self, other IrObject) IrObject {
+func arrayPlus(rt Runtime, this, other IrObject) IrObject {
 	y, err := toArray(other)
 	if err != nil {
 		rt.SetError(err)
 		return nil
 	}
 
-	x := ARRAY(self)
+	x := ARRAY(this)
 	result := make([]IrObject, len(x.Elements)+len(y.Elements))
 	i := copy(result, x.Elements)
 	copy(result[i:], y.Elements)
@@ -241,7 +241,7 @@ func arrayPlus(rt Runtime, self, other IrObject) IrObject {
 	return NewArray(result)
 }
 
-func arrayMinus(rt Runtime, self, other IrObject) IrObject {
+func arrayMinus(rt Runtime, this, other IrObject) IrObject {
 	y, err := toArray(other)
 	if err != nil {
 		rt.SetError(err)
@@ -253,7 +253,7 @@ func arrayMinus(rt Runtime, self, other IrObject) IrObject {
 		hashInsert(rt, h, el, True)
 	}
 
-	x := ARRAY(self)
+	x := ARRAY(this)
 	var result []IrObject
 	for _, el := range x.Elements {
 		if BOOL(hashHasKey(rt, h, el)) {

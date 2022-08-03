@@ -248,6 +248,10 @@ func TestNextToken(t *testing.T) {
 			Input:        bytes.NewBufferString("or"),
 			ExpectedType: token.Or,
 		},
+		"this keyword": {
+			Input:        bytes.NewBufferString("this"),
+			ExpectedType: token.This,
+		},
 	}
 
 	for scenario, test := range tests {

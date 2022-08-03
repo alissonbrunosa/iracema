@@ -12,7 +12,7 @@ const (
 	PushNone                     // PUSH_NONE
 	SetAttr                      // SET_ATTR
 	GetAttr                      // GET_ATTR
-	PushSelf                     // PUSH_SELF
+	PushThis                     // PUSH_THIS
 	SetLocal                     // SET_LOCAL
 	GetLocal                     // GET_LOCAL
 	MatchType                    // MATCH_TYPE

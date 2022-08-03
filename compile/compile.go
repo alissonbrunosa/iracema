@@ -361,7 +361,7 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) error {
 			return nil
 		}
 
-		c.add(bytecode.PushSelf, 0)
+		c.add(bytecode.PushThis, 0)
 		ci := lang.NewCallInfo(node.Value, 0)
 		c.add(bytecode.CallMethod, c.addConstant(ci))
 
@@ -417,7 +417,7 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) error {
 				return err
 			}
 		} else {
-			c.add(bytecode.PushSelf, 0)
+			c.add(bytecode.PushThis, 0)
 		}
 
 		for _, arg := range node.Arguments {
@@ -433,7 +433,7 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) error {
 		}
 
 	case *ast.SuperExpr:
-		c.add(bytecode.PushSelf, 0)
+		c.add(bytecode.PushThis, 0)
 
 		var ci lang.IrObject
 		if node.ExplicitArgs {
@@ -507,7 +507,7 @@ func (c *compiler) compileBlock(block *ast.BlockStmt, addReturn bool) error {
 * │                          next                           │
 * │                           │                             │
 * │    ┌──────────────────────▼────────────────────────┐    │
-* │    │  0012 PUSH_SELF                               │    │
+* │    │  0012 PUSH_THIS                               │    │
 * │    │  0014 GET_LOCAL           a@0                 │    │
 * │    │  0016 CALL_METHOD         name: puts argc: 1  │    │
 * │    │  0018 POP                                     │    │
@@ -572,7 +572,7 @@ func (c *compiler) compileWhileStmt(node *ast.WhileStmt) error {
 * │                           │                             │
 * │     ┌─────────────────────▼────────────────────────┐    │
 * │     │  0018 SET_LOCAL          el@1                │    │
-* │     │  0020 PUSH_SELF                              │    │
+* │     │  0020 PUSH_THIS                              │    │
 * │     │  0022 GET_LOCAL          el@1                │    │
 * │     │  0024 CALL_METHOD        name: puts argc: 1  │    │
 * │     │  0026 POP                                    │    │
@@ -639,7 +639,7 @@ func (c *compiler) compileForStmt(node *ast.ForStmt) error {
 *                               next                           │
 *                                │                             │
 *          ┌─────────────────────▼─────────────────────────┐   │
-*          │  0012 PUSH_SELF                               │   │
+*          │  0012 PUSH_THIS                               │   │
 *          │  0014 PUSH                10                  │   │
 *          │  0016 CALL_METHOD         name: puts argc: 1  │   │
 *          │  0018 POP                                     │   │
@@ -658,7 +658,7 @@ func (c *compiler) compileForStmt(node *ast.ForStmt) error {
 * │                             next                           │
 * │                              │                             │
 * │        ┌─────────────────────▼─────────────────────────┐   │
-* │        │  0030 PUSH_SELF                               │   │
+* │        │  0030 PUSH_THIS                               │   │
 * │        │  0032 PUSH                20                  │   │
 * │        │  0034 CALL_METHOD         name: puts argc: 1  │   │
 * │        │  0036 POP                                     │   │
@@ -668,7 +668,7 @@ func (c *compiler) compileForStmt(node *ast.ForStmt) error {
 * │  │                          next                           │
 * │  │                           │                             │
 * │  │     ┌─────────────────────▼─────────────────────────┐   │
-* │  │     │  0040 PUSH_SELF                               ◄───┘
+* │  │     │  0040 PUSH_THIS                               ◄───┘
 * │  │     │  0042 PUSH                "DEFAULT"           │
 * │  │     │  0044 CALL_METHOD         name: puts argc: 1  │
 * │  │     │  0046 POP                                     │
@@ -744,7 +744,7 @@ func (c *compiler) compileSwitchStmt(node *ast.SwitchStmt) error {
 *                              next                             │
 *                                │                              │
 *         ┌──────────────────────▼────────────────────────┐     │
-*         │ 0012  PUSH_SELF                               │     │
+*         │ 0012  PUSH_THIS                               │     │
 *         │ 0014  PUSH                "BIGGER"            │     │
 *         │ 0016  CALL_METHOD         name: puts argc: 1  │     │
 *         │ 0018  POP                                     │     │
@@ -754,7 +754,7 @@ func (c *compiler) compileSwitchStmt(node *ast.SwitchStmt) error {
 *    │                         next                             │
 *    │                           │                              │
 *    │    ┌──────────────────────▼────────────────────────┐     │
-*    │    │ 0022  PUSH_SELF                               ◄─────┘
+*    │    │ 0022  PUSH_THIS                               ◄─────┘
 *    │    │ 0024  PUSH                "SMALLER"           │
 *    │    │ 0026  CALL_METHOD         name: puts argc: 1  │
 *    │    │ 0028  POP                                     │
@@ -944,6 +944,10 @@ func (c *compiler) compileLiteral(lit *ast.BasicLit) error {
 
 	case token.None:
 		c.add(bytecode.PushNone, 0)
+		return nil
+
+	case token.This:
+		c.add(bytecode.PushThis, 0)
 		return nil
 
 	default:

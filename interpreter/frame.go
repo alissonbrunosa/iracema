@@ -16,7 +16,7 @@ type frame struct {
 	flags        byte
 	name         string
 	method       *lang.Method
-	self         lang.IrObject
+	this         lang.IrObject
 	class        *lang.Class
 	instrs       []uint16
 	constants    []lang.IrObject
@@ -29,13 +29,13 @@ type frame struct {
 
 const STACK_SIZE = 1024
 
-func TopFrame(self lang.IrObject, meth *lang.Method) *frame {
+func TopFrame(this lang.IrObject, meth *lang.Method) *frame {
 	return &frame{
 		flags:        TOP_FRAME,
 		name:         "top",
 		method:       meth,
-		self:         self,
-		class:        self.Class(),
+		this:         this,
+		class:        this.Class(),
 		stack:        make([]lang.IrObject, STACK_SIZE),
 		instrs:       meth.Instrs(),
 		constants:    meth.Constants(),
@@ -44,12 +44,12 @@ func TopFrame(self lang.IrObject, meth *lang.Method) *frame {
 	}
 }
 
-func (f *frame) NewGoFrame(self lang.IrObject, meth *lang.Method) *frame {
+func (f *frame) NewGoFrame(this lang.IrObject, meth *lang.Method) *frame {
 	return &frame{
 		flags:        GOMETHOD_FRAME,
 		name:         meth.Name(),
 		method:       meth,
-		self:         self,
+		this:         this,
 		stack:        f.stack[f.stackPointer:],
 		instrs:       nil,
 		constants:    nil,
@@ -59,13 +59,13 @@ func (f *frame) NewGoFrame(self lang.IrObject, meth *lang.Method) *frame {
 	}
 }
 
-func (f *frame) NewObjectFrame(self lang.IrObject, meth *lang.Method) *frame {
+func (f *frame) NewObjectFrame(this lang.IrObject, meth *lang.Method) *frame {
 	return &frame{
 		flags:        OBJECT_FRAME,
 		name:         meth.Name(),
 		method:       meth,
-		self:         self,
-		class:        self.(*lang.Class),
+		this:         this,
+		class:        this.(*lang.Class),
 		stack:        f.stack[f.stackPointer:],
 		instrs:       meth.Instrs(),
 		constants:    meth.Constants(),
@@ -75,14 +75,14 @@ func (f *frame) NewObjectFrame(self lang.IrObject, meth *lang.Method) *frame {
 	}
 }
 
-func (f *frame) NewFrame(self lang.IrObject, meth *lang.Method, flags byte) *frame {
+func (f *frame) NewFrame(this lang.IrObject, meth *lang.Method, flags byte) *frame {
 	f.stackPointer -= meth.Arity()
 
 	frame := &frame{
 		flags:        flags,
 		method:       meth,
-		self:         self,
-		class:        self.Class(),
+		this:         this,
+		class:        this.Class(),
 		stack:        f.stack[f.stackPointer:],
 		name:         meth.Name(),
 		instrs:       meth.Instrs(),

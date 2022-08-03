@@ -13,22 +13,22 @@ func unwrapString(obj IrObject) []byte {
 	return STRING(obj).Value
 }
 
-func stringSize(rt Runtime, self IrObject) IrObject {
-	str := self.(*String)
+func stringSize(rt Runtime, this IrObject) IrObject {
+	str := this.(*String)
 	return Int(len(str.Value))
 }
 
-func stringEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
-	left := STRING(self)
+func stringEqual(rt Runtime, this IrObject, rhs IrObject) IrObject {
+	left := STRING(this)
 	right := STRING(rhs)
 
 	return Bool(bytes.Equal(left.Value, right.Value))
 }
 
-func stringPlus(rt Runtime, self IrObject, rhs IrObject) IrObject {
+func stringPlus(rt Runtime, this IrObject, rhs IrObject) IrObject {
 	var buf strings.Builder
 
-	left := unwrapString(self)
+	left := unwrapString(this)
 	right := unwrapString(rhs)
 
 	buf.Grow(len(left) + len(right))
@@ -38,8 +38,8 @@ func stringPlus(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	return NewString(buf.String())
 }
 
-func stringHash(rt Runtime, self IrObject) IrObject {
-	str := unwrapString(self)
+func stringHash(rt Runtime, this IrObject) IrObject {
+	str := unwrapString(this)
 
 	var hash Int
 	if len(str) > 0 {
@@ -51,8 +51,8 @@ func stringHash(rt Runtime, self IrObject) IrObject {
 	return hash
 }
 
-func stringInspect(rt Runtime, self IrObject) IrObject {
-	return self
+func stringInspect(rt Runtime, this IrObject) IrObject {
+	return this
 }
 
 var StringClass *Class

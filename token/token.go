@@ -23,6 +23,7 @@ var keywords = map[string]Type{
 	"super":   Super,
 	"or":      Or,
 	"and":     And,
+	"this":    This,
 }
 
 const LowestPrecedence = 0

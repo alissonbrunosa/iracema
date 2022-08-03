@@ -69,8 +69,8 @@ func floatDivide(rt Runtime, lhs, rhs IrObject) IrObject {
 	}
 }
 
-func floatEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
-	left := FLOAT(self)
+func floatEqual(rt Runtime, this IrObject, rhs IrObject) IrObject {
+	left := FLOAT(this)
 
 	switch right := rhs.(type) {
 	case Float:
@@ -96,8 +96,8 @@ func floatGreat(rt Runtime, lhs IrObject, rhs IrObject) IrObject {
 		return nil
 	}
 }
-func floatGreatEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
-	left := FLOAT(self)
+func floatGreatEqual(rt Runtime, this IrObject, rhs IrObject) IrObject {
+	left := FLOAT(this)
 
 	switch right := rhs.(type) {
 	case Float:
@@ -126,8 +126,8 @@ func floatLess(rt Runtime, lhs IrObject, rhs IrObject) IrObject {
 	}
 }
 
-func floatLessEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
-	left := FLOAT(self)
+func floatLessEqual(rt Runtime, this IrObject, rhs IrObject) IrObject {
+	left := FLOAT(this)
 
 	switch right := rhs.(type) {
 	case Float:
@@ -141,22 +141,22 @@ func floatLessEqual(rt Runtime, self IrObject, rhs IrObject) IrObject {
 	}
 }
 
-func floatUnaryAdd(rt Runtime, self IrObject) IrObject {
-	return self
+func floatUnaryAdd(rt Runtime, this IrObject) IrObject {
+	return this
 }
 
-func floatUnarySub(rt Runtime, self IrObject) IrObject {
-	return -FLOAT(self)
+func floatUnarySub(rt Runtime, this IrObject) IrObject {
+	return -FLOAT(this)
 }
 
-func floatInspect(rt Runtime, self IrObject) IrObject {
-	value := FLOAT(self)
+func floatInspect(rt Runtime, this IrObject) IrObject {
+	value := FLOAT(this)
 	inspect := fmt.Sprintf("%f", value)
 	return NewString(inspect)
 }
 
-func floatHash(rt Runtime, self IrObject) IrObject {
-	value := FLOAT(self)
+func floatHash(rt Runtime, this IrObject) IrObject {
+	value := FLOAT(this)
 	bits := *(*uint64)(unsafe.Pointer(&value))
 	bits = bits ^ (bits >> 32)
 	return Int(bits)
