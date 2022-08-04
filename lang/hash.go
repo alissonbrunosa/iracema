@@ -1,5 +1,7 @@
 package lang
 
+import "strings"
+
 func HASH(obj IrObject) *Hash {
 	return obj.(*Hash)
 }
@@ -97,6 +99,46 @@ func hashValues(rt Runtime, this IrObject) IrObject {
 	return NewArray(values)
 }
 
+func hashInspect(rt Runtime, this IrObject) IrObject {
+	h := HASH(this)
+
+	if h.count == 0 {
+		return NewString("{}")
+	}
+
+	var out strings.Builder
+	out.WriteByte('{')
+	for _, entry := range h.table {
+		if entry == nil {
+			continue
+		}
+
+		for ; entry != nil; entry = entry.next {
+			if out.Len() > 2 { // 2 is the two chars { and whitespace
+				out.WriteString(", ")
+			}
+			val := call(rt, entry.key, "inspect")
+			if val == nil {
+				return nil
+			}
+
+			out.Write(unwrapString(val))
+			out.WriteString(": ")
+
+			val = call(rt, entry.value, "inspect")
+			if val == nil {
+				return nil
+			}
+
+			out.Write(unwrapString(val))
+		}
+	}
+
+	out.WriteByte('}')
+
+	return NewString(out.String())
+}
+
 func hashSize(rt Runtime, this IrObject) IrObject {
 	return HASH(this).count
 }
@@ -153,6 +195,7 @@ func InitHash() {
 	HashClass.AddGoMethod("keys", zeroArgs(hashValues))
 	HashClass.AddGoMethod("size", zeroArgs(hashSize))
 	HashClass.AddGoMethod("values_at", nArgs(hashValuesAt))
+	HashClass.AddGoMethod("inspect", zeroArgs(hashInspect))
 }
 
 func NewHash() *Hash {
