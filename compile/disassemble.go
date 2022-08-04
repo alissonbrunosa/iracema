@@ -41,7 +41,7 @@ func (c *compiler) Disassemble(file *ast.File) {
 				case bytecode.DefineObject:
 					m := fragment.consts[ins.operand].(*lang.Method)
 					fmt.Fprintf(w, "%-30s%s\n", ins.opcode, m.Name())
-				case bytecode.BuildArray:
+				case bytecode.BuildArray, bytecode.BuildHash:
 					fmt.Fprintf(w, "%-30ssize: %d\n", ins.opcode, ins.operand)
 				default:
 					fmt.Fprintln(w, ins.opcode)

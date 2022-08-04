@@ -17,6 +17,7 @@ const (
 	GetLocal                     // GET_LOCAL
 	MatchType                    // MATCH_TYPE
 	BuildArray                   // BUILD_ARRAY
+	BuildHash                    // BUILD_HASH
 	CallMethod                   // CALL_METHOD
 	CallSuper                    // CALL_SUPER
 	SetConstant                  // SET_CONSTANT

@@ -270,7 +270,7 @@ type ArrayLit struct {
 
 func (*ArrayLit) String() string { return "ArrayLit" }
 
-type KeyValueExpr struct {
+type HashEntry struct {
 	Key   Expr
 	Colon *token.Token
 	Value Expr
@@ -278,11 +278,11 @@ type KeyValueExpr struct {
 	expr
 }
 
-func (*KeyValueExpr) String() string { return "KeyValueExpr" }
+func (*HashEntry) String() string { return "KeyValueExpr" }
 
 type HashLit struct {
 	LeftBrace  *token.Token
-	Elements   []*KeyValueExpr
+	Entries    []*HashEntry
 	RightBrace *token.Token
 
 	expr

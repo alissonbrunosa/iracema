@@ -190,6 +190,14 @@ func (h *Hash) addEntry(rt Runtime, hashCode Int, key IrObject, value IrObject, 
 	h.count++
 }
 
+func (h *Hash) BulkInsert(rt Runtime, elements []IrObject) {
+	for i := 0; i < len(elements); i += 2 {
+		if res := hashInsert(rt, h, elements[i], elements[i+1]); res == nil {
+			break
+		}
+	}
+}
+
 func (h *Hash) rehash() {
 	oldTable := h.table
 	oldCapacity := Int(len(oldTable))

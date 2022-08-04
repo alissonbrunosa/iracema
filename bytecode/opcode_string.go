@@ -21,23 +21,24 @@ func _() {
 	_ = x[GetLocal-10]
 	_ = x[MatchType-11]
 	_ = x[BuildArray-12]
-	_ = x[CallMethod-13]
-	_ = x[CallSuper-14]
-	_ = x[SetConstant-15]
-	_ = x[GetConstant-16]
-	_ = x[DefineObject-17]
-	_ = x[DefineFunction-18]
-	_ = x[Jump-19]
-	_ = x[JumpIfFalse-20]
-	_ = x[JumpIfTrue-21]
-	_ = x[Iterate-22]
-	_ = x[NewIterator-23]
-	_ = x[WithCatch-24]
+	_ = x[BuildHash-13]
+	_ = x[CallMethod-14]
+	_ = x[CallSuper-15]
+	_ = x[SetConstant-16]
+	_ = x[GetConstant-17]
+	_ = x[DefineObject-18]
+	_ = x[DefineFunction-19]
+	_ = x[Jump-20]
+	_ = x[JumpIfFalse-21]
+	_ = x[JumpIfTrue-22]
+	_ = x[Iterate-23]
+	_ = x[NewIterator-24]
+	_ = x[WithCatch-25]
 }
 
-const _Opcode_name = "NOPPOPPUSHTHROWRETURNPUSH_NONESET_ATTRGET_ATTRPUSH_THISSET_LOCALGET_LOCALMATCH_TYPEBUILD_ARRAYCALL_METHODCALL_SUPERSET_CONSTANTGET_CONSTANTDEFINE_OBJECTDEFINE_FUNCTIONJUMPJUMP_IF_FALSEJUMP_IF_TRUEITERATENEWITERATORWITH_CATCH"
+const _Opcode_name = "NOPPOPPUSHTHROWRETURNPUSH_NONESET_ATTRGET_ATTRPUSH_THISSET_LOCALGET_LOCALMATCH_TYPEBUILD_ARRAYBUILD_HASHCALL_METHODCALL_SUPERSET_CONSTANTGET_CONSTANTDEFINE_OBJECTDEFINE_FUNCTIONJUMPJUMP_IF_FALSEJUMP_IF_TRUEITERATENEWITERATORWITH_CATCH"
 
-var _Opcode_index = [...]uint8{0, 3, 6, 10, 15, 21, 30, 38, 46, 55, 64, 73, 83, 94, 105, 115, 127, 139, 152, 167, 171, 184, 196, 203, 214, 224}
+var _Opcode_index = [...]uint8{0, 3, 6, 10, 15, 21, 30, 38, 46, 55, 64, 73, 83, 94, 104, 115, 125, 137, 149, 162, 177, 181, 194, 206, 213, 224, 234}
 
 func (i Opcode) String() string {
 	if i >= Opcode(len(_Opcode_index)-1) {

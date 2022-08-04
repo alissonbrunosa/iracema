@@ -390,7 +390,10 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) error {
 		}
 
 	case *ast.ArrayLit:
-		return c.compileArrayLireral(node)
+		return c.compileArrayLit(node)
+
+	case *ast.HashLit:
+		return c.compileHashLit(node)
 
 	case *ast.GroupExpr:
 		return c.compileExpr(node.Expr, isEvaluated)
@@ -460,7 +463,7 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) error {
 		}
 
 	default:
-		return errors.New("unknown expr")
+		return errors.New("unknown expr: " + expr.String())
 	}
 
 	return nil
@@ -904,7 +907,7 @@ func (c *compiler) compileFunDecl(fun *ast.FunDecl) error {
 	return nil
 }
 
-func (c *compiler) compileArrayLireral(node *ast.ArrayLit) error {
+func (c *compiler) compileArrayLit(node *ast.ArrayLit) error {
 	size := len(node.Elements)
 	for _, el := range node.Elements {
 		if err := c.compileExpr(el, true); err != nil {
@@ -913,6 +916,22 @@ func (c *compiler) compileArrayLireral(node *ast.ArrayLit) error {
 	}
 
 	c.add(bytecode.BuildArray, byte(size))
+	return nil
+}
+
+func (c *compiler) compileHashLit(hash *ast.HashLit) error {
+	size := len(hash.Entries)
+	for _, entry := range hash.Entries {
+		if err := c.compileExpr(entry.Key, true); err != nil {
+			return err
+		}
+
+		if err := c.compileExpr(entry.Value, true); err != nil {
+			return err
+		}
+	}
+
+	c.add(bytecode.BuildHash, byte(size*2))
 	return nil
 }
 

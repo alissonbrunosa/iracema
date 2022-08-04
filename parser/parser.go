@@ -502,15 +502,15 @@ func (p *parser) parseArrayLit() *ast.ArrayLit {
 func (p *parser) parseHashLit() *ast.HashLit {
 	return &ast.HashLit{
 		LeftBrace:  p.expect(token.LeftBrace),
-		Elements:   p.KeyValuePairList(),
+		Entries:    p.parseHashEntries(),
 		RightBrace: p.expect(token.RightBrace),
 	}
 }
 
-func (p *parser) KeyValuePairList() (list []*ast.KeyValueExpr) {
+func (p *parser) parseHashEntries() (list []*ast.HashEntry) {
 	for p.tok.Type != token.RightBrace {
 
-		list = append(list, p.KeyValuePair())
+		list = append(list, p.parseHashEntry())
 		if !p.atComma(token.RightBrace) {
 			break
 		}
@@ -521,8 +521,8 @@ func (p *parser) KeyValuePairList() (list []*ast.KeyValueExpr) {
 	return
 }
 
-func (p *parser) KeyValuePair() *ast.KeyValueExpr {
-	return &ast.KeyValueExpr{
+func (p *parser) parseHashEntry() *ast.HashEntry {
+	return &ast.HashEntry{
 		Key:   p.parseExpr(),
 		Colon: p.expect(token.Colon),
 		Value: p.parseExpr(),

@@ -524,9 +524,9 @@ func TestParseHashLiteral(t *testing.T) {
 		[]string{"2", "20"},
 	}
 
-	for i, pair := range lit.Elements {
-		testLit(t, pair.Key, expectedKeyValues[i][0])
-		testLit(t, pair.Value, expectedKeyValues[i][1])
+	for i, entry := range lit.Entries {
+		testLit(t, entry.Key, expectedKeyValues[i][0])
+		testLit(t, entry.Value, expectedKeyValues[i][1])
 	}
 }
 

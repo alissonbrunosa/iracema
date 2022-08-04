@@ -112,6 +112,12 @@ func (i *Interpreter) dispatch() (lang.IrObject, error) {
 			i.Push(ary)
 			goto next_instr
 
+		case bytecode.BuildHash:
+			hash := lang.NewHash()
+			hash.BulkInsert(i, i.PopN(operand))
+			i.Push(hash)
+			goto next_instr
+
 		case bytecode.SetLocal:
 			val := i.Pop()
 			i.SetLocal(operand, val)
