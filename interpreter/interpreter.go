@@ -14,11 +14,12 @@ type Interpreter struct {
 	err        *lang.ErrorObject
 }
 
-func (i *Interpreter) Init(top *lang.Method) {
+func (i *Interpreter) Exec(top *lang.Method) (lang.IrObject, error) {
 	i.PushFrame(lang.NewScript(), top, TOP_FRAME)
+	return i.dispatch()
 }
 
-func (i *Interpreter) Dispatch() (lang.IrObject, error) {
+func (i *Interpreter) dispatch() (lang.IrObject, error) {
 	for {
 	start_frame:
 		if i.instrPointer >= len(i.instrs) {
@@ -364,7 +365,7 @@ func (i *Interpreter) Call(recv lang.IrObject, meth *lang.Method, args ...lang.I
 		}
 
 		i.PushFrame(recv, meth, SINGLE_FRAME|IRMETHOD_FRAME)
-		ret, err := i.Dispatch()
+		ret, err := i.dispatch()
 		if err != nil {
 			i.err = lang.NewError("unkown error:", lang.Error)
 			return nil
