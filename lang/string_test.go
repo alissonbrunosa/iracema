@@ -1,6 +1,8 @@
 package lang
 
-import "testing"
+import (
+	"testing"
+)
 
 func Test_stringEqual(t *testing.T) {
 	table := []struct {
@@ -28,9 +30,9 @@ func Test_stringLength(t *testing.T) {
 }
 
 func Test_stringInspect(t *testing.T) {
-	str := NewString("string")
-	inspect := stringInspect(globalTestDummyRuntime, str)
-	assertEqual(t, inspect, NewString("string"))
+	val := stringInspect(globalTestDummyRuntime, NewString("string"))
+
+	assertEqual(t, val, NewString(`"string"`))
 }
 
 func Test_stringPlus(t *testing.T) {

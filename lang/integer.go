@@ -188,6 +188,7 @@ func InitInt() {
 	IntClass.AddGoMethod("<", oneArg(intLess))
 	IntClass.AddGoMethod("<=", oneArg(intLessEqual))
 	IntClass.AddGoMethod("inspect", zeroArgs(intInspect))
+	IntClass.AddGoMethod("to_str", zeroArgs(intInspect))
 	IntClass.AddGoMethod("uadd", zeroArgs(intUnaryAdd))
 	IntClass.AddGoMethod("usub", zeroArgs(intUnarySub))
 }

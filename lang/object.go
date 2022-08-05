@@ -11,12 +11,12 @@ func returnFalse(rt Runtime, this IrObject) IrObject {
 
 func objectPuts(rt Runtime, this IrObject, args ...IrObject) IrObject {
 	for _, arg := range args {
-		inspect := call(rt, arg, "inspect")
-		if inspect == nil {
+		v := call(rt, arg, "to_str")
+		if v == nil {
 			return nil
 		}
 
-		fmt.Println(inspect)
+		fmt.Println(v)
 	}
 
 	return None
@@ -93,6 +93,7 @@ func InitObject() {
 	ObjectClass.AddGoMethod("puts", nArgs(objectPuts))
 	ObjectClass.AddGoMethod("object_id", zeroArgs(objectId))
 	ObjectClass.AddGoMethod("inspect", zeroArgs(objectInspect))
+	ObjectClass.AddGoMethod("to_str", zeroArgs(objectInspect))
 	ObjectClass.AddGoMethod("nil?", zeroArgs(returnFalse))
 	ObjectClass.AddGoMethod("unot", zeroArgs(objectUnaryNot))
 }

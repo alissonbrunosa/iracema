@@ -1,6 +1,8 @@
 package lang
 
-import "testing"
+import (
+	"testing"
+)
 
 type dummyRuntime struct {
 	err *ErrorObject
@@ -16,23 +18,22 @@ var globalTestDummyRuntime = new(dummyRuntime)
 func assertEqual(t *testing.T, got IrObject, expected IrObject) {
 	t.Helper()
 
-	var result bool
-	var value IrObject
+	var match bool
 	switch res := expected.(type) {
 	case Int:
-		result = res == got.(Int)
+		match = res == got.(Int)
 	case Float:
-		result = res == got.(Float)
+		match = res == got.(Float)
 	case *String:
-		result = string(res.Value) == string(got.(*String).Value)
+		match = string(res.Value) == string(got.(*String).Value)
 	case Bool:
-		result = res == got.(Bool)
+		match = res == got.(Bool)
 
 	default:
 		t.Fatalf("wrong type %T", res)
 	}
 
-	if !result {
-		t.Errorf("expected value to be %v, got %v", expected, value)
+	if !match {
+		t.Errorf("expected value to be %v, got %v", expected, got)
 	}
 }

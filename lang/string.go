@@ -51,8 +51,49 @@ func stringHash(rt Runtime, this IrObject) IrObject {
 	return hash
 }
 
-func stringInspect(rt Runtime, this IrObject) IrObject {
+func stringToString(rt Runtime, this IrObject) IrObject {
 	return this
+}
+
+func stringInspect(rt Runtime, this IrObject) IrObject {
+	bytes := unwrapString(this)
+	var buf strings.Builder
+	buf.Grow(len(bytes) + 2)
+
+	buf.WriteString("\"")
+	for _, b := range bytes {
+		switch b {
+		case '\a':
+			buf.WriteString("\\a")
+
+		case '\b':
+			buf.WriteString("\\b")
+
+		case '\f':
+			buf.WriteString("\\f")
+
+		case '\n':
+			buf.WriteString("\\n")
+
+		case '\r':
+			buf.WriteString("\\r")
+
+		case '\t':
+			buf.WriteString("\\t")
+
+		case '\v':
+			buf.WriteString("\\v")
+
+		case '\\':
+			buf.WriteString("\\\\")
+
+		default:
+			buf.WriteByte(b)
+		}
+	}
+
+	buf.WriteString("\"")
+	return NewString(buf.String())
 }
 
 var StringClass *Class
@@ -69,6 +110,7 @@ func InitString() {
 	StringClass.AddGoMethod("size", zeroArgs(stringSize))
 	StringClass.AddGoMethod("+", oneArg(stringPlus))
 	StringClass.AddGoMethod("inspect", zeroArgs(stringInspect))
+	StringClass.AddGoMethod("to_str", zeroArgs(stringToString))
 }
 
 /*
@@ -90,7 +132,6 @@ Creates a new string object
 func NewString(value string) *String {
 	return &String{
 		Value: []byte(value),
-
-		base: &base{class: StringClass},
+		base:  &base{class: StringClass},
 	}
 }

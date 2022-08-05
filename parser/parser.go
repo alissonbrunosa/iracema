@@ -388,8 +388,7 @@ func (p *parser) parseOperand() (expr ast.Expr) {
 	case
 		token.Int, token.Float, token.String, token.Bool,
 		token.None, token.This:
-		expr = &ast.BasicLit{Token: p.tok, Value: p.tok.Literal}
-		p.advance()
+		expr = p.parseBasicLit()
 
 	case token.Block:
 		expr = p.parseBlockExpr()
@@ -414,6 +413,18 @@ func (p *parser) parseOperand() (expr ast.Expr) {
 		p.advance()
 	}
 
+	return
+}
+
+func (p *parser) parseBasicLit() (lit *ast.BasicLit) {
+	switch p.tok.Type {
+	case token.String:
+		lit = &ast.BasicLit{Token: p.tok, Value: readEscape(p.tok.Literal)}
+	default:
+		lit = &ast.BasicLit{Token: p.tok, Value: p.tok.Literal}
+	}
+
+	p.advance()
 	return
 }
 

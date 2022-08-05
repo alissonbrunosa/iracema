@@ -338,7 +338,7 @@ func TestStringError(t *testing.T) {
 		{
 			Scenario:    "New line in string",
 			Input:       "\"string\n",
-			ExpectedErr: "new line in string",
+			ExpectedErr: "string not terminated",
 		},
 	}
 

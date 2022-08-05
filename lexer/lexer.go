@@ -193,13 +193,20 @@ func (l *lexer) readString() string {
 			break
 		}
 
-		if l.char == 0 {
-			l.errorHandler(l.position.Snapshot(l.offset), "string not terminated")
-			break
+		if l.char == '\\' {
+			l.advance()
+			switch l.char {
+			case 'a', 'b', 'f', 'n', 'r', 't', 'v', '\\', '"':
+				l.advance()
+				continue
+			default:
+				l.errorHandler(l.position.Snapshot(l.offset), "unknown escape: "+"\\"+string(l.char))
+				break
+			}
 		}
 
-		if l.char == '\n' {
-			l.errorHandler(l.position.Snapshot(l.offset), "new line in string")
+		if l.char <= 0 || l.char == '\n' {
+			l.errorHandler(l.position.Snapshot(l.offset), "string not terminated")
 			break
 		}
 

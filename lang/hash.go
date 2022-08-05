@@ -196,6 +196,7 @@ func InitHash() {
 	HashClass.AddGoMethod("size", zeroArgs(hashSize))
 	HashClass.AddGoMethod("values_at", nArgs(hashValuesAt))
 	HashClass.AddGoMethod("inspect", zeroArgs(hashInspect))
+	HashClass.AddGoMethod("to_str", zeroArgs(hashInspect))
 }
 
 func NewHash() *Hash {
