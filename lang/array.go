@@ -286,6 +286,7 @@ func InitArray() {
 	ArrayClass.AddGoMethod("length", zeroArgs(arrayLength))
 	ArrayClass.AddGoMethod("size", zeroArgs(arrayLength))
 	ArrayClass.AddGoMethod("inspect", zeroArgs(arrayInspect))
+	ArrayClass.AddGoMethod("to_str", zeroArgs(arrayInspect))
 	ArrayClass.AddGoMethod("flatten", zeroArgs(arrayFlatten))
 	ArrayClass.AddGoMethod("uniq", zeroArgs(arrayUniq))
 	ArrayClass.AddGoMethod("shift", oneArg(arrayShift))

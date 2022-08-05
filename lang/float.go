@@ -185,6 +185,7 @@ func InitFloat() {
 	FloatClass.AddGoMethod("<", oneArg(floatLess))
 	FloatClass.AddGoMethod("<=", oneArg(floatLessEqual))
 	FloatClass.AddGoMethod("inspect", zeroArgs(floatInspect))
+	FloatClass.AddGoMethod("to_str", zeroArgs(floatInspect))
 	FloatClass.AddGoMethod("uadd", zeroArgs(floatUnaryAdd))
 	FloatClass.AddGoMethod("usub", zeroArgs(floatUnarySub))
 }

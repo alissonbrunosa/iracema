@@ -106,37 +106,37 @@ func hashInspect(rt Runtime, this IrObject) IrObject {
 		return NewString("{}")
 	}
 
-	var out strings.Builder
-	out.WriteByte('{')
+	var buf strings.Builder
+	buf.WriteByte('{')
 	for _, entry := range h.table {
 		if entry == nil {
 			continue
 		}
 
 		for ; entry != nil; entry = entry.next {
-			if out.Len() > 2 { // 2 is the two chars { and whitespace
-				out.WriteString(", ")
+			if buf.Len() > 1 { // 1 is open {
+				buf.WriteString(", ")
 			}
 			val := call(rt, entry.key, "inspect")
 			if val == nil {
 				return nil
 			}
 
-			out.Write(unwrapString(val))
-			out.WriteString(": ")
+			buf.Write(unwrapString(val))
+			buf.WriteString(": ")
 
 			val = call(rt, entry.value, "inspect")
 			if val == nil {
 				return nil
 			}
 
-			out.Write(unwrapString(val))
+			buf.Write(unwrapString(val))
 		}
 	}
 
-	out.WriteByte('}')
+	buf.WriteByte('}')
 
-	return NewString(out.String())
+	return NewString(buf.String())
 }
 
 func hashSize(rt Runtime, this IrObject) IrObject {

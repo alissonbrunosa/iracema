@@ -23,6 +23,7 @@ func InitBool() {
 
 	BoolClass = NewClass("Bool", ObjectClass)
 	BoolClass.AddGoMethod("inspect", zeroArgs(boolInspect))
+	BoolClass.AddGoMethod("to_str", zeroArgs(boolInspect))
 }
 
 /*

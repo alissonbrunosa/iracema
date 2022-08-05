@@ -27,6 +27,7 @@ func init() {
 
 		"Error":             Error,
 		"NameError":         NameError,
+		"TypeError":         TypeError,
 		"RuntimeError":      RuntimeError,
 		"ArgumentError":     ArgumentError,
 		"NoMethodError":     NoMethodError,

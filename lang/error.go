@@ -2,7 +2,6 @@ package lang
 
 import (
 	"fmt"
-	"strings"
 )
 
 var (
@@ -25,6 +24,18 @@ func errMessage(rt Runtime, this IrObject) IrObject {
 	return NewString(err.message)
 }
 
+func errInit(rt Runtime, this IrObject, message IrObject) IrObject {
+	err := ERROR(this)
+	err.message = string(unwrapString(message))
+	return None
+}
+
+func errAlloc(class *Class) IrObject {
+	return &ErrorObject{
+		base: &base{class: class},
+	}
+}
+
 type ErrorObject struct {
 	*base
 
@@ -37,8 +48,11 @@ func (err *ErrorObject) String() string {
 
 func InitError() {
 	Error = NewClass("Error", ObjectClass)
+	Error.allocator = errAlloc
+	Error.AddGoMethod("init", oneArg(errInit))
 	Error.AddGoMethod("message", zeroArgs(errMessage))
 	Error.AddGoMethod("inspect", zeroArgs(errMessage))
+	Error.AddGoMethod("to_str", zeroArgs(errMessage))
 
 	NameError = NewClass("NameError", Error)
 	RegexpError = NewClass("RegexpError", Error)
@@ -51,31 +65,28 @@ func InitError() {
 }
 
 func NewNoMethodError(recv IrObject, name string) *ErrorObject {
-	var buf = new(strings.Builder)
-	fmt.Fprintf(buf, "undefined method '%s' for %s", name, recv.Class())
+	mesg := fmt.Sprintf("undefined method '%s' for %s", name, recv.Class())
 
 	return &ErrorObject{
-		message: buf.String(),
+		message: mesg,
 		base:    &base{class: NoMethodError},
 	}
 }
 
 func NewArityError(given, expected int) *ErrorObject {
-	var buf = new(strings.Builder)
-	fmt.Fprintf(buf, "wrong number of arguments (given %d, expected %d)", given, expected)
+	mesg := fmt.Sprintf("wrong number of arguments (given %d, expected %d)", given, expected)
 
 	return &ErrorObject{
-		message: buf.String(),
+		message: mesg,
 		base:    &base{class: ArgumentError},
 	}
 }
 
 func NewNameError(name IrObject) *ErrorObject {
-	var buf = new(strings.Builder)
-	fmt.Fprintf(buf, "uninitialized constant %s", name)
+	mesg := fmt.Sprintf("uninitialized constant %s", name)
 
 	return &ErrorObject{
-		message: buf.String(),
+		message: mesg,
 		base:    &base{class: NameError},
 	}
 }

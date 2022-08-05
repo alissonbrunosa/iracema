@@ -352,11 +352,12 @@ func (i *Interpreter) Call(recv lang.IrObject, meth *lang.Method, args ...lang.I
 	case lang.GoFunction:
 		i.PushGoFrame(recv, meth)
 		val := meth.Native().Invoke(i, recv, args...)
+		i.PopFrame()
+
 		if val == nil {
 			return nil
 		}
 
-		i.PopFrame()
 		return val
 
 	case lang.IrMethod:
