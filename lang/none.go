@@ -18,6 +18,7 @@ func InitNone() {
 
 	NoneClass = NewClass("None", ObjectClass)
 	NoneClass.AddGoMethod("inspect", zeroArgs(noneInspect))
+	NoneClass.AddGoMethod("to_str", zeroArgs(noneInspect))
 	NoneClass.AddGoMethod("none?", zeroArgs(noneCheck))
 }
 

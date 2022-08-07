@@ -9,7 +9,6 @@ const (
 	OBJECT_FRAME   = 0x02
 	IRMETHOD_FRAME = 0x04
 	SINGLE_FRAME   = 0x08
-	GOMETHOD_FRAME = 0x10
 )
 
 type frame struct {
@@ -29,33 +28,24 @@ type frame struct {
 
 const STACK_SIZE = 1024
 
-func TopFrame(this lang.IrObject, meth *lang.Method) *frame {
+func TopFrame(this lang.IrObject, fun *lang.Method) *frame {
+	stack := make([]lang.IrObject, STACK_SIZE)
+
+	for i := byte(0); i < fun.LocalCount(); i++ {
+		stack[i] = lang.None
+	}
+
 	return &frame{
 		flags:        TOP_FRAME,
-		name:         "top",
-		method:       meth,
+		method:       fun,
 		this:         this,
 		class:        this.Class(),
-		stack:        make([]lang.IrObject, STACK_SIZE),
-		instrs:       meth.Instrs(),
-		constants:    meth.Constants(),
-		stackPointer: meth.LocalCount(),
+		stack:        stack,
+		name:         fun.Name(),
+		instrs:       fun.Instrs(),
+		constants:    fun.Constants(),
+		stackPointer: fun.LocalCount(),
 		catchOffset:  -1,
-	}
-}
-
-func (f *frame) NewGoFrame(this lang.IrObject, meth *lang.Method) *frame {
-	return &frame{
-		flags:        GOMETHOD_FRAME,
-		name:         meth.Name(),
-		method:       meth,
-		this:         this,
-		stack:        f.stack[f.stackPointer:],
-		instrs:       nil,
-		constants:    nil,
-		stackPointer: 0,
-		catchOffset:  -1,
-		previous:     f,
 	}
 }
 
@@ -76,8 +66,11 @@ func (f *frame) NewObjectFrame(this lang.IrObject, meth *lang.Method) *frame {
 }
 
 func (f *frame) NewFrame(this lang.IrObject, meth *lang.Method, flags byte) *frame {
-	f.stackPointer -= meth.Arity()
+	for i := f.stackPointer; i < f.stackPointer+meth.LocalCount(); i++ {
+		f.stack[i] = lang.None
+	}
 
+	f.stackPointer -= meth.Arity()
 	frame := &frame{
 		flags:        flags,
 		method:       meth,

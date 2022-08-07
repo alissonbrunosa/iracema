@@ -297,11 +297,6 @@ func (i *Interpreter) PushObjectFrame(this lang.IrObject, fun *lang.Method) {
 	i.frameCount++
 }
 
-func (i *Interpreter) PushGoFrame(this lang.IrObject, meth *lang.Method) {
-	i.frame = i.NewGoFrame(this, meth)
-	i.frameCount++
-}
-
 func (i *Interpreter) PushFrame(this lang.IrObject, fun *lang.Method, flags byte) {
 	if i.frame == nil {
 		i.frame = TopFrame(this, fun)
