@@ -49,10 +49,6 @@ func (t *Token) Precedence() int {
 	return LowestPrecedence
 }
 
-func (t *Token) Is(kind Type) bool {
-	return t.Type == kind
-}
-
 func (t *Token) String() string { return t.Type.String() }
 
 func Lookup(ident string) Type {

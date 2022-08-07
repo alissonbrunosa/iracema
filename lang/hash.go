@@ -1,6 +1,8 @@
 package lang
 
-import "strings"
+import (
+	"strings"
+)
 
 func HASH(obj IrObject) *Hash {
 	return obj.(*Hash)
@@ -119,14 +121,14 @@ func hashInspect(rt Runtime, this IrObject) IrObject {
 				buf.WriteString(", ")
 			}
 			var val IrObject
-			if val = call(rt, entry.key, "inspect"); val != nil {
+			if val = call(rt, entry.key, "inspect"); val == nil {
 				return nil
 			}
 
 			buf.Write(unwrapString(val))
 			buf.WriteString(": ")
 
-			if val = call(rt, entry.value, "inspect"); val != nil {
+			if val = call(rt, entry.value, "inspect"); val == nil {
 				return nil
 			}
 

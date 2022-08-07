@@ -9,7 +9,7 @@ func _() {
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
 	_ = x[Illegal-0]
-	_ = x[Eof-1]
+	_ = x[EOF-1]
 	_ = x[If-2]
 	_ = x[Is-3]
 	_ = x[For-4]
@@ -53,8 +53,8 @@ func _() {
 	_ = x[Great-42]
 	_ = x[GreatEqual-43]
 	_ = x[Ident-44]
-	_ = x[LeftParenthesis-45]
-	_ = x[RightParenthesis-46]
+	_ = x[LeftParen-45]
+	_ = x[RightParen-46]
 	_ = x[LeftBracket-47]
 	_ = x[RightBracket-48]
 	_ = x[LeftBrace-49]

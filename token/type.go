@@ -5,7 +5,7 @@ type Type byte
 //go:generate stringer -type=Type -linecomment
 const (
 	Illegal Type = iota // Illegal
-	Eof                 // EOF
+	EOF                 // EOF
 
 	If      // if
 	Is      // is
@@ -45,18 +45,18 @@ const (
 	Not     // !
 	Arrow   // ->
 	Comma
-	Assign           // =
-	Equal            // ==
-	NotEqual         // !=
-	Less             // <
-	LessEqual        // <=
-	Great            // >
-	GreatEqual       // >=
-	Ident            // Ident
-	LeftParenthesis  // (
-	RightParenthesis // )
-	LeftBracket      // [
-	RightBracket     // ]
-	LeftBrace        // {
-	RightBrace       // }
+	Assign       // =
+	Equal        // ==
+	NotEqual     // !=
+	Less         // <
+	LessEqual    // <=
+	Great        // >
+	GreatEqual   // >=
+	Ident        // Ident
+	LeftParen    // (
+	RightParen   // )
+	LeftBracket  // [
+	RightBracket // ]
+	LeftBrace    // {
+	RightBrace   // }
 )

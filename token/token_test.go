@@ -73,14 +73,6 @@ func TestToken_Precedence(t *testing.T) {
 	}
 }
 
-func TestToken_Is(t *testing.T) {
-	tok := &Token{Type: LeftBrace}
-
-	if tok.Is(RightBrace) {
-		t.Errorf("expected to be false")
-	}
-}
-
 func TestTokenType_String(t *testing.T) {
 	if Star.String() != "*" {
 		t.Errorf("expected to be *, got %s", Star.String())

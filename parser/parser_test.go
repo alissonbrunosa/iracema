@@ -309,12 +309,6 @@ func TestInvalidFunDecl(t *testing.T) {
 		Code        string
 		ExpectedErr string
 	}{
-
-		{
-			Scenario:    "Instance Variable as parameter",
-			Code:        `fun name(@arg) {}`,
-			ExpectedErr: "[Lin: 1 Col: 10] syntax error: argument cannot be an instance variable",
-		},
 		{
 			Scenario:    "Missing comm in parameter list",
 			Code:        `fun name(arg1 arg2) {}`,

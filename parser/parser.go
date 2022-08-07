@@ -6,7 +6,6 @@ import (
 	"iracema/ast"
 	"iracema/lexer"
 	"iracema/token"
-	"strings"
 )
 
 var startStmt = map[token.Type]bool{
@@ -41,10 +40,10 @@ func (p *parser) init(source io.Reader) {
 func (p *parser) parse() *ast.File {
 	var stmts []ast.Stmt
 
-	for p.tok.Type != token.Eof && p.tok.Type != token.RightBrace && p.tok.Type != token.Case && p.tok.Type != token.Default {
+	for p.tok.Type != token.EOF && p.tok.Type != token.RightBrace && p.tok.Type != token.Case && p.tok.Type != token.Default {
 		stmts = append(stmts, p.parseStmt())
 
-		if !p.consume(token.NewLine) && p.tok.Type != token.Eof {
+		if !p.consume(token.NewLine) && p.tok.Type != token.EOF {
 			err := fmt.Sprintf("unexpected %s, expecting EOF or new line", p.tok)
 			p.addError(p.tok.Position, err)
 			p.sync(startStmt)
@@ -56,7 +55,7 @@ func (p *parser) parse() *ast.File {
 }
 
 func (p *parser) parseStmtList() (list []ast.Stmt) {
-	for p.tok.Type != token.Eof && p.tok.Type != token.RightBrace && p.tok.Type != token.Case && p.tok.Type != token.Default {
+	for p.tok.Type != token.EOF && p.tok.Type != token.RightBrace && p.tok.Type != token.Case && p.tok.Type != token.Default {
 		list = append(list, p.parseStmt())
 
 		if !p.consume(token.NewLine) && p.tok.Type != token.RightBrace {
@@ -72,7 +71,7 @@ func (p *parser) parseStmtList() (list []ast.Stmt) {
 }
 
 func (p *parser) sync(to map[token.Type]bool) {
-	for ; !p.at(token.Eof); p.advance() {
+	for ; !p.at(token.EOF); p.advance() {
 		if to[p.tok.Type] {
 			break
 		}
@@ -110,7 +109,7 @@ func (p *parser) parseStmt() ast.Stmt {
 
 	case
 		token.Ident, token.String, token.Bool, token.Int, token.Float,
-		token.LeftParenthesis, token.Not, token.Plus, token.Minus,
+		token.LeftParen, token.Not, token.Plus, token.Minus,
 		token.LeftBracket, token.LeftBrace, token.None, token.Block,
 		token.Super, token.This:
 		return p.parseSimpleStmt()
@@ -150,11 +149,11 @@ func (p *parser) parseFunDecl() ast.Stmt {
 
 func (p *parser) parseCatchList() (list []*ast.CatchDecl) {
 	for p.consume(token.Catch) {
-		p.expect(token.LeftParenthesis)
+		p.expect(token.LeftParen)
 		ref := p.parseIdent()
 		p.expect(token.Colon)
 		typ := p.parseConst()
-		p.expect(token.RightParenthesis)
+		p.expect(token.RightParen)
 		catch := &ast.CatchDecl{
 			Ref:  ref,
 			Type: typ,
@@ -208,10 +207,10 @@ func (p *parser) parseForStmt() ast.Stmt {
 	p.expect(token.For)
 	element := p.parseIdent()
 	p.expect(token.In)
-	iterable := p.parseExpr()
+	iterator := p.parseExpr()
 	body := p.parseBlockStmt()
 
-	return &ast.ForStmt{Element: element, Iterable: iterable, Body: body}
+	return &ast.ForStmt{Element: element, Iterable: iterator, Body: body}
 }
 
 func (p *parser) parseSwitchStmt() ast.Stmt {
@@ -221,8 +220,8 @@ func (p *parser) parseSwitchStmt() ast.Stmt {
 	s.Key = p.parseExpr()
 	p.expect(token.LeftBrace)
 
-	for p.tok.Type != token.Eof && p.tok.Type != token.RightBrace {
-		if caseClause, isDefault := p.parseCaseCluase(); isDefault {
+	for p.tok.Type != token.EOF && p.tok.Type != token.RightBrace {
+		if caseClause, isDefault := p.parseCase(); isDefault {
 			s.Default = caseClause
 		} else {
 			s.Cases = append(s.Cases, caseClause)
@@ -234,7 +233,7 @@ func (p *parser) parseSwitchStmt() ast.Stmt {
 	return s
 }
 
-func (p *parser) parseCaseCluase() (*ast.CaseClause, bool) {
+func (p *parser) parseCase() (*ast.CaseClause, bool) {
 	c := new(ast.CaseClause)
 
 	if p.consume(token.Case) {
@@ -256,15 +255,11 @@ func (p *parser) parseCaseCluase() (*ast.CaseClause, bool) {
 }
 
 func (p *parser) parseStopStmt() ast.Stmt {
-	return &ast.StopStmt{
-		Token: p.expect(token.Stop),
-	}
+	return &ast.StopStmt{Token: p.expect(token.Stop)}
 }
 
 func (p *parser) parseNextStmt() ast.Stmt {
-	return &ast.NextStmt{
-		Token: p.expect(token.Next),
-	}
+	return &ast.NextStmt{Token: p.expect(token.Next)}
 }
 
 func (p *parser) parseReturnStmt() ast.Stmt {
@@ -279,27 +274,22 @@ func (p *parser) parseReturnStmt() ast.Stmt {
 }
 
 func (p *parser) parseParameterList() (list []*ast.Ident) {
-	if !p.at(token.LeftParenthesis) {
+	if !p.at(token.LeftParen) {
 		return
 	}
 
-	p.expect(token.LeftParenthesis)
-	for p.tok.Type != token.RightParenthesis && p.tok.Type != token.Eof {
-		param := p.parseIdent()
-		if param.IsAttr() {
-			p.addError(param.Token.Position, "argument cannot be an instance variable")
-			continue
-		}
+	p.expect(token.LeftParen)
+	for p.tok.Type != token.RightParen && p.tok.Type != token.EOF {
+		list = append(list, p.parseIdent())
 
-		list = append(list, param)
-		if !p.atComma(token.RightParenthesis) {
+		if !p.expectCommaOr(token.RightParen) {
 			break
 		}
 
 		p.advance()
 	}
 
-	p.expect(token.RightParenthesis)
+	p.expect(token.RightParen)
 
 	return
 }
@@ -369,7 +359,7 @@ func (p *parser) parsePrimaryExpr() (expr ast.Expr) {
 		case token.Dot:
 			expr = p.parseCallExpr(expr)
 
-		case token.LeftParenthesis:
+		case token.LeftParen:
 			expr = &ast.CallExpr{
 				Method:    expr.(*ast.Ident),
 				Arguments: p.parseArgumentList(),
@@ -396,7 +386,7 @@ func (p *parser) parseOperand() (expr ast.Expr) {
 	case token.Ident:
 		expr = p.parseIdent()
 
-	case token.LeftParenthesis:
+	case token.LeftParen:
 		expr = p.parseGroupExpr()
 
 	case token.LeftBracket:
@@ -417,15 +407,14 @@ func (p *parser) parseOperand() (expr ast.Expr) {
 }
 
 func (p *parser) parseBasicLit() (lit *ast.BasicLit) {
+	defer p.advance()
+
 	switch p.tok.Type {
 	case token.String:
-		lit = &ast.BasicLit{Token: p.tok, Value: readEscape(p.tok.Literal)}
+		return &ast.BasicLit{Token: p.tok, Value: readEscape(p.tok.Literal)}
 	default:
-		lit = &ast.BasicLit{Token: p.tok, Value: p.tok.Literal}
+		return &ast.BasicLit{Token: p.tok, Value: p.tok.Literal}
 	}
-
-	p.advance()
-	return
 }
 
 func (p *parser) parseBlockExpr() *ast.BlockExpr {
@@ -455,9 +444,9 @@ func (p *parser) parseConst() *ast.Ident {
 }
 
 func (p *parser) parseGroupExpr() ast.Expr {
-	p.expect(token.LeftParenthesis)
+	p.expect(token.LeftParen)
 	expr := p.parseExpr()
-	p.expect(token.RightParenthesis)
+	p.expect(token.RightParen)
 
 	return &ast.GroupExpr{Expr: expr}
 }
@@ -473,21 +462,21 @@ func (p *parser) parseCallExpr(receiver ast.Expr) ast.Expr {
 }
 
 func (p *parser) parseArgumentList() (list []ast.Expr) {
-	if !p.at(token.LeftParenthesis) {
+	if !p.at(token.LeftParen) {
 		return
 	}
 
-	p.expect(token.LeftParenthesis)
-	for p.tok.Type != token.RightParenthesis && p.tok.Type != token.Eof {
+	p.expect(token.LeftParen)
+	for p.tok.Type != token.RightParen && p.tok.Type != token.EOF {
 		list = append(list, p.parseExpr())
-		if !p.atComma(token.RightParenthesis) {
+		if !p.expectCommaOr(token.RightParen) {
 			break
 		}
 
 		p.advance()
 	}
 
-	p.expect(token.RightParenthesis)
+	p.expect(token.RightParen)
 
 	return
 }
@@ -496,9 +485,9 @@ func (p *parser) parseArrayLit() *ast.ArrayLit {
 	leftBracket := p.expect(token.LeftBracket)
 
 	var list []ast.Expr
-	for p.tok.Type != token.RightBracket && p.tok.Type != token.Eof {
+	for p.tok.Type != token.RightBracket && p.tok.Type != token.EOF {
 		list = append(list, p.parseExpr())
-		if !p.atComma(token.RightBracket) {
+		if !p.expectCommaOr(token.RightBracket) {
 			break
 		}
 
@@ -522,7 +511,7 @@ func (p *parser) parseHashEntries() (list []*ast.HashEntry) {
 	for p.tok.Type != token.RightBrace {
 
 		list = append(list, p.parseHashEntry())
-		if !p.atComma(token.RightBrace) {
+		if !p.expectCommaOr(token.RightBrace) {
 			break
 		}
 
@@ -552,7 +541,7 @@ func (p *parser) parseIndexExpr(expr ast.Expr) ast.Expr {
 func (p *parser) parseSuperExpr() ast.Expr {
 	return &ast.SuperExpr{
 		Token:        p.expect(token.Super),
-		ExplicitArgs: p.at(token.LeftParenthesis),
+		ExplicitArgs: p.at(token.LeftParen),
 		Arguments:    p.parseArgumentList(),
 	}
 }
@@ -566,29 +555,26 @@ func (p *parser) at(kind token.Type) bool {
 }
 
 func (p *parser) addError(pos *token.Position, err string) {
-	var b strings.Builder
-	fmt.Fprintf(&b, "[Lin: %d Col: %d] syntax error: ", pos.Line(), pos.Column())
-	b.WriteString(err)
-
-	p.errors = append(p.errors, &Error{Msg: b.String()})
+	mesg := fmt.Sprintf("[Lin: %d Col: %d] syntax error: %s", pos.Line(), pos.Column(), err)
+	p.errors = append(p.errors, &Error{Msg: mesg})
 }
 
 func (p *parser) expect(expected token.Type) (tok *token.Token) {
+	defer p.advance()
+
 	if p.tok.Type != expected {
 		p.addError(p.tok.Position, fmt.Sprintf("expected '%s', found '%s'", expected, p.tok.Type))
 	}
 
-	tok = p.tok
-	p.advance()
-	return
+	return p.tok
 }
 
-func (p *parser) atComma(next token.Type) bool {
-	if p.tok.Is(token.Comma) {
+func (p *parser) expectCommaOr(next token.Type) bool {
+	if p.tok.Type == token.Comma {
 		return true
 	}
 
-	if p.tok.Is(next) {
+	if p.tok.Type == next {
 		return false
 	}
 

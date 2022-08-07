@@ -17,34 +17,44 @@ func TestNextToken(t *testing.T) {
 	}{
 		"Eof": {
 			Input:           bytes.NewBufferString(""),
-			ExpectedType:    token.Eof,
+			ExpectedType:    token.EOF,
 			ExpectedLiteral: "",
 		},
-		"Ident": {
+		"ident": {
 			Input:           bytes.NewBufferString("name"),
 			ExpectedType:    token.Ident,
 			ExpectedLiteral: "name",
 		},
-		"Ident Const": {
+		"ident (ignore whitespace)": {
+			Input:           bytes.NewBufferString(" name "),
+			ExpectedType:    token.Ident,
+			ExpectedLiteral: "name",
+		},
+		"ident const": {
 			Input:           bytes.NewBufferString("Object"),
 			ExpectedType:    token.Ident,
 			ExpectedLiteral: "Object",
 		},
-		"String": {
+		"empty string": {
 			Input:           bytes.NewBufferString(`""`),
 			ExpectedType:    token.String,
 			ExpectedLiteral: "",
+		},
+		"non empty string": {
+			Input:           bytes.NewBufferString(`"test"`),
+			ExpectedType:    token.String,
+			ExpectedLiteral: "test",
 		},
 		"block": {
 			Input:        bytes.NewBufferString("block"),
 			ExpectedType: token.Block,
 		},
-		"True": {
+		"literal true": {
 			Input:           bytes.NewBufferString("true"),
 			ExpectedType:    token.Bool,
 			ExpectedLiteral: "true",
 		},
-		"False": {
+		"literal false": {
 			Input:           bytes.NewBufferString("false"),
 			ExpectedType:    token.Bool,
 			ExpectedLiteral: "false",
@@ -83,11 +93,11 @@ func TestNextToken(t *testing.T) {
 		},
 		"LeftParenthesis": {
 			Input:        bytes.NewBufferString("("),
-			ExpectedType: token.LeftParenthesis,
+			ExpectedType: token.LeftParen,
 		},
 		"RightParenthesis": {
 			Input:        bytes.NewBufferString(")"),
-			ExpectedType: token.RightParenthesis,
+			ExpectedType: token.RightParen,
 		},
 		"LeftBracket": {
 			Input:        bytes.NewBufferString("["),
@@ -105,25 +115,25 @@ func TestNextToken(t *testing.T) {
 			Input:        bytes.NewBufferString("}"),
 			ExpectedType: token.RightBrace,
 		},
-		"Object": {
+		"keyword object": {
 			Input:           bytes.NewBufferString("object"),
 			ExpectedType:    token.Object,
 			ExpectedLiteral: "object",
 		},
-		"Fun": {
+		"keyword fun": {
 			Input:        bytes.NewBufferString("fun"),
 			ExpectedType: token.Fun,
 		},
-		"Catch": {
+		"keyword catch": {
 			Input:        bytes.NewBufferString("catch"),
 			ExpectedType: token.Catch,
 		},
-		"Int": {
+		"literal int": {
 			Input:           bytes.NewBufferString("10"),
 			ExpectedType:    token.Int,
 			ExpectedLiteral: "10",
 		},
-		"Float": {
+		"literal float": {
 			Input:           bytes.NewBufferString("10.10"),
 			ExpectedType:    token.Float,
 			ExpectedLiteral: "10.10",
@@ -136,103 +146,98 @@ func TestNextToken(t *testing.T) {
 			Input:        bytes.NewBufferString("+"),
 			ExpectedType: token.Plus,
 		},
-		"If": {
+		"keyword if": {
 			Input:        bytes.NewBufferString("if"),
 			ExpectedType: token.If,
 		},
-		"Else": {
+		"keyword else": {
 			Input:        bytes.NewBufferString("else"),
 			ExpectedType: token.Else,
 		},
-		"Stop": {
+		"keyword stop": {
 			Input:        bytes.NewBufferString("stop"),
 			ExpectedType: token.Stop,
 		},
-		"Next": {
+		"keyword next": {
 			Input:        bytes.NewBufferString("next"),
 			ExpectedType: token.Next,
 		},
-		"for": {
+		"keyword for": {
 			Input:        bytes.NewBufferString("for"),
 			ExpectedType: token.For,
 		},
-		"in": {
+		"keyword in": {
 			Input:        bytes.NewBufferString("in"),
 			ExpectedType: token.In,
 		},
-		"While": {
+		"keyword while": {
 			Input:        bytes.NewBufferString("while"),
 			ExpectedType: token.While,
 		},
-		"GreaterThan": {
+		"Great": {
 			Input:        bytes.NewBufferString(">"),
 			ExpectedType: token.Great,
 		},
-		"GreaterOrEqualThan": {
+		"GreatEqual": {
 			Input:        bytes.NewBufferString(">="),
 			ExpectedType: token.GreatEqual,
 		},
-		"LessThan": {
+		"Less": {
 			Input:        bytes.NewBufferString("<"),
 			ExpectedType: token.Less,
 		},
-		"LessOrEqualThan": {
+		"LessEqual": {
 			Input:        bytes.NewBufferString("<="),
 			ExpectedType: token.LessEqual,
 		},
-		"Return": {
+		"keyword return": {
 			Input:        bytes.NewBufferString("return"),
 			ExpectedType: token.Return,
 		},
-		"Instance variable ident": {
-			Input:           bytes.NewBufferString("@name"),
-			ExpectedType:    token.Ident,
-			ExpectedLiteral: "@name",
-		},
-		"Ident with special char (?)": {
+		"ident with special char (?)": {
 			Input:           bytes.NewBufferString("complete?"),
 			ExpectedType:    token.Ident,
 			ExpectedLiteral: "complete?",
 		},
-		"Ident with special char (!)": {
+		"ident with special char (!)": {
 			Input:           bytes.NewBufferString("boom!"),
 			ExpectedType:    token.Ident,
 			ExpectedLiteral: "boom!",
 		},
-		"Ident camel_case (_)": {
+		"ident camel_case (_)": {
 			Input:           bytes.NewBufferString("first_name"),
 			ExpectedType:    token.Ident,
 			ExpectedLiteral: "first_name",
 		},
-		"Slash": {
+		"slash": {
 			Input:        bytes.NewBufferString("/"),
 			ExpectedType: token.Slash,
 		},
-		"Star": {
+		"star": {
 			Input:        bytes.NewBufferString("*"),
 			ExpectedType: token.Star,
 		},
-		"Illegal": {
+		"illegal": {
 			Input:        bytes.NewBufferString("%"),
 			ExpectedType: token.Illegal,
 		},
-		"is": {
+		"keyword is": {
 			Input:        bytes.NewBufferString("is"),
 			ExpectedType: token.Is,
 		},
-		"switch": {
+		"keyword switch": {
 			Input:        bytes.NewBufferString("switch"),
 			ExpectedType: token.Switch,
 		},
-		"case": {
+		"keyword case": {
 			Input:        bytes.NewBufferString("case"),
 			ExpectedType: token.Case,
 		},
-		"default": {
+		"keyword default": {
 			Input:        bytes.NewBufferString("default"),
 			ExpectedType: token.Default,
 		},
-		"super": {
+		"keyword super": {
 			Input:        bytes.NewBufferString("super"),
 			ExpectedType: token.Super,
 		},
@@ -240,15 +245,15 @@ func TestNextToken(t *testing.T) {
 			Input:        bytes.NewBufferString(";"),
 			ExpectedType: token.NewLine,
 		},
-		"and keyword": {
+		"keyword and": {
 			Input:        bytes.NewBufferString("and"),
 			ExpectedType: token.And,
 		},
-		"or keyword": {
+		"keyword or": {
 			Input:        bytes.NewBufferString("or"),
 			ExpectedType: token.Or,
 		},
-		"this keyword": {
+		"keyword this": {
 			Input:        bytes.NewBufferString("this"),
 			ExpectedType: token.This,
 		},
@@ -310,20 +315,6 @@ b = "str"
 	}
 }
 
-func TestInvalidInstanceVariable(t *testing.T) {
-	expectedErr := "instance variable can't start with numbers"
-	input := bytes.NewBufferString("@1name")
-	l := New(input, func(_ *token.Position, err string) {
-		if err != expectedErr {
-			t.Errorf("expected error to be %q, got %v", expectedErr, err)
-		}
-	})
-
-	if tok := l.NextToken(); tok.Type != token.Ident {
-		t.Errorf("expected token to be %q, got %q", token.Ident, tok.Type)
-	}
-}
-
 func TestStringError(t *testing.T) {
 	tests := []struct {
 		Scenario    string
@@ -367,7 +358,7 @@ func TestSkipComment(t *testing.T) {
 		{
 			scenario:      "same line comment",
 			source:        "a = 10 # assing",
-			expectedToken: []token.Type{token.Ident, token.Assign, token.Int, token.Eof},
+			expectedToken: []token.Type{token.Ident, token.Assign, token.Int, token.EOF},
 		},
 		{
 			scenario: "when line above has a comment",
@@ -378,7 +369,7 @@ func TestSkipComment(t *testing.T) {
 				token.Int,
 				token.Plus,
 				token.Int,
-				token.Eof,
+				token.EOF,
 			},
 		},
 		{
@@ -389,13 +380,13 @@ func TestSkipComment(t *testing.T) {
 				token.Assign,
 				token.Int,
 				token.Star,
-				token.LeftParenthesis,
+				token.LeftParen,
 				token.Int,
 				token.Plus,
 				token.Int,
-				token.RightParenthesis,
+				token.RightParen,
 				token.NewLine,
-				token.Eof,
+				token.EOF,
 			},
 		},
 		{
@@ -406,7 +397,7 @@ func TestSkipComment(t *testing.T) {
 				token.Assign,
 				token.Int,
 				token.NewLine,
-				token.Eof,
+				token.EOF,
 			},
 		},
 	}
@@ -424,5 +415,19 @@ func TestSkipComment(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestInvalidEscape(t *testing.T) {
+	expectedErr := `unknown escape: \m`
+	input := bytes.NewBufferString(`"test\m"`)
+	l := New(input, func(_ *token.Position, err string) {
+		if err != expectedErr {
+			t.Errorf("expected error to be %q, got %q", expectedErr, err)
+		}
+	})
+
+	if tok := l.NextToken(); tok.Type != token.String {
+		t.Errorf("expected token to be %q, got %q", token.String, tok.Type)
 	}
 }

@@ -370,7 +370,7 @@ func (i *Interpreter) Call(recv lang.IrObject, method *lang.Method, args ...lang
 	i.PushFrame(recv, method, SINGLE_FRAME|IRMETHOD_FRAME)
 	ret, err := i.dispatch()
 	if err != nil {
-		i.err = lang.NewError("unkown error:", lang.Error)
+		i.err = lang.NewError("unknown error:", lang.Error)
 		return nil
 	}
 

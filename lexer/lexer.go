@@ -26,101 +26,128 @@ func (l *lexer) NextToken() *token.Token {
 	position := l.position.Snapshot(l.readOffset)
 	l.readNewLine = false
 
-	var literal string
-	var kind token.Type
-
-	char := l.char
-	if isLetter(char) {
-		literal = l.readIdent()
-		kind = token.Lookup(literal)
-
+	if isLetter(l.char) {
+		literal := l.readIdent()
+		kind := token.Lookup(literal)
 		return token.New(kind, literal, position)
 	}
 
-	if isDecimal(char) {
-		kind, literal = l.readNumber()
-
+	if isDecimal(l.char) {
+		kind, literal := l.readNumber()
 		return token.New(kind, literal, position)
 	}
 
-	l.advance()
-	switch char {
+	switch l.char {
 	case '"':
-		kind = token.String
-		literal = l.readString()
+		return token.New(token.String, l.readString(), position)
+
 	case '.':
-		kind = token.Dot
+		l.advance()
+		return token.New(token.Dot, "", position)
+
 	case ':':
-		kind = token.Colon
+		l.advance()
+		return token.New(token.Colon, "", position)
+
 	case '=':
-		kind = token.Assign
+		l.advance()
+		kind := token.Assign
+
 		if l.char == '=' {
-			kind = token.Equal
 			l.advance()
+			kind = token.Equal
 		}
+		return token.New(kind, "", position)
 
 	case '>':
-		kind = token.Great
+		l.advance()
+		kind := token.Great
+
 		if l.char == '=' {
-			kind = token.GreatEqual
 			l.advance()
+			kind = token.GreatEqual
 		}
+
+		return token.New(kind, "", position)
 
 	case '<':
-		kind = token.Less
+		l.advance()
+		kind := token.Less
+
 		if l.char == '=' {
+			l.advance()
 			kind = token.LessEqual
-			l.advance()
 		}
+		return token.New(kind, "", position)
 
-	case '@':
-		if isDecimal(l.char) {
-			l.errorHandler(position, "instance variable can't start with numbers")
-		}
-
-		l.pushBack()
-		kind = token.Ident
-		literal = l.readIdent()
 	case ',':
-		kind = token.Comma
-	case '(':
-		kind = token.LeftParenthesis
-	case ')':
-		l.readNewLine = true
-		kind = token.RightParenthesis
-	case '[':
-		kind = token.LeftBracket
-	case ']':
-		l.readNewLine = true
-		kind = token.RightBracket
-	case '{':
-		kind = token.LeftBrace
-	case '}':
-		l.readNewLine = true
-		kind = token.RightBrace
-	case '-':
-		kind = token.Minus
-	case '+':
-		kind = token.Plus
-	case '/':
-		kind = token.Slash
-	case '*':
-		kind = token.Star
-	case '!':
-		kind = token.Not
-		if l.char == '=' {
-			kind = token.NotEqual
-			l.advance()
-		}
-	case '\n', ';':
-		kind = token.NewLine
-	case 0:
-		kind = token.Eof
-	default:
-		kind = token.Illegal
-	}
+		l.advance()
+		return token.New(token.Comma, "", position)
 
-	return token.New(kind, literal, position)
+	case '(':
+		l.advance()
+		return token.New(token.LeftParen, "", position)
+
+	case ')':
+		l.advance()
+		l.readNewLine = true
+		return token.New(token.RightParen, "", position)
+
+	case '[':
+		l.advance()
+		return token.New(token.LeftBracket, "", position)
+
+	case ']':
+		l.advance()
+		l.readNewLine = true
+		return token.New(token.RightBracket, "", position)
+
+	case '{':
+		l.advance()
+		return token.New(token.LeftBrace, "", position)
+
+	case '}':
+		l.advance()
+		l.readNewLine = true
+		return token.New(token.RightBrace, "", position)
+
+	case '-':
+		l.advance()
+		return token.New(token.Minus, "", position)
+
+	case '+':
+		l.advance()
+		return token.New(token.Plus, "", position)
+
+	case '/':
+		l.advance()
+		return token.New(token.Slash, "", position)
+
+	case '*':
+		l.advance()
+		return token.New(token.Star, "", position)
+
+	case '!':
+		l.advance()
+		kind := token.Not
+
+		if l.char == '=' {
+			l.advance()
+			kind = token.NotEqual
+		}
+		return token.New(kind, "", position)
+
+	case '\n', ';':
+		l.advance()
+		return token.New(token.NewLine, "", position)
+
+	case 0:
+		return token.New(token.EOF, "", position)
+
+	default:
+		l.advance()
+		return token.New(token.Illegal, "", position)
+	}
 }
 
 func (l *lexer) advance() {
@@ -183,9 +210,10 @@ func isDecimal(char byte) bool {
 }
 
 func (l *lexer) readString() string {
+	l.advance()
 	l.readNewLine = true
 
-	offs := l.offset
+	start := l.offset
 	for {
 		if l.char == '"' {
 			l.advance()
@@ -194,12 +222,7 @@ func (l *lexer) readString() string {
 
 		if l.char == '\\' {
 			l.advance()
-			switch l.char {
-			case 'a', 'b', 'f', 'n', 'r', 't', 'v', '\\', '"':
-				l.advance()
-				continue
-			default:
-				l.errorHandler(l.position.Snapshot(l.offset), "unknown escape: "+"\\"+string(l.char))
+			if !l.escape() {
 				break
 			}
 		}
@@ -212,13 +235,24 @@ func (l *lexer) readString() string {
 		l.advance()
 	}
 
-	return string(l.source[offs : l.offset-1])
+	return string(l.source[start : l.offset-1])
+}
+
+func (l *lexer) escape() bool {
+	switch l.char {
+	case 'a', 'b', 'f', 'n', 'r', 't', 'v', '\\', '"':
+		l.advance()
+		return true
+	default:
+		l.errorHandler(l.position.Snapshot(l.offset), `unknown escape: \`+string(l.char))
+		return false
+	}
 }
 
 func (l *lexer) readIdent() string {
 	l.readNewLine = true
 
-	offs := l.offset
+	start := l.offset
 	for isLetter(l.char) || isDecimal(l.char) {
 		l.advance()
 	}
@@ -227,7 +261,7 @@ func (l *lexer) readIdent() string {
 		l.advance()
 	}
 
-	return string(l.source[offs:l.offset])
+	return string(l.source[start:l.offset])
 }
 
 func (l *lexer) readNumber() (token.Type, string) {
@@ -259,9 +293,10 @@ func New(input io.Reader, errHandler ErrorHandler) *lexer {
 	l := &lexer{
 		source:       bytes,
 		errorHandler: errHandler,
+		offset:       -1,
+		char:         ' ',
 		position:     token.NewPosition(),
 	}
 
-	l.advance()
 	return l
 }
