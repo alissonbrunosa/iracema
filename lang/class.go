@@ -7,7 +7,10 @@ func CLASS(obj IrObject) *Class {
 func classNew(rt Runtime, this IrObject, args ...IrObject) IrObject {
 	c := CLASS(this)
 	object := c.Alloc()
-	safeCall(rt, object, "init", args...)
+	if val := call(rt, object, "init", args...); val == nil {
+		return nil
+	}
+
 	return object
 }
 

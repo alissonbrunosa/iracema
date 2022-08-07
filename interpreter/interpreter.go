@@ -7,6 +7,12 @@ import (
 	"os"
 )
 
+const (
+	CALL_OK = 1 << iota
+	CALL_NEW_FRAME
+	CALL_ERROR
+)
+
 type Interpreter struct {
 	*frame
 
@@ -81,6 +87,7 @@ func (i *Interpreter) dispatch() (lang.IrObject, error) {
 			} else {
 				i.Push(lang.False)
 			}
+
 			goto next_instr
 
 		case bytecode.Throw:
@@ -217,31 +224,13 @@ func (i *Interpreter) dispatch() (lang.IrObject, error) {
 				goto fail
 			}
 
-			switch method.MethodType() {
-			case lang.GoFunction:
-				args := i.PopN(info.Argc() + 1) // +1 recv
-
-				i.PushGoFrame(recv, method)
-				val := method.Native().Invoke(i, recv, args[1:]...)
-				i.PopFrame()
-				if val != nil {
-					i.Push(val)
-					goto next_instr
-				}
-
-				goto fail
-
-			case lang.IrMethod:
-				if info.Argc() != method.Arity() {
-					i.err = lang.NewArityError(int(info.Argc()), int(method.Arity()))
-					goto fail
-				}
-
-				i.PushFrame(recv, method, IRMETHOD_FRAME)
+			switch i.call0(recv, method, info) {
+			case CALL_OK:
+				goto next_instr
+			case CALL_NEW_FRAME:
 				goto start_frame
 			default:
-				fmt.Println("Damn! That's a bug!")
-				os.Exit(1)
+				goto fail
 			}
 
 		case bytecode.CallSuper:
@@ -265,31 +254,13 @@ func (i *Interpreter) dispatch() (lang.IrObject, error) {
 				goto fail
 			}
 
-			switch method.MethodType() {
-			case lang.GoFunction:
-				args := i.PopN(info.Argc() + 1)
-
-				i.PushGoFrame(recv, method)
-				val := method.Native().Invoke(i, recv, args...)
-				i.PopFrame()
-				if val != nil {
-					i.Push(val)
-					goto next_instr
-				}
-
-				goto fail
-
-			case lang.IrMethod:
-				if info.Argc() != method.Arity() {
-					i.err = lang.NewArityError(int(info.Argc()), int(method.Arity()))
-					goto fail
-				}
-
-				i.PushFrame(recv, method, IRMETHOD_FRAME)
+			switch i.call0(recv, method, info) {
+			case CALL_OK:
+				goto next_instr
+			case CALL_NEW_FRAME:
 				goto start_frame
 			default:
-				fmt.Println("Damn! That's a bug!")
-				os.Exit(1)
+				goto fail
 			}
 
 		default:
@@ -298,20 +269,27 @@ func (i *Interpreter) dispatch() (lang.IrObject, error) {
 		}
 
 	fail:
-		for i.frame != nil {
-			if i.frame.catchOffset > 0 {
-				i.Push(i.err)
-				i.frame.instrPointer = i.frame.catchOffset
-				goto resume_frame
-			}
-			i.PopFrame()
+		if i.catchError() {
+			goto resume_frame
 		}
-
-		fmt.Println(i.err)
-		os.Exit(1)
 	}
 
 	return nil, nil
+}
+
+func (i *Interpreter) catchError() bool {
+	for i.frame != nil {
+		if i.frame.catchOffset > 0 {
+			i.Push(i.err)
+			i.frame.instrPointer = i.frame.catchOffset
+			return true
+		}
+		i.PopFrame()
+	}
+
+	fmt.Println(i.err)
+	os.Exit(1)
+	return false
 }
 
 func (i *Interpreter) PushObjectFrame(this lang.IrObject, fun *lang.Method) {
@@ -330,6 +308,7 @@ func (i *Interpreter) PushFrame(this lang.IrObject, fun *lang.Method, flags byte
 	} else {
 		i.frame = i.NewFrame(this, fun, flags)
 	}
+
 	i.frameCount++
 }
 
@@ -347,40 +326,53 @@ func (i *Interpreter) SetError(err *lang.ErrorObject) {
 	i.err = err
 }
 
-func (i *Interpreter) Call(recv lang.IrObject, meth *lang.Method, args ...lang.IrObject) lang.IrObject {
-	switch meth.MethodType() {
-	case lang.GoFunction:
-		i.PushGoFrame(recv, meth)
-		val := meth.Native().Invoke(i, recv, args...)
-		i.PopFrame()
+func (i *Interpreter) callGoFunc(recv lang.IrObject, method lang.Native, argc byte) int {
+	args := i.PopN(argc + 1) // +1 recv
 
-		if val == nil {
-			return nil
-		}
-
-		return val
-
-	case lang.IrMethod:
-		if byte(len(args)) != meth.Arity() {
-			i.err = lang.NewArityError(len(args), int(meth.Arity()))
-			return nil
-		}
-
-		i.Push(recv)
-		for _, arg := range args {
-			i.Push(arg)
-		}
-
-		i.PushFrame(recv, meth, SINGLE_FRAME|IRMETHOD_FRAME)
-		ret, err := i.dispatch()
-		if err != nil {
-			i.err = lang.NewError("unkown error:", lang.Error)
-			return nil
-		}
-
-		return ret
+	if val := method.Invoke(i, recv, args[1:]...); val != nil {
+		i.Push(val)
+		return CALL_OK
 	}
 
-	i.err = lang.NewError("invalid method type", lang.Error)
-	return nil
+	return CALL_ERROR
+}
+
+func (i *Interpreter) call0(recv lang.IrObject, method *lang.Method, info *lang.CallInfo) int {
+	switch method.MethodType() {
+	case lang.GoFunction:
+		return i.callGoFunc(recv, method.Native(), info.Argc())
+
+	case lang.IrMethod:
+		if info.Argc() != method.Arity() {
+			i.err = lang.NewArityError(int(info.Argc()), int(method.Arity()))
+			return CALL_ERROR
+		}
+
+		i.PushFrame(recv, method, IRMETHOD_FRAME)
+		return CALL_NEW_FRAME
+	default:
+		lang.Unreachable()
+		return CALL_ERROR
+	}
+}
+
+func (i *Interpreter) Call(recv lang.IrObject, method *lang.Method, args ...lang.IrObject) lang.IrObject {
+	if byte(len(args)) != method.Arity() {
+		i.err = lang.NewArityError(len(args), int(method.Arity()))
+		return nil
+	}
+
+	i.Push(recv)
+	for _, arg := range args {
+		i.Push(arg)
+	}
+
+	i.PushFrame(recv, method, SINGLE_FRAME|IRMETHOD_FRAME)
+	ret, err := i.dispatch()
+	if err != nil {
+		i.err = lang.NewError("unkown error:", lang.Error)
+		return nil
+	}
+
+	return ret
 }

@@ -22,6 +22,10 @@ func objectPuts(rt Runtime, this IrObject, args ...IrObject) IrObject {
 	return None
 }
 
+func objectInit(rt Runtime, this IrObject) IrObject {
+	return None
+}
+
 func objectId(rt Runtime, this IrObject) IrObject {
 	ptr := reflect.ValueOf(this).Pointer()
 	return Int(ptr)
@@ -45,13 +49,6 @@ func objectInspect(rt Runtime, this IrObject) IrObject {
 
 func objectUnaryNot(rt Runtime, this IrObject) IrObject {
 	return !IsTruthy(this)
-}
-
-func objectAlloc(class *Class) IrObject {
-	return &Object{
-		base:  &base{class: class},
-		attrs: make(map[string]IrObject, 3),
-	}
 }
 
 type Object struct {
@@ -86,7 +83,15 @@ func InitObject() {
 	}
 
 	ObjectClass = NewClass("Object", nil)
-	ObjectClass.allocator = objectAlloc
+
+	ObjectClass.allocator = func(class *Class) IrObject {
+		return &Object{
+			base:  &base{class: class},
+			attrs: make(map[string]IrObject, 3),
+		}
+	}
+
+	ObjectClass.AddGoMethod("init", zeroArgs(objectInit))
 	ObjectClass.AddGoMethod("==", oneArg(objectEqual))
 	ObjectClass.AddGoMethod("!=", oneArg(objectNotEqual))
 	ObjectClass.AddGoMethod("hash", zeroArgs(objectId))

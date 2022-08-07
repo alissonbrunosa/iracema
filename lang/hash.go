@@ -39,7 +39,8 @@ func hashLookup(rt Runtime, this IrObject, key IrObject) IrObject {
 			return entry.value
 		}
 	}
-	return nil
+
+	return None
 }
 
 func hashInsert(rt Runtime, this IrObject, key IrObject, value IrObject) IrObject {
@@ -117,16 +118,15 @@ func hashInspect(rt Runtime, this IrObject) IrObject {
 			if buf.Len() > 1 { // 1 is open {
 				buf.WriteString(", ")
 			}
-			val := call(rt, entry.key, "inspect")
-			if val == nil {
+			var val IrObject
+			if val = call(rt, entry.key, "inspect"); val != nil {
 				return nil
 			}
 
 			buf.Write(unwrapString(val))
 			buf.WriteString(": ")
 
-			val = call(rt, entry.value, "inspect")
-			if val == nil {
+			if val = call(rt, entry.value, "inspect"); val != nil {
 				return nil
 			}
 

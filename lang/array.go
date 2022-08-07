@@ -38,17 +38,20 @@ func arrayInspect(rt Runtime, this IrObject) IrObject {
 		return NewString("[]")
 	}
 
-	var inspect IrObject
 	var buf strings.Builder
 
 	buf.WriteByte('[')
 	for i, el := range array.Elements {
-		inspect = call(rt, el, "inspect")
-		if i > 0 {
-			buf.WriteString(", ")
+		if val := call(rt, el, "inspect"); val != nil {
+			if i > 0 {
+				buf.WriteString(", ")
+			}
+
+			buf.Write(unwrapString(val))
+			continue
 		}
 
-		buf.Write(unwrapString(inspect))
+		return nil
 	}
 	buf.WriteByte(']')
 
@@ -143,8 +146,11 @@ func arrayHash(rt Runtime, this IrObject) IrObject {
 
 	hash := Int(1)
 	for _, el := range array.Elements {
-		code := call(rt, el, "hash")
-		hash = hash*31 + INT(code)
+		if code := call(rt, el, "hash"); code != nil {
+			hash = hash*31 + INT(code)
+		}
+
+		return nil
 	}
 
 	return hash
@@ -217,10 +223,15 @@ func arrayEqual(rt Runtime, this IrObject, other IrObject) IrObject {
 	}
 
 	for i, el := range x.Elements {
-		ret := call(rt, el, "==", y.Elements[i])
-		if !BOOL(ret) {
-			return False
+		if ret := call(rt, el, "==", y.Elements[i]); ret != nil {
+			if !BOOL(ret) {
+				return False
+			}
+
+			continue
 		}
+
+		return nil
 	}
 
 	return True

@@ -2,7 +2,6 @@ package lexer
 
 import (
 	"io"
-	"io/ioutil"
 	"iracema/token"
 )
 
@@ -252,7 +251,7 @@ func (l *lexer) readNumber() (token.Type, string) {
 }
 
 func New(input io.Reader, errHandler ErrorHandler) *lexer {
-	bytes, err := ioutil.ReadAll(input)
+	bytes, err := io.ReadAll(input)
 	if err != nil {
 		panic("could not read from input" + err.Error())
 	}
