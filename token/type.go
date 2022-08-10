@@ -4,8 +4,9 @@ type Type byte
 
 //go:generate stringer -type=Type -linecomment
 const (
-	Illegal Type = iota // Illegal
-	EOF                 // EOF
+	_       Type = iota
+	Illegal      // Illegal
+	EOF          // EOF
 
 	If      // if
 	Is      // is

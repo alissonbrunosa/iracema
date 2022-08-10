@@ -320,6 +320,14 @@ type CallExpr struct {
 
 func (*CallExpr) String() string { return "CallExpr" }
 
+type BadExpr struct {
+	Expr Expr
+
+	expr
+}
+
+func (*BadExpr) String() string { return "BadExpr" }
+
 type GroupExpr struct {
 	Expr Expr
 
