@@ -7,15 +7,15 @@
 ```iracema
 object Lang {
   fun init(name) {
-    @name = name
+    puts("called when object is created")
   }
 
   fun name {
-    return @name
+    return "Iracema"
   }
 }
 
-l = Lang.new("Iracema")
+l = Lang.new
 puts(l.name)
 
 ```
