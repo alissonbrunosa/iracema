@@ -312,7 +312,7 @@ func TestInvalidFunDecl(t *testing.T) {
 		{
 			Scenario:    "Missing comm in parameter list",
 			Code:        `fun name(arg1 arg2) {}`,
-			ExpectedErr: "[Lin: 1 Col: 15] syntax error: missing ','",
+			ExpectedErr: "[Lin: 1 Col: 15] syntax error: missing , or )",
 		},
 		{
 			Scenario:    "Missing closing brace",
@@ -381,32 +381,62 @@ func TestParseObjectDecl_with_Parent(t *testing.T) {
 }
 
 func TestFunDecl(t *testing.T) {
+	type expectParam = struct {
+		name  string
+		value string
+	}
+
 	tests := []struct {
-		Code           string
-		ExpectedName   string
-		ExpectedParams []string
+		scenario       string
+		code           string
+		expectedParams []expectParam
 	}{
 		{
-			Code:         "fun walk {}",
-			ExpectedName: "walk",
+			scenario: "no params",
+			code:     "fun calc {}",
 		},
 		{
-			Code:           "fun say(msg) {}",
-			ExpectedName:   "say",
-			ExpectedParams: []string{"msg"},
+			scenario: "single params",
+			code:     "fun calc(a) {}",
+			expectedParams: []expectParam{
+				{name: "a"},
+			},
 		},
 		{
-			Code:           "fun pow(a, b) {}",
-			ExpectedName:   "pow",
-			ExpectedParams: []string{"a", "b"},
+			scenario: "params has default",
+			code:     "fun calc(a = 1, b = 2) {}",
+			expectedParams: []expectParam{
+				{name: "a", value: "1"},
+				{name: "b", value: "2"},
+			},
+		},
+		{
+			scenario: "only one param has default",
+			code:     "fun calc(a, b = 10) {}",
+			expectedParams: []expectParam{
+				{name: "a"},
+				{name: "b", value: "10"},
+			},
 		},
 	}
 
 	for _, test := range tests {
-		stmts := setupTest(t, test.Code, 1)
+		stmts := setupTest(t, test.code, 1)
 
-		assertFunDecl(t, stmts[0], test.ExpectedName, test.ExpectedParams...)
+		assert := func(t *testing.T, pos int, field *ast.Field) {
+			testIdent(t, field.Name, test.expectedParams[pos].name)
+
+			if field.Value != nil {
+				testLit(t, field.Value, test.expectedParams[pos].value)
+			}
+		}
+
+		assertFunDecl(t, stmts[0], "calc", assert)
 	}
+}
+
+func TestFunDecl_WithDefault(t *testing.T) {
+
 }
 
 func TestFunDeclWithCatch(t *testing.T) {
@@ -430,7 +460,7 @@ func TestFunDeclWithCatch(t *testing.T) {
 	for _, test := range tests {
 		stmts := setupTest(t, test.Code, 1)
 
-		funDecl := assertFunDecl(t, stmts[0], "walk")
+		funDecl := assertFunDecl(t, stmts[0], "walk", nil)
 
 		for i, catch := range funDecl.Catches {
 			testIdent(t, catch.Ref, test.ExpectedRef)
@@ -634,7 +664,7 @@ func TestParse_withStmtsInTheSameLine(t *testing.T) {
 func TestParseReturnStmt(t *testing.T) {
 	stmts := setupTest(t, "fun do_stuff { return 10 }", 1)
 
-	funDecl := assertFunDecl(t, stmts[0], "do_stuff")
+	funDecl := assertFunDecl(t, stmts[0], "do_stuff", nil)
 
 	returnStmt, ok := funDecl.Body.Stmts[0].(*ast.ReturnStmt)
 	if !ok {
@@ -647,7 +677,7 @@ func TestParseReturnStmt(t *testing.T) {
 func TestParseReturnStmt_withoutValue(t *testing.T) {
 	stmts := setupTest(t, "fun do_stuff { return }", 1)
 
-	funDecl := assertFunDecl(t, stmts[0], "do_stuff")
+	funDecl := assertFunDecl(t, stmts[0], "do_stuff", nil)
 
 	returnStmt, ok := funDecl.Body.Stmts[0].(*ast.ReturnStmt)
 	if !ok {

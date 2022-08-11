@@ -296,20 +296,18 @@ func (p *parser) parseReturnStmt() ast.Stmt {
 	return &ast.ReturnStmt{Token: retToken, Value: value}
 }
 
-func (p *parser) parseParameterList() (list []*ast.Ident) {
+func (p *parser) parseParameterList() (list []*ast.Field) {
 	if !p.at(token.LeftParen) {
 		return
 	}
 
 	p.expect(token.LeftParen)
 	for p.tok.Type != token.RightParen && p.tok.Type != token.EOF {
-		list = append(list, p.parseIdent())
+		list = append(list, p.parseField())
 
-		if !p.expectCommaOr(token.RightParen) {
-			break
+		if !p.consumeCommaOrExpect(token.RightParen) {
+			return
 		}
-
-		p.advance()
 	}
 
 	p.expect(token.RightParen)
@@ -495,7 +493,8 @@ func (p *parser) parseArgumentList() (list []ast.Expr) {
 	p.expect(token.LeftParen)
 	for p.tok.Type != token.RightParen && p.tok.Type != token.EOF {
 		list = append(list, p.parseExpr())
-		if !p.expectCommaFollowedBy(token.RightParen) {
+
+		if !p.consumeCommaOrExpect(token.RightParen) {
 			return
 		}
 	}
@@ -505,7 +504,7 @@ func (p *parser) parseArgumentList() (list []ast.Expr) {
 	return
 }
 
-func (p *parser) expectCommaFollowedBy(next token.Type) bool {
+func (p *parser) consumeCommaOrExpect(next token.Type) bool {
 	if p.consume(token.Comma) || p.tok.Type == next {
 		return true
 	}
@@ -516,22 +515,20 @@ func (p *parser) expectCommaFollowedBy(next token.Type) bool {
 	return false
 }
 
-func (p *parser) parseArrayLit() *ast.ArrayLit {
-	leftBracket := p.expect(token.LeftBracket)
+func (p *parser) parseArrayLit() (ary *ast.ArrayLit) {
+	ary = new(ast.ArrayLit)
 
-	var list []ast.Expr
+	ary.LeftBracket = p.expect(token.LeftBracket)
 	for p.tok.Type != token.RightBracket && p.tok.Type != token.EOF {
-		list = append(list, p.parseExpr())
-		if !p.expectCommaOr(token.RightBracket) {
-			break
-		}
+		ary.Elements = append(ary.Elements, p.parseExpr())
 
-		p.advance()
+		if !p.consumeCommaOrExpect(token.RightBracket) {
+			return
+		}
 	}
 
-	rightBracket := p.expect(token.RightBracket)
-
-	return &ast.ArrayLit{LeftBracket: leftBracket, Elements: list, RightBracket: rightBracket}
+	ary.RightBracket = p.expect(token.RightBracket)
+	return
 }
 
 func (p *parser) parseHashLit() *ast.HashLit {
@@ -544,13 +541,11 @@ func (p *parser) parseHashLit() *ast.HashLit {
 
 func (p *parser) parseHashEntries() (list []*ast.HashEntry) {
 	for p.tok.Type != token.RightBrace {
-
 		list = append(list, p.parseHashEntry())
-		if !p.expectCommaOr(token.RightBrace) {
-			break
-		}
 
-		p.advance()
+		if !p.consumeCommaOrExpect(token.RightBrace) {
+			return
+		}
 	}
 
 	return
@@ -581,6 +576,18 @@ func (p *parser) parseSuperExpr() ast.Expr {
 	}
 }
 
+func (p *parser) parseField() *ast.Field {
+	name := p.parseIdent()
+
+	var expr ast.Expr
+	if p.consume(token.Assign) {
+		fmt.Println("AQUI")
+		expr = p.parseExpr()
+	}
+
+	return &ast.Field{Name: name, Value: expr}
+}
+
 func (p *parser) advance() {
 	p.tok = p.lexer.NextToken()
 }
@@ -606,20 +613,6 @@ func (p *parser) expect(expected token.Type) (tok *token.Token) {
 	}
 
 	return p.tok
-}
-
-func (p *parser) expectCommaOr(next token.Type) bool {
-	if p.tok.Type == token.Comma {
-		return true
-	}
-
-	if p.tok.Type == next {
-		return false
-	}
-
-	p.setError(p.tok.Position, "missing ','")
-	p.advance() // cosume invalid token
-	return false
 }
 
 func (p *parser) consume(tok token.Type) bool {

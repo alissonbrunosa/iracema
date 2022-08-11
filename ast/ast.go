@@ -98,6 +98,26 @@ type AssignStmt struct {
 
 func (*AssignStmt) String() string { return "AssignStmt" }
 
+type Field struct {
+	Name  *Ident
+	Value Expr
+
+	stmt
+}
+
+func (f *Field) String() string { return "ast.Field" }
+
+type FunDecl struct {
+	Name       *Ident
+	Parameters []*Field
+	Body       *BlockStmt
+	Catches    []*CatchDecl
+
+	stmt
+}
+
+func (*FunDecl) String() string { return "FunDecl" }
+
 type CatchDecl struct {
 	Ref  *Ident
 	Type *Ident
@@ -107,17 +127,6 @@ type CatchDecl struct {
 }
 
 func (*CatchDecl) String() string { return "CatchDecl" }
-
-type FunDecl struct {
-	Name       *Ident
-	Parameters []*Ident
-	Body       *BlockStmt
-	Catches    []*CatchDecl
-
-	stmt
-}
-
-func (*FunDecl) String() string { return "FunDecl" }
 
 type IfStmt struct {
 	Cond Expr
@@ -302,7 +311,7 @@ type IndexExpr struct {
 func (*IndexExpr) String() string { return "IndexExpr" }
 
 type BlockExpr struct {
-	Parameters []*Ident
+	Parameters []*Field
 	Body       *BlockStmt
 
 	expr

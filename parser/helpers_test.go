@@ -109,7 +109,9 @@ func testLit(t *testing.T, expr ast.Expr, expectedValue string) {
 	}
 }
 
-func assertFunDecl(t *testing.T, stmt ast.Stmt, name string, params ...string) *ast.FunDecl {
+type assertParam func(*testing.T, int, *ast.Field)
+
+func assertFunDecl(t *testing.T, stmt ast.Stmt, name string, fn assertParam) *ast.FunDecl {
 	t.Helper()
 
 	funDecl, ok := stmt.(*ast.FunDecl)
@@ -119,12 +121,8 @@ func assertFunDecl(t *testing.T, stmt ast.Stmt, name string, params ...string) *
 
 	testIdent(t, funDecl.Name, name)
 
-	if len(funDecl.Parameters) != len(params) {
-		t.Fatalf("FunDecl params size is %d, given %d", len(funDecl.Parameters), len(params))
-	}
-
-	for i, got := range funDecl.Parameters {
-		testIdent(t, got, params[i])
+	for i, field := range funDecl.Parameters {
+		fn(t, i, field)
 	}
 
 	return funDecl
