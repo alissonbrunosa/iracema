@@ -910,6 +910,29 @@ func TestCompileFunDecl_withMultipleCatches(t *testing.T) {
 	}
 }
 
+func TestCompileFunDecl_withDefaultParams(t *testing.T) {
+	funMatch := []Match{
+		expect(bytecode.GetLocal).toHaveOperand(0),
+		expect(bytecode.JumpIfTrue).toHaveOperand(4),
+		expect(bytecode.Push).withOperand(0).toHaveConstant(10),
+		expect(bytecode.SetLocal).toHaveOperand(0),
+		expect(bytecode.PushNone),
+		expect(bytecode.Return),
+	}
+
+	top := []Match{
+		expect(bytecode.DefineFunction).toDefine("sum", funMatch),
+		expect(bytecode.PushNone),
+		expect(bytecode.Return),
+	}
+
+	fun := compile("fun sum(a = 10, b) {}")
+
+	for i, instr := range fun.Instrs() {
+		top[i].Match(t, instr, fun.Constants())
+	}
+}
+
 func TestCompileArrayLit(t *testing.T) {
 	top := []Match{
 		expect(bytecode.Push).withOperand(0).toHaveConstant(1),

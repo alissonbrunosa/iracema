@@ -65,12 +65,13 @@ func (f *frame) NewObjectFrame(this lang.IrObject, meth *lang.Method) *frame {
 	}
 }
 
-func (f *frame) NewFrame(this lang.IrObject, meth *lang.Method, flags byte) *frame {
-	for i := f.stackPointer; i < f.stackPointer+meth.LocalCount(); i++ {
+func (f *frame) NewFrame(this lang.IrObject, argc byte, meth *lang.Method, flags byte) *frame {
+	locals := meth.LocalCount() - meth.Arity()
+	for i := f.stackPointer; i <= f.stackPointer+locals; i++ {
 		f.stack[i] = lang.None
 	}
 
-	f.stackPointer -= meth.Arity()
+	f.stackPointer -= argc
 	frame := &frame{
 		flags:        flags,
 		method:       meth,
@@ -133,4 +134,10 @@ func (f *frame) PopN(n byte) []lang.IrObject {
 
 func (f *frame) JumpTo(offset byte) {
 	f.instrPointer = int(offset)
+}
+
+func (f *frame) Clean() {
+	for i := byte(0); i < f.stackPointer; i++ {
+		f.stack[i] = nil
+	}
 }

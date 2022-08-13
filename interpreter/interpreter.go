@@ -21,7 +21,7 @@ type Interpreter struct {
 }
 
 func (i *Interpreter) Exec(top *lang.Method) (lang.IrObject, error) {
-	i.PushFrame(lang.NewScript(), top, TOP_FRAME)
+	i.PushFrame(lang.NewScript(), 0, top, TOP_FRAME)
 	return i.dispatch()
 }
 
@@ -297,11 +297,11 @@ func (i *Interpreter) PushObjectFrame(this lang.IrObject, fun *lang.Method) {
 	i.frameCount++
 }
 
-func (i *Interpreter) PushFrame(this lang.IrObject, fun *lang.Method, flags byte) {
+func (i *Interpreter) PushFrame(this lang.IrObject, argc byte, fun *lang.Method, flags byte) {
 	if i.frame == nil {
 		i.frame = TopFrame(this, fun)
 	} else {
-		i.frame = i.NewFrame(this, fun, flags)
+		i.frame = i.NewFrame(this, argc, fun, flags)
 	}
 
 	i.frameCount++
@@ -312,6 +312,7 @@ func (i *Interpreter) PopFrame() (finished bool) {
 		finished = true
 	}
 
+	i.Clean()
 	i.frame = i.frame.previous
 	i.frameCount--
 	return
@@ -338,12 +339,12 @@ func (i *Interpreter) call0(recv lang.IrObject, method *lang.Method, info *lang.
 		return i.callGoFunc(recv, method.Native(), info.Argc())
 
 	case lang.IrMethod:
-		if info.Argc() != method.Arity() {
-			i.err = lang.NewArityError(int(info.Argc()), int(method.Arity()))
+		if err := method.CheckArity(info.Argc()); err != nil {
+			i.err = err
 			return CALL_ERROR
 		}
 
-		i.PushFrame(recv, method, IRMETHOD_FRAME)
+		i.PushFrame(recv, info.Argc(), method, IRMETHOD_FRAME)
 		return CALL_NEW_FRAME
 	default:
 		lang.Unreachable()
@@ -362,7 +363,7 @@ func (i *Interpreter) Call(recv lang.IrObject, method *lang.Method, args ...lang
 		i.Push(arg)
 	}
 
-	i.PushFrame(recv, method, SINGLE_FRAME|IRMETHOD_FRAME)
+	i.PushFrame(recv, byte(len(args)), method, SINGLE_FRAME|IRMETHOD_FRAME)
 	ret, err := i.dispatch()
 	if err != nil {
 		i.err = lang.NewError("unknown error:", lang.Error)

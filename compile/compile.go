@@ -72,6 +72,7 @@ type fragment struct {
 	name         string
 	scope        int
 	argc         byte
+	optArgc      byte
 	consts       []lang.IrObject
 	paramIndices []byte
 	locals       []*local
@@ -130,6 +131,7 @@ func (c *compiler) assemble() *lang.Method {
 	return lang.NewIrMethod(
 		c.name,
 		c.argc,
+		c.optArgc,
 		bytecode,
 		byte(len(c.locals)),
 		c.consts,
@@ -281,7 +283,7 @@ func (c *compiler) compileStmt(stmt ast.Stmt) error {
 					continue
 				}
 
-				local := c.defineLocal(lhs.Value, false)
+				local := c.defineLocal(lhs, false)
 				if err := c.compileExpr(value, true); err != nil {
 					return err
 				}
@@ -610,7 +612,7 @@ func (c *compiler) compileForStmt(node *ast.ForStmt) error {
 	c.add(bytecode.Iterate, 0)
 	c.addJump(bytecode.JumpIfFalse, exit)
 
-	local := c.defineLocal(node.Element.Value, true)
+	local := c.defineLocal(node.Element, true)
 	c.add(bytecode.SetLocal, local.index)
 
 	if err := c.compileBlock(node.Body, false); err != nil {
@@ -854,6 +856,33 @@ func (c *compiler) compileObjectDecl(obj *ast.ObjectDecl) error {
 	return nil
 }
 
+func (c *compiler) compileFunParams(params []*ast.Field) error {
+	c.argc = byte(len(params))
+
+	for _, param := range params {
+		p := c.defineLocal(param.Name, true)
+		c.paramIndices = append(c.paramIndices, p.index)
+
+		if param.Value == nil {
+			continue
+		}
+
+		c.optArgc++
+		nextParam := new(basicblock)
+		c.add(bytecode.GetLocal, p.index)
+		c.addJump(bytecode.JumpIfTrue, nextParam)
+
+		if err := c.compileExpr(param.Value, true); err != nil {
+			return err
+		}
+
+		c.add(bytecode.SetLocal, p.index)
+		c.useBlock(nextParam)
+	}
+
+	return nil
+}
+
 func (c *compiler) compileFunDecl(fun *ast.FunDecl) error {
 	if c.scope == METHOD_SCOPE {
 		return errors.New("can not declare a method inside of a method")
@@ -861,16 +890,14 @@ func (c *compiler) compileFunDecl(fun *ast.FunDecl) error {
 
 	c.openScope(fun.Name.Value, METHOD_SCOPE)
 
+	if err := c.compileFunParams(fun.Parameters); err != nil {
+		return err
+	}
+
 	var catch *basicblock
 	if len(fun.Catches) != 0 {
 		catch = new(basicblock)
 		c.addJump(bytecode.WithCatch, catch)
-	}
-
-	c.argc = byte(len(fun.Parameters))
-	for _, param := range fun.Parameters {
-		p := c.defineLocal(param.Value, true)
-		c.paramIndices = append(c.paramIndices, p.index)
 	}
 
 	if err := c.compileBlock(fun.Body, true); err != nil {
@@ -886,7 +913,7 @@ func (c *compiler) compileFunDecl(fun *ast.FunDecl) error {
 			c.addJump(bytecode.JumpIfFalse, catch)
 
 			if ch.Ref != nil {
-				local := c.defineLocal(ch.Ref.Value, true)
+				local := c.defineLocal(ch.Ref, true)
 				c.add(bytecode.SetLocal, local.index)
 			}
 
@@ -1105,13 +1132,13 @@ func (c *compiler) compileNextStmt(_next *ast.NextStmt) error {
 	return nil
 }
 
-func (c *compiler) defineLocal(name string, initialized bool) *local {
-	if l := c.resolve(name); l != nil {
+func (c *compiler) defineLocal(ident *ast.Ident, initialized bool) *local {
+	if l := c.resolve(ident.Value); l != nil {
 		return l
 	}
 
 	index := byte(len(c.locals))
-	l := &local{name: name, index: index, initialized: initialized}
+	l := &local{name: ident.Value, index: index, initialized: initialized}
 	c.locals = append(c.locals, l)
 	return l
 }

@@ -581,7 +581,6 @@ func (p *parser) parseField() *ast.Field {
 
 	var expr ast.Expr
 	if p.consume(token.Assign) {
-		fmt.Println("AQUI")
 		expr = p.parseExpr()
 	}
 

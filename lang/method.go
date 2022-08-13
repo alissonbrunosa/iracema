@@ -13,7 +13,8 @@ type Method struct {
 	methodType  MethodType
 	name        string
 	arity       byte
-	body        interface{}
+	optArgc     byte
+	body        any
 	localCount  byte
 	constants   []IrObject
 	catchOffset int
@@ -28,6 +29,20 @@ func (m *Method) Constants() []IrObject  { return m.constants }
 func (m *Method) LocalCount() byte       { return m.localCount }
 func (m *Method) CatchOffset() int       { return m.catchOffset }
 
+func (m *Method) CheckArity(given byte) *ErrorObject {
+	if m.optArgc == 0 && given != m.arity {
+		return NewArityError(int(given), int(m.arity))
+	}
+
+	min := m.arity - m.optArgc
+	if given < min || given > m.arity {
+		format := "wrong number of arguments (given %d, expected %d..%d)"
+		return NewError(format, ArgumentError, given, min, m.arity)
+	}
+
+	return nil
+}
+
 func NewGoMethod(name string, body Native, arity byte) *Method {
 	return &Method{
 		methodType: GoFunction,
@@ -37,11 +52,12 @@ func NewGoMethod(name string, body Native, arity byte) *Method {
 	}
 }
 
-func NewIrMethod(name string, arity byte, body []uint16, localCount byte, consts []IrObject, catchOffset int) *Method {
+func NewIrMethod(name string, arity byte, optArgc byte, body []uint16, localCount byte, consts []IrObject, catchOffset int) *Method {
 	return &Method{
 		methodType:  IrMethod,
 		name:        name,
 		arity:       arity,
+		optArgc:     optArgc,
 		body:        body,
 		localCount:  localCount,
 		constants:   consts,
