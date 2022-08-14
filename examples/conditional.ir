@@ -1,0 +1,26 @@
+value = 10
+
+if value == 10 {
+  puts("EQUAL")
+}
+
+
+# If-Else
+
+if value > 10 {
+  puts("BIGGER")
+} else {
+  puts("SMALLER")
+}
+
+
+
+# If-Else-If
+value = 20
+if value > 20 {
+  puts("BIGGER")
+} else if value > 10 {
+  puts("BIGGER THAN 10")
+} else {
+  puts("SMALLER")
+}

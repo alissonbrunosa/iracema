@@ -1,0 +1,34 @@
+list = [1,2,3,4,5]
+for el in list {
+  puts(el)
+}
+
+
+value = 5
+while value > 0 {
+  puts(value)
+  value = value - 1
+}
+
+
+# Stop statement stops the loop
+# The snippet below print 1, 2 and stops
+list = [1,2,3,4,5]
+for el in list {
+  if el == 3 {
+    stop
+  }
+
+  puts(el)
+}
+
+# Next statement skips to next iteration
+# The snippet below print 1, 2, 4, 5
+list = [1,2,3,4,5]
+for el in list {
+  if el == 3 {
+    next
+  }
+
+  puts(el)
+}

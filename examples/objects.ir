@@ -1,0 +1,49 @@
+# Simple
+object Lang {
+  fun name {
+    return "Iracema"
+  }
+}
+
+l = Lang.new
+puts(l.name)
+
+
+# With "constructor"
+object Person {
+  fun init(name) {
+    puts(name)
+  }
+}
+
+Person.new("John")
+
+
+# inheritance
+object Animal {
+  fun make_noise {
+    puts("animal making noise")
+  }
+}
+
+object Dog is Animal {
+  fun walk {
+    puts("Dog walking")
+  }
+}
+
+d = Dog.new
+d.make_noise # prints "animal making noise"
+d.walk       # prints "Dog walking"
+
+
+# calling method from Parent
+object Cat is Animal {
+  fun make_noise {
+    super
+    puts("Cat making noise")
+  }
+}
+
+d = Cat.new
+d.make_noise # prints "animal making noise" and then "Cat making noise"

@@ -1,0 +1,15 @@
+# function/method are declared using the keyword fun
+
+fun fib(n) {
+  if n <= 1 {
+      return n
+  }
+
+  return fib(n-1) + fib(n-2)
+}
+
+
+# Return value needs to be explicitly declared
+# otherwise the function returns none
+
+fun dummy {} # returns none
