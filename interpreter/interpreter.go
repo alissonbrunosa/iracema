@@ -3,7 +3,9 @@ package interpreter
 import (
 	"fmt"
 	"iracema/bytecode"
+	"iracema/compile"
 	"iracema/lang"
+	"iracema/parser"
 	"os"
 )
 
@@ -46,6 +48,17 @@ func (i *Interpreter) dispatch() (lang.IrObject, error) {
 		switch opcode {
 		case bytecode.Nop:
 			goto next_instr
+		case bytecode.LoadFile:
+			name := constants[operand]
+
+			switch i.loadFIle(name) {
+			case CALL_OK:
+				goto next_instr
+			case CALL_NEW_FRAME:
+				goto start_frame
+			default:
+				goto fail
+			}
 
 		case bytecode.Push:
 			value := constants[operand]
@@ -308,7 +321,7 @@ func (i *Interpreter) PushFrame(this lang.IrObject, argc byte, fun *lang.Method,
 }
 
 func (i *Interpreter) PopFrame() (finished bool) {
-	if i.flags&(TOP_FRAME|SINGLE_FRAME) != 0 {
+	if i.flags&FLAG_DONE != 0 {
 		finished = true
 	}
 
@@ -353,8 +366,9 @@ func (i *Interpreter) call0(recv lang.IrObject, method *lang.Method, info *lang.
 }
 
 func (i *Interpreter) Call(recv lang.IrObject, method *lang.Method, args ...lang.IrObject) lang.IrObject {
-	if byte(len(args)) != method.Arity() {
-		i.err = lang.NewArityError(len(args), int(method.Arity()))
+	argc := len(args)
+
+	if i.err = method.CheckArity(byte(argc)); i.err != nil {
 		return nil
 	}
 
@@ -363,7 +377,7 @@ func (i *Interpreter) Call(recv lang.IrObject, method *lang.Method, args ...lang
 		i.Push(arg)
 	}
 
-	i.PushFrame(recv, byte(len(args)), method, SINGLE_FRAME|IRMETHOD_FRAME)
+	i.PushFrame(recv, byte(len(args)), method, FLAG_DONE|IRMETHOD_FRAME)
 	ret, err := i.dispatch()
 	if err != nil {
 		i.err = lang.NewError("unknown error:", lang.Error)
@@ -371,4 +385,30 @@ func (i *Interpreter) Call(recv lang.IrObject, method *lang.Method, args ...lang
 	}
 
 	return ret
+}
+
+func (i *Interpreter) loadFIle(name lang.IrObject) int {
+	fileName := lang.GoString(name)
+	f, err := os.Open(fileName)
+	if err != nil {
+		i.err = lang.NewError(err.Error(), lang.RuntimeError)
+		return CALL_ERROR
+	}
+	defer f.Close()
+
+	ast, err := parser.Parse(f)
+	if err != nil {
+		i.err = lang.NewError(err.Error(), lang.RuntimeError)
+		return CALL_ERROR
+	}
+
+	c := compile.New()
+	method, err := c.Compile(ast)
+	if err != nil {
+		i.err = lang.NewError(err.Error(), lang.RuntimeError)
+		return CALL_ERROR
+	}
+
+	i.PushFrame(i.this, 0, method, TOP_FRAME)
+	return CALL_NEW_FRAME
 }

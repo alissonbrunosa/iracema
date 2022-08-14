@@ -29,6 +29,7 @@ const (
 	Or      // or
 	And     // and
 	This    // this
+	Use     // use
 
 	Int    // Int
 	Float  // Float

@@ -8,7 +8,7 @@ const (
 	TOP_FRAME      = 0x01
 	OBJECT_FRAME   = 0x02
 	IRMETHOD_FRAME = 0x04
-	SINGLE_FRAME   = 0x08
+	FLAG_DONE      = 0x08
 )
 
 type frame struct {
@@ -36,7 +36,7 @@ func TopFrame(this lang.IrObject, fun *lang.Method) *frame {
 	}
 
 	return &frame{
-		flags:        TOP_FRAME,
+		flags:        TOP_FRAME | FLAG_DONE,
 		method:       fun,
 		this:         this,
 		class:        this.Class(),

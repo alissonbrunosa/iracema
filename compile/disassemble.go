@@ -29,7 +29,7 @@ func (c *compiler) Disassemble(file *ast.File) {
 				fmt.Printf("%04d ", i)
 				i += 2
 				switch ins.opcode {
-				case bytecode.Push, bytecode.MatchType, bytecode.GetConstant:
+				case bytecode.Push, bytecode.MatchType, bytecode.GetConstant, bytecode.LoadFile:
 					fmt.Fprintf(w, "%-30s%s\n", ins.opcode, fragment.consts[ins.operand])
 				case bytecode.CallMethod, bytecode.CallSuper:
 					ci := fragment.consts[ins.operand].(*lang.CallInfo)

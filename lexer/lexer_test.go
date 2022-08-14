@@ -257,6 +257,10 @@ func TestNextToken(t *testing.T) {
 			Input:        bytes.NewBufferString("this"),
 			ExpectedType: token.This,
 		},
+		"keyword import": {
+			Input:        bytes.NewBufferString("use"),
+			ExpectedType: token.Use,
+		},
 	}
 
 	for scenario, test := range tests {

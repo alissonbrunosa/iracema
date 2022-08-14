@@ -28,6 +28,32 @@ type stmt struct{ node }
 
 func (*stmt) aStmt() {}
 
+type File struct {
+	Imports []string
+	Name    string
+	Stmts   []Stmt
+
+	stmt
+}
+
+type Import struct {
+	Name string
+
+	stmt
+}
+
+func (i *Import) String() string { return i.Name }
+
+func (f *File) String() string {
+	var buf strings.Builder
+
+	for _, s := range f.Stmts {
+		buf.WriteString(s.String())
+	}
+
+	return buf.String()
+}
+
 type BlockStmt struct {
 	Stmts []Stmt
 
@@ -59,23 +85,6 @@ type NextStmt struct {
 }
 
 func (*NextStmt) String() string { return "next" }
-
-type File struct {
-	Name  string
-	Stmts []Stmt
-
-	stmt
-}
-
-func (f *File) String() string {
-	var buf strings.Builder
-
-	for _, s := range f.Stmts {
-		buf.WriteString(s.String())
-	}
-
-	return buf.String()
-}
 
 type ObjectDecl struct {
 	Name   *Ident

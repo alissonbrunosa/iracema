@@ -36,8 +36,8 @@ const (
 	WHILE_LOOP = 2
 
 	TOP_SCOPE = 1 << iota
-	CLASS_SCOPE
-	METHOD_SCOPE
+	OBJECT_SCOPE
+	FUN_SCOPE
 )
 
 type controlflow struct {
@@ -109,6 +109,10 @@ func (c *compiler) init() {
 }
 
 func (c *compiler) Compile(file *ast.File) (*lang.Method, error) {
+	for _, name := range file.Imports {
+		c.add(bytecode.LoadFile, c.addConstant(name))
+	}
+
 	if err := c.compileStmt(file); err != nil {
 		return nil, err
 	}
@@ -842,7 +846,7 @@ func (c *compiler) compileObjectDecl(obj *ast.ObjectDecl) error {
 		c.add(bytecode.PushNone, 0)
 	}
 
-	c.openScope(obj.Name.Value, CLASS_SCOPE)
+	c.openScope(obj.Name.Value, OBJECT_SCOPE)
 	if err := c.compileBlock(obj.Body, true); err != nil {
 		return err
 	}
@@ -884,11 +888,11 @@ func (c *compiler) compileFunParams(params []*ast.Field) error {
 }
 
 func (c *compiler) compileFunDecl(fun *ast.FunDecl) error {
-	if c.scope == METHOD_SCOPE {
+	if c.scope == FUN_SCOPE {
 		return errors.New("can not declare a method inside of a method")
 	}
 
-	c.openScope(fun.Name.Value, METHOD_SCOPE)
+	c.openScope(fun.Name.Value, FUN_SCOPE)
 
 	if err := c.compileFunParams(fun.Parameters); err != nil {
 		return err

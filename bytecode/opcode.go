@@ -29,6 +29,7 @@ const (
 	JumpIfTrue                   // JUMP_IF_TRUE
 	Iterate                      // ITERATE
 	NewIterator                  // NEWITERATOR
+	LoadFile                     // LOAD_FILE
 
 	/*
 		┌──────────────────────── INTERNAL OPCODES ────────────────────────────┐

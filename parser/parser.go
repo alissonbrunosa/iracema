@@ -61,6 +61,14 @@ func isDone(tok *token.Token) bool {
 func (p *parser) parse() *ast.File {
 	var stmts []ast.Stmt
 
+	var imports []string
+	for p.consume(token.Use) {
+		name := p.expect(token.String)
+		imports = append(imports, name.Literal)
+
+		p.consume(token.NewLine)
+	}
+
 	for !isDone(p.tok) {
 		stmts = append(stmts, p.parseStmt())
 
@@ -72,7 +80,7 @@ func (p *parser) parse() *ast.File {
 		}
 	}
 
-	return &ast.File{Stmts: stmts}
+	return &ast.File{Stmts: stmts, Imports: imports}
 }
 
 func (p *parser) parseStmtList() (list []ast.Stmt) {

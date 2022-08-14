@@ -24,6 +24,7 @@ var keywords = map[string]Type{
 	"or":      Or,
 	"and":     And,
 	"this":    This,
+	"use":     Use,
 }
 
 const LowestPrecedence = 0
