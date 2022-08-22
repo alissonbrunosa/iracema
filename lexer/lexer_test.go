@@ -261,6 +261,10 @@ func TestNextToken(t *testing.T) {
 			Input:        bytes.NewBufferString("use"),
 			ExpectedType: token.Use,
 		},
+		"keyword var": {
+			Input:        bytes.NewBufferString("var"),
+			ExpectedType: token.Var,
+		},
 	}
 
 	for scenario, test := range tests {

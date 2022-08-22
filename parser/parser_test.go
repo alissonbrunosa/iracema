@@ -310,9 +310,9 @@ func TestInvalidFunDecl(t *testing.T) {
 		ExpectedErr string
 	}{
 		{
-			Scenario:    "Missing comm in parameter list",
-			Code:        `fun name(arg1 arg2) {}`,
-			ExpectedErr: "[Lin: 1 Col: 15] syntax error: missing , or )",
+			Scenario:    "Missing comma in parameter list",
+			Code:        `fun name(arg1 Int arg2 Int) {}`,
+			ExpectedErr: "[Lin: 1 Col: 19] syntax error: missing , or )",
 		},
 		{
 			Scenario:    "Missing closing brace",
@@ -380,6 +380,25 @@ func TestParseObjectDecl_with_Parent(t *testing.T) {
 	testConst(t, objDecl.Parent, "Animal")
 }
 
+func TestParseObjectDecl_withField(t *testing.T) {
+	object := `object Person {
+  var name String
+}`
+	stmts := setupTest(t, object, 1)
+
+	objDecl, ok := stmts[0].(*ast.ObjectDecl)
+	if !ok {
+		t.Errorf("expected first stmt to be *ast.ObjectDecl, got %T", stmts[0])
+	}
+
+	testConst(t, objDecl.Name, "Person")
+
+	for _, field := range objDecl.FieldList {
+		testIdent(t, field.Type, "String")
+		testIdent(t, field.Name, "name")
+	}
+}
+
 func TestFunDecl(t *testing.T) {
 	type expectParam = struct {
 		name  string
@@ -397,14 +416,14 @@ func TestFunDecl(t *testing.T) {
 		},
 		{
 			scenario: "single params",
-			code:     "fun calc(a) {}",
+			code:     "fun calc(a Int) {}",
 			expectedParams: []expectParam{
 				{name: "a"},
 			},
 		},
 		{
 			scenario: "params has default",
-			code:     "fun calc(a = 1, b = 2) {}",
+			code:     "fun calc(a Int = 1, b Int = 2) {}",
 			expectedParams: []expectParam{
 				{name: "a", value: "1"},
 				{name: "b", value: "2"},
@@ -412,7 +431,7 @@ func TestFunDecl(t *testing.T) {
 		},
 		{
 			scenario: "only one param has default",
-			code:     "fun calc(a, b = 10) {}",
+			code:     "fun calc(a Int, b Int = 10) {}",
 			expectedParams: []expectParam{
 				{name: "a"},
 				{name: "b", value: "10"},
@@ -433,10 +452,6 @@ func TestFunDecl(t *testing.T) {
 
 		assertFunDecl(t, stmts[0], "calc", assert)
 	}
-}
-
-func TestFunDecl_WithDefault(t *testing.T) {
-
 }
 
 func TestFunDeclWithCatch(t *testing.T) {
@@ -687,4 +702,20 @@ func TestParseReturnStmt_withoutValue(t *testing.T) {
 	if returnStmt.Value != nil {
 		t.Errorf("expected .Value to be nil, got %T", returnStmt.Value)
 	}
+}
+
+func TestFieldSel(t *testing.T) {
+	stmts := setupTest(t, "this.name", 1)
+
+	exprStmt, ok := stmts[0].(*ast.ExprStmt)
+	if !ok {
+		t.Fatalf("expected first stmt to be *ast.ExprStmt, got %T", stmts[0])
+	}
+
+	fs, ok := exprStmt.Expr.(*ast.FieldSel)
+	if !ok {
+		t.Fatalf("expected first stmt to be *ast.FieldSel, got %T", exprStmt.Expr)
+	}
+
+	testIdent(t, fs.Name, "name")
 }

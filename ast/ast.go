@@ -87,10 +87,12 @@ type NextStmt struct {
 func (*NextStmt) String() string { return "next" }
 
 type ObjectDecl struct {
-	Name   *Ident
-	Parent *Ident
-	Body   *BlockStmt
-	Attrs  []*Ident
+	Name      *Ident
+	Parent    *Ident
+	FieldList []*VarDecl
+	FunList   []*FunDecl
+
+	Body *BlockStmt
 
 	stmt
 }
@@ -109,6 +111,7 @@ func (*AssignStmt) String() string { return "AssignStmt" }
 
 type Field struct {
 	Name  *Ident
+	Type  *Ident
 	Value Expr
 
 	stmt
@@ -116,9 +119,20 @@ type Field struct {
 
 func (f *Field) String() string { return "ast.Field" }
 
+type VarDecl struct {
+	Name  *Ident
+	Type  *Ident
+	Value Expr
+
+	stmt
+}
+
+func (*VarDecl) String() string { return "LetDecl" }
+
 type FunDecl struct {
 	Name       *Ident
 	Parameters []*Field
+	Return     *Ident
 	Body       *BlockStmt
 	Catches    []*CatchDecl
 
@@ -208,6 +222,14 @@ func (r *ReturnStmt) String() string {
 	return buf.String()
 }
 
+type FieldSel struct {
+	Name *Ident
+
+	expr
+}
+
+func (*FieldSel) String() string { return "FieldSel" }
+
 //
 // Expressions
 //
@@ -229,7 +251,6 @@ type Ident struct {
 }
 
 func (i *Ident) IsConstant() bool { return 'A' <= i.Value[0] && i.Value[0] <= 'Z' }
-func (i *Ident) IsAttr() bool     { return i.Value[0] == '@' }
 func (*Ident) String() string     { return "Ident" }
 
 type UnaryExpr struct {

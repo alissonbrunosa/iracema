@@ -113,7 +113,14 @@ func (l *lexer) NextToken() *token.Token {
 
 	case '-':
 		l.advance()
-		return token.New(token.Minus, "", position)
+		kind := token.Minus
+
+		if l.char == '>' {
+			l.advance()
+			kind = token.Arrow
+		}
+
+		return token.New(kind, "", position)
 
 	case '+':
 		l.advance()

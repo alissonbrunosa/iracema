@@ -116,6 +116,9 @@ func (p *parser) parseStmt() ast.Stmt {
 	case token.Object:
 		return p.parseObjectDecl()
 
+	case token.Var:
+		return p.parseVarDecl()
+
 	case token.Fun:
 		return p.parseFunDecl()
 
@@ -155,27 +158,68 @@ func (p *parser) parseStmt() ast.Stmt {
 func (p *parser) parseObjectDecl() ast.Stmt {
 	p.expect(token.Object)
 
-	name := p.parseConst()
+	obj := new(ast.ObjectDecl)
+	obj.Name = p.parseConst()
 
-	var parent *ast.Ident
 	if p.consume(token.Is) {
-		parent = p.parseConst()
+		obj.Parent = p.parseConst()
 	}
 
-	body := p.parseBlockStmt()
+	p.expect(token.LeftBrace)
+	for p.tok.Type != token.RightBrace {
+		switch p.tok.Type {
+		case token.Var:
+			obj.FieldList = append(obj.FieldList, p.parseVarDecl())
 
-	return &ast.ObjectDecl{Name: name, Parent: parent, Body: body}
+		case token.Fun:
+			obj.FunList = append(obj.FunList, p.parseFunDecl())
+		case token.NewLine:
+			p.advance()
+			continue
+
+		default:
+			mesg := fmt.Sprintf("unexpected %s, expecting FunDecl or Field", p.tok)
+			p.setError(p.tok.Position, mesg)
+			return obj
+		}
+	}
+
+	p.expect(token.RightBrace)
+
+	return obj
 }
 
-func (p *parser) parseFunDecl() ast.Stmt {
+func (p *parser) parseVarDecl() *ast.VarDecl {
+	p.expect(token.Var)
+
+	decl := new(ast.VarDecl)
+	decl.Name = p.parseIdent()
+	if p.consume(token.Assign) {
+		decl.Value = p.parseExpr()
+	} else {
+		decl.Type = p.parseIdent()
+		if p.consume(token.Assign) {
+			decl.Value = p.parseExpr()
+		}
+	}
+
+	return decl
+}
+
+func (p *parser) parseFunDecl() *ast.FunDecl {
 	p.expect(token.Fun)
 
-	return &ast.FunDecl{
-		Name:       p.parseIdent(),
-		Parameters: p.parseParameterList(),
-		Body:       p.parseBlockStmt(),
-		Catches:    p.parseCatchList(),
+	fun := new(ast.FunDecl)
+	fun.Name = p.parseIdent()
+	fun.Parameters = p.parseParameterList()
+
+	if p.consume(token.Arrow) {
+		fun.Return = p.parseConst()
 	}
+
+	fun.Body = p.parseBlockStmt()
+	fun.Catches = p.parseCatchList()
+	return fun
 }
 
 func (p *parser) parseCatchList() (list []*ast.CatchDecl) {
@@ -409,7 +453,7 @@ func (p *parser) parseOperand() ast.Expr {
 	switch p.tok.Type {
 	case
 		token.Int, token.Float, token.String, token.Bool,
-		token.None, token.This:
+		token.None:
 		return p.parseBasicLit()
 
 	case token.Block:
@@ -426,6 +470,16 @@ func (p *parser) parseOperand() ast.Expr {
 
 	case token.LeftBrace:
 		return p.parseHashLit()
+
+	case token.This:
+		// TODO: make some improvements in this section
+		thisTok := p.tok
+		p.advance()
+		if p.consume(token.Dot) {
+			return &ast.FieldSel{Name: p.parseIdent()}
+		}
+
+		return &ast.BasicLit{Token: thisTok}
 
 	case token.Super:
 		return p.parseSuperExpr()
@@ -585,14 +639,15 @@ func (p *parser) parseSuperExpr() ast.Expr {
 }
 
 func (p *parser) parseField() *ast.Field {
-	name := p.parseIdent()
+	field := new(ast.Field)
+	field.Name = p.parseIdent()
+	field.Type = p.parseConst()
 
-	var expr ast.Expr
 	if p.consume(token.Assign) {
-		expr = p.parseExpr()
+		field.Value = p.parseExpr()
 	}
 
-	return &ast.Field{Name: name, Value: expr}
+	return field
 }
 
 func (p *parser) advance() {
