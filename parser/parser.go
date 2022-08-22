@@ -9,6 +9,12 @@ import (
 	"iracema/token"
 )
 
+var startDecl = map[token.Type]bool{
+	token.Var:    true,
+	token.Fun:    true,
+	token.Object: true,
+}
+
 var startStmt = map[token.Type]bool{
 	token.Object: true,
 	token.Fun:    true,
@@ -59,28 +65,41 @@ func isDone(tok *token.Token) bool {
 }
 
 func (p *parser) parse() *ast.File {
-	var stmts []ast.Stmt
-
-	var imports []string
-	for p.consume(token.Use) {
-		name := p.expect(token.String)
-		imports = append(imports, name.Literal)
-
-		p.consume(token.NewLine)
-	}
+	file := new(ast.File)
 
 	for !isDone(p.tok) {
-		stmts = append(stmts, p.parseStmt())
+		switch p.tok.Type {
+		case token.Use:
+			for p.consume(token.Use) {
+				name := p.expect(token.String)
+				file.Imports = append(file.Imports, name.Literal)
+
+				p.consume(token.NewLine)
+			}
+		case token.Var:
+			file.VarList = append(file.VarList, p.parseVarDecl())
+
+		case token.Fun:
+			file.FunList = append(file.FunList, p.parseFunDecl())
+
+		case token.Object:
+			file.ObjectList = append(file.ObjectList, p.parseObjectDecl())
+
+		default:
+			mesg := fmt.Sprintf("unexpected %s, expecting VarDecl, FunDecl or ObjectDecl", p.tok)
+			p.setError(p.tok.Position, mesg)
+			p.sync(startDecl)
+			continue
+		}
 
 		if !p.consume(token.NewLine) && p.tok.Type != token.EOF {
 			err := fmt.Sprintf("unexpected %s, expecting EOF or new line", p.tok)
 			p.setError(p.tok.Position, err)
 			p.sync(startStmt)
-			continue
 		}
 	}
 
-	return &ast.File{Stmts: stmts, Imports: imports}
+	return file
 }
 
 func (p *parser) parseStmtList() (list []ast.Stmt) {
@@ -155,7 +174,7 @@ func (p *parser) parseStmt() ast.Stmt {
 	}
 }
 
-func (p *parser) parseObjectDecl() ast.Stmt {
+func (p *parser) parseObjectDecl() *ast.ObjectDecl {
 	p.expect(token.Object)
 
 	obj := new(ast.ObjectDecl)

@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"bytes"
 	"iracema/ast"
 	"iracema/token"
 	"testing"
@@ -9,46 +8,46 @@ import (
 
 func TestParseAssignStmt(t *testing.T) {
 	tests := []struct {
-		Scenario          string
-		Code              string
-		ExpectedIdent     []string
-		ExpectedValue     []string
-		ExpectedStmtCount int
+		scenario          string
+		input             string
+		expectedIdent     []string
+		expectedValue     []string
+		expectedStmtCount int
 	}{
 		{
-			Scenario:          "assign int",
-			Code:              "a = 10",
-			ExpectedIdent:     []string{"a"},
-			ExpectedValue:     []string{"10"},
-			ExpectedStmtCount: 1,
+			scenario:          "assign int",
+			input:             "a = 10",
+			expectedIdent:     []string{"a"},
+			expectedValue:     []string{"10"},
+			expectedStmtCount: 1,
 		},
 		{
-			Scenario:          "assign float",
-			Code:              "b = 10.10",
-			ExpectedIdent:     []string{"b"},
-			ExpectedValue:     []string{"10.10"},
-			ExpectedStmtCount: 1,
+			scenario:          "assign float",
+			input:             "b = 10.10",
+			expectedIdent:     []string{"b"},
+			expectedValue:     []string{"10.10"},
+			expectedStmtCount: 1,
 		},
 		{
-			Scenario:          "assign string",
-			Code:              "x = \"this is string\"",
-			ExpectedIdent:     []string{"x"},
-			ExpectedValue:     []string{"this is string"},
-			ExpectedStmtCount: 1,
+			scenario:          "assign string",
+			input:             "x = \"this is string\"",
+			expectedIdent:     []string{"x"},
+			expectedValue:     []string{"this is string"},
+			expectedStmtCount: 1,
 		},
 		{
-			Scenario:          "multiple assign ",
-			Code:              "a, b = 1, 2",
-			ExpectedIdent:     []string{"a", "b"},
-			ExpectedValue:     []string{"1", "2"},
-			ExpectedStmtCount: 1,
+			scenario:          "multiple assign ",
+			input:             "a, b = 1, 2",
+			expectedIdent:     []string{"a", "b"},
+			expectedValue:     []string{"1", "2"},
+			expectedStmtCount: 1,
 		},
 	}
 
 	for _, test := range tests {
 		tt := test
-		t.Run(tt.Scenario, func(t *testing.T) {
-			stmts := setupTest(t, tt.Code, tt.ExpectedStmtCount)
+		t.Run(tt.scenario, func(t *testing.T) {
+			stmts := setupFunBody(t, tt.input)
 
 			assignStmt, ok := stmts[0].(*ast.AssignStmt)
 			if !ok {
@@ -61,8 +60,8 @@ func TestParseAssignStmt(t *testing.T) {
 					t.Errorf("Expected leftHand to be a *ast.Ident, got %T", leftHand)
 				}
 
-				if leftHand.Value != tt.ExpectedIdent[i] {
-					t.Errorf("Expected name in the leftHand to be %q, got %q", tt.ExpectedValue[i], leftHand.Value)
+				if leftHand.Value != tt.expectedIdent[i] {
+					t.Errorf("Expected name in the leftHand to be %q, got %q", tt.expectedValue[i], leftHand.Value)
 				}
 			}
 
@@ -72,8 +71,8 @@ func TestParseAssignStmt(t *testing.T) {
 					t.Errorf("Expected rightHand to be a *ast.BasicLit, got %T", rightHand)
 				}
 
-				if rightHand.Value != tt.ExpectedValue[i] {
-					t.Errorf("Expected value in the rightHand to be %q, got %q", tt.ExpectedValue, rightHand.Value)
+				if rightHand.Value != tt.expectedValue[i] {
+					t.Errorf("Expected value in the rightHand to be %q, got %q", tt.expectedValue, rightHand.Value)
 				}
 			}
 		})
@@ -171,7 +170,7 @@ func TestBinaryExpr(t *testing.T) {
 	for _, test := range tests {
 		tt := test
 		t.Run(tt.Scenario, func(t *testing.T) {
-			stmts := setupTest(t, tt.Code, 1)
+			stmts := setupFunBody(t, tt.Code)
 
 			exprStmt, ok := stmts[0].(*ast.ExprStmt)
 			if !ok {
@@ -210,37 +209,34 @@ func TestBinaryExpr(t *testing.T) {
 
 func TestOperatorPrecedenceParsing(t *testing.T) {
 	tests := []struct {
-		Code           string
-		ExpectedOutput string
+		input          string
+		expectedOutput string
 	}{
-		{Code: "10 - 2", ExpectedOutput: "(10-2)"},
-		{Code: "10 + 2", ExpectedOutput: "(10+2)"},
-		{Code: "10 * 2", ExpectedOutput: "(10*2)"},
-		{Code: "10 / 2", ExpectedOutput: "(10/2)"},
-		{Code: "10 / 2 + 5", ExpectedOutput: "((10/2)+5)"},
-		{Code: "10 * 2 + 5", ExpectedOutput: "((10*2)+5)"},
-		{Code: "10 / 2 * 5", ExpectedOutput: "((10/2)*5)"},
-		{Code: "10 + 2 * 5", ExpectedOutput: "(10+(2*5))"},
-		{Code: "(10 + 2) * 5", ExpectedOutput: "((10+2)*5)"},
-		{Code: "10 / (2 * 5)", ExpectedOutput: "(10/(2*5))"},
-		{Code: "!true", ExpectedOutput: "(!true)"},
-		{Code: "!!true", ExpectedOutput: "(!(!true))"},
-		{Code: "-10 * 10", ExpectedOutput: "((-10)*10)"},
-		{Code: "10 + -10 * 10", ExpectedOutput: "(10+((-10)*10))"},
+		{input: "10 - 2", expectedOutput: "(10-2)"},
+		{input: "10 + 2", expectedOutput: "(10+2)"},
+		{input: "10 * 2", expectedOutput: "(10*2)"},
+		{input: "10 / 2", expectedOutput: "(10/2)"},
+		{input: "10 / 2 + 5", expectedOutput: "((10/2)+5)"},
+		{input: "10 * 2 + 5", expectedOutput: "((10*2)+5)"},
+		{input: "10 / 2 * 5", expectedOutput: "((10/2)*5)"},
+		{input: "10 + 2 * 5", expectedOutput: "(10+(2*5))"},
+		{input: "(10 + 2) * 5", expectedOutput: "((10+2)*5)"},
+		{input: "10 / (2 * 5)", expectedOutput: "(10/(2*5))"},
+		{input: "!true", expectedOutput: "(!true)"},
+		{input: "!!true", expectedOutput: "(!(!true))"},
+		{input: "-10 * 10", expectedOutput: "((-10)*10)"},
+		{input: "10 + -10 * 10", expectedOutput: "(10+((-10)*10))"},
 	}
 
 	for _, test := range tests {
-		input := bytes.NewBufferString(test.Code)
-		file, err := Parse(input)
+		stmts := setupFunBody(t, test.input)
 
-		if err != nil {
-			t.Fatal(err)
-		}
+		stmt := stmts[0]
 
-		output := file.String()
+		output := stmt.String()
 
-		if output != test.ExpectedOutput {
-			t.Errorf("expected output to be %q, got %q\n", test.ExpectedOutput, output)
+		if output != test.expectedOutput {
+			t.Errorf("expected output to be %q, got %q\n", test.expectedOutput, output)
 		}
 	}
 }
@@ -279,7 +275,7 @@ func TestParseCallExpr(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		stmts := setupTest(t, test.Code, 1)
+		stmts := setupFunBody(t, test.Code)
 
 		exprStmt, ok := stmts[0].(*ast.ExprStmt)
 		if !ok {
@@ -291,9 +287,9 @@ func TestParseCallExpr(t *testing.T) {
 			t.Errorf("expected *ast.CallExpr, got %T", exprStmt.Expr)
 		}
 
-		testIdent(t, callExpr.Receiver, test.ExpectedReceiver)
-		testIdent(t, callExpr.Method, test.ExpectedMethod)
-		testArguments(t, callExpr.Arguments, test.ExpectedArgs)
+		assetIdent(t, callExpr.Receiver, test.ExpectedReceiver)
+		assetIdent(t, callExpr.Method, test.ExpectedMethod)
+		assertArgumentList(t, callExpr.Arguments, test.ExpectedArgs)
 	}
 }
 
@@ -315,19 +311,24 @@ func TestErrorParse(t *testing.T) {
 		},
 		{
 			Scenario:    "var decl without type and value",
-			Code:        "var a",
-			ExpectedErr: "[Lin: 1 Col: 5] syntax error: expected 'Ident', found 'EOF'",
+			Code:        "fun dummy { var a }",
+			ExpectedErr: "[Lin: 1 Col: 19] syntax error: expected 'Ident', found '}'",
 		},
 		{
 			Scenario:    "object declaration without a constant",
 			Code:        "object car {}",
 			ExpectedErr: "[Lin: 1 Col: 8] syntax error: expected ident to be a constant",
 		},
+		{
+			Scenario:    "when statement is not VarDecl, FunDecl or ObjectDecl",
+			Code:        "10 + 10",
+			ExpectedErr: "[Lin: 1 Col: 1] syntax error: unexpected Int, expecting VarDecl, FunDecl or ObjectDecl",
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.Scenario, func(t *testing.T) {
-			testParserError(t, test.Code, test.ExpectedErr)
+			assertError(t, test.Code, test.ExpectedErr)
 		})
 	}
 }
@@ -351,55 +352,38 @@ func TestFunctionCall(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		stmts := setupTest(t, test.Code, 1)
+		stmts := setupFunBody(t, test.Code)
 
 		exprStmt := stmts[0].(*ast.ExprStmt)
 
 		callExpr := exprStmt.Expr.(*ast.CallExpr)
-		testIdent(t, callExpr.Method, test.ExpectedFunctionName)
-		testArguments(t, callExpr.Arguments, test.ExpectedArgs)
+		assetIdent(t, callExpr.Method, test.ExpectedFunctionName)
+		assertArgumentList(t, callExpr.Arguments, test.ExpectedArgs)
 	}
 }
 
 func TestParseObjectDecl(t *testing.T) {
-	stmts := setupTest(t, "object Person{}", 1)
-
-	objDecl, ok := stmts[0].(*ast.ObjectDecl)
-	if !ok {
-		t.Errorf("expected first stmt to be *ast.ObjectDecl, got %T", stmts[0])
-	}
-
-	testConst(t, objDecl.Name, "Person")
+	objDecl := setupObject(t, "object Person{}", 1)
+	assertConst(t, objDecl.Name, "Person")
 }
 
 func TestParseObjectDecl_with_Parent(t *testing.T) {
-	stmts := setupTest(t, "object Dog is Animal {}", 1)
-
-	objDecl, ok := stmts[0].(*ast.ObjectDecl)
-	if !ok {
-		t.Errorf("expected first stmt to be *ast.ObjectDecl, got %T", stmts[0])
-	}
-
-	testConst(t, objDecl.Name, "Dog")
-	testConst(t, objDecl.Parent, "Animal")
+	objDecl := setupObject(t, "object Dog is Animal {}", 1)
+	assertConst(t, objDecl.Name, "Dog")
+	assertConst(t, objDecl.Parent, "Animal")
 }
 
 func TestParseObjectDecl_withField(t *testing.T) {
 	object := `object Person {
   var name String
 }`
-	stmts := setupTest(t, object, 1)
+	objDecl := setupObject(t, object, 1)
 
-	objDecl, ok := stmts[0].(*ast.ObjectDecl)
-	if !ok {
-		t.Errorf("expected first stmt to be *ast.ObjectDecl, got %T", stmts[0])
-	}
-
-	testConst(t, objDecl.Name, "Person")
+	assertConst(t, objDecl.Name, "Person")
 
 	for _, field := range objDecl.FieldList {
-		testIdent(t, field.Type, "String")
-		testIdent(t, field.Name, "name")
+		assetIdent(t, field.Type, "String")
+		assetIdent(t, field.Name, "name")
 	}
 }
 
@@ -444,17 +428,17 @@ func TestFunDecl(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		stmts := setupTest(t, test.code, 1)
+		fun := setupFun(t, test.code, 1)
 
 		assert := func(t *testing.T, pos int, field *ast.Field) {
-			testIdent(t, field.Name, test.expectedParams[pos].name)
+			assetIdent(t, field.Name, test.expectedParams[pos].name)
 
 			if field.Value != nil {
-				testLit(t, field.Value, test.expectedParams[pos].value)
+				assertLit(t, field.Value, test.expectedParams[pos].value)
 			}
 		}
 
-		assertFunDecl(t, stmts[0], "calc", assert)
+		assertFunDecl(t, fun, "calc", assert)
 	}
 }
 
@@ -477,13 +461,13 @@ func TestFunDeclWithCatch(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		stmts := setupTest(t, test.Code, 1)
+		fun := setupFun(t, test.Code, 1)
 
-		funDecl := assertFunDecl(t, stmts[0], "walk", nil)
+		funDecl := assertFunDecl(t, fun, "walk", nil)
 
 		for i, catch := range funDecl.Catches {
-			testIdent(t, catch.Ref, test.ExpectedRef)
-			testConst(t, catch.Type, test.ExpectedTypes[i])
+			assetIdent(t, catch.Ref, test.ExpectedRef)
+			assertConst(t, catch.Type, test.ExpectedTypes[i])
 		}
 	}
 }
@@ -508,7 +492,7 @@ func TestUnaryExpr(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		stmts := setupTest(t, test.Code, 1)
+		stmts := setupFunBody(t, test.Code)
 
 		stmtExpr, ok := stmts[0].(*ast.ExprStmt)
 		if !ok {
@@ -524,13 +508,13 @@ func TestUnaryExpr(t *testing.T) {
 			t.Errorf("expected operator to be %q, got %q", test.ExpectedOperator, expr.Operator)
 		}
 
-		testLit(t, expr.Expr, test.ExpectedValue)
+		assertLit(t, expr.Expr, test.ExpectedValue)
 	}
 }
 
 func TestParseArrayLiteral(t *testing.T) {
 	code := "[1, 2, 3]"
-	stmts := setupTest(t, code, 1)
+	stmts := setupFunBody(t, code)
 
 	exprStmt, ok := stmts[0].(*ast.ExprStmt)
 	if !ok {
@@ -543,14 +527,14 @@ func TestParseArrayLiteral(t *testing.T) {
 	}
 
 	for i, el := range []string{"1", "2", "3"} {
-		testLit(t, lit.Elements[i], el)
+		assertLit(t, lit.Elements[i], el)
 	}
 }
 
 func TestParseHashLiteral(t *testing.T) {
 	code := "{ 1: 10, 2: 20 }"
 
-	stmts := setupTest(t, code, 1)
+	stmts := setupFunBody(t, code)
 
 	exprStmt, ok := stmts[0].(*ast.ExprStmt)
 	if !ok {
@@ -568,15 +552,15 @@ func TestParseHashLiteral(t *testing.T) {
 	}
 
 	for i, entry := range lit.Entries {
-		testLit(t, entry.Key, expectedKeyValues[i][0])
-		testLit(t, entry.Value, expectedKeyValues[i][1])
+		assertLit(t, entry.Key, expectedKeyValues[i][0])
+		assertLit(t, entry.Value, expectedKeyValues[i][1])
 	}
 }
 
 func TestParseIndexExpr(t *testing.T) {
 	code := "value[10]"
 
-	stmts := setupTest(t, code, 1)
+	stmts := setupFunBody(t, code)
 
 	exprStmt, ok := stmts[0].(*ast.ExprStmt)
 	if !ok {
@@ -588,13 +572,13 @@ func TestParseIndexExpr(t *testing.T) {
 		t.Errorf("expected first stmt to be *ast.IndexExpr, got %T", exprStmt.Expr)
 	}
 
-	testIdent(t, idxExpr.Expr, "value")
-	testLit(t, idxExpr.Index, "10")
+	assetIdent(t, idxExpr.Expr, "value")
+	assertLit(t, idxExpr.Index, "10")
 }
 
 func TestParseCodeBlock(t *testing.T) {
 	code := "block {}"
-	stmts := setupTest(t, code, 1)
+	stmts := setupFunBody(t, code)
 
 	exprStmt, ok := stmts[0].(*ast.ExprStmt)
 	if !ok {
@@ -647,7 +631,7 @@ func Test_ParseSuperExpr(t *testing.T) {
 
 	for _, test := range table {
 		t.Run(test.scenario, func(t *testing.T) {
-			stmts := setupTest(t, test.code, 1)
+			stmts := setupFunBody(t, test.code)
 
 			exprStmt := stmts[0].(*ast.ExprStmt)
 
@@ -661,44 +645,44 @@ func Test_ParseSuperExpr(t *testing.T) {
 }
 
 func TestParse_withStmtsInTheSameLine(t *testing.T) {
-	stmts := setupTest(t, "a = 10; b = 20", 2)
+	stmts := setupFunBody(t, "a = 10; b = 20")
+
+	if len(stmts) != 2 {
+		t.Fatalf("expected to have 2 statements, got %d", len(stmts))
+	}
 
 	first, ok := stmts[0].(*ast.AssignStmt)
 	if !ok {
 		t.Fatalf("expected ast.AssignStmt, got %T", stmts[0])
 	}
 
-	testIdent(t, first.Left[0], "a")
-	testLit(t, first.Right[0], "10")
+	assetIdent(t, first.Left[0], "a")
+	assertLit(t, first.Right[0], "10")
 
 	second, ok := stmts[1].(*ast.AssignStmt)
 	if !ok {
 		t.Fatalf("expected ast.AssignStmt, got %T", stmts[1])
 	}
 
-	testIdent(t, second.Left[0], "b")
-	testLit(t, second.Right[0], "20")
+	assetIdent(t, second.Left[0], "b")
+	assertLit(t, second.Right[0], "20")
 }
 
 func TestParseReturnStmt(t *testing.T) {
-	stmts := setupTest(t, "fun do_stuff { return 10 }", 1)
+	stmts := setupFunBody(t, "return 10")
 
-	funDecl := assertFunDecl(t, stmts[0], "do_stuff", nil)
-
-	returnStmt, ok := funDecl.Body.Stmts[0].(*ast.ReturnStmt)
+	returnStmt, ok := stmts[0].(*ast.ReturnStmt)
 	if !ok {
 		t.Errorf("expected first stmt to be *ast.ReturnStmt, got %T", stmts[0])
 	}
 
-	testLit(t, returnStmt.Value, "10")
+	assertLit(t, returnStmt.Value, "10")
 }
 
 func TestParseReturnStmt_withoutValue(t *testing.T) {
-	stmts := setupTest(t, "fun do_stuff { return }", 1)
+	stmts := setupFunBody(t, "return")
 
-	funDecl := assertFunDecl(t, stmts[0], "do_stuff", nil)
-
-	returnStmt, ok := funDecl.Body.Stmts[0].(*ast.ReturnStmt)
+	returnStmt, ok := stmts[0].(*ast.ReturnStmt)
 	if !ok {
 		t.Errorf("expected first stmt to be *ast.ReturnStmt, got %T", stmts[0])
 	}
@@ -709,7 +693,7 @@ func TestParseReturnStmt_withoutValue(t *testing.T) {
 }
 
 func TestFieldSel(t *testing.T) {
-	stmts := setupTest(t, "this.name", 1)
+	stmts := setupFunBody(t, "this.name")
 
 	exprStmt, ok := stmts[0].(*ast.ExprStmt)
 	if !ok {
@@ -721,7 +705,7 @@ func TestFieldSel(t *testing.T) {
 		t.Fatalf("expected first stmt to be *ast.FieldSel, got %T", exprStmt.Expr)
 	}
 
-	testIdent(t, fs.Name, "name")
+	assetIdent(t, fs.Name, "name")
 }
 
 func TestVarDecl(t *testing.T) {
@@ -755,21 +739,21 @@ func TestVarDecl(t *testing.T) {
 
 	for _, test := range table {
 		t.Run(test.scenario, func(t *testing.T) {
-			stmts := setupTest(t, test.input, 1)
+			stmts := setupFunBody(t, test.input)
 
 			vd, ok := stmts[0].(*ast.VarDecl)
 			if !ok {
 				t.Fatalf("expected first stmt to be *ast.VarDecl, got %T", stmts[0])
 			}
 
-			testIdent(t, vd.Name, test.expectedIdent)
+			assetIdent(t, vd.Name, test.expectedIdent)
 
 			if vd.Type != nil {
-				testIdent(t, vd.Type, test.expectedType)
+				assetIdent(t, vd.Type, test.expectedType)
 			}
 
 			if vd.Value != nil {
-				testLit(t, vd.Value, test.expectedValue)
+				assertLit(t, vd.Value, test.expectedValue)
 			}
 		})
 	}

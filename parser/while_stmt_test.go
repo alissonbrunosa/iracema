@@ -9,7 +9,7 @@ import (
 func TestParseWhileStmt(t *testing.T) {
 	code := `while value > 10 {}`
 
-	stmts := setupTest(t, code, 1)
+	stmts := setupFunBody(t, code)
 
 	whileStmt, ok := stmts[0].(*ast.WhileStmt)
 	if !ok {
@@ -21,8 +21,8 @@ func TestParseWhileStmt(t *testing.T) {
 		t.Errorf("expected to be *ast.BinaryExpr, got %T", whileStmt.Cond)
 	}
 
-	testIdent(t, predicate.Left, "value")
-	testLit(t, predicate.Right, "10")
+	assetIdent(t, predicate.Left, "value")
+	assertLit(t, predicate.Right, "10")
 
 	if predicate.Operator.Type != token.Great {
 		t.Errorf("expected operator to be token.GreaterThan, got %q", predicate.Operator)
@@ -32,7 +32,7 @@ func TestParseWhileStmt(t *testing.T) {
 func TestParseWhileStmtWithStopStmt(t *testing.T) {
 	code := "while value > 10 { stop }"
 
-	stmts := setupTest(t, code, 1)
+	stmts := setupFunBody(t, code)
 
 	whileStmt, ok := stmts[0].(*ast.WhileStmt)
 	if !ok {
@@ -44,8 +44,8 @@ func TestParseWhileStmtWithStopStmt(t *testing.T) {
 		t.Errorf("expected to be *ast.BinaryExpr, got %T", whileStmt.Cond)
 	}
 
-	testIdent(t, predicate.Left, "value")
-	testLit(t, predicate.Right, "10")
+	assetIdent(t, predicate.Left, "value")
+	assertLit(t, predicate.Right, "10")
 
 	if predicate.Operator.Type != token.Great {
 		t.Errorf("expected operator to be token.GreaterThan, got %q", predicate.Operator)

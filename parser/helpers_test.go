@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func testParserError(t *testing.T, code string, expectedErr string) {
+func assertError(t *testing.T, code string, expectedErr string) {
 	t.Helper()
 
 	input := bytes.NewBufferString(code)
@@ -21,7 +21,31 @@ func testParserError(t *testing.T, code string, expectedErr string) {
 	}
 }
 
-func setupTest(t *testing.T, code string, expectStmts int) []ast.Stmt {
+func setupFunBody(t *testing.T, code string) []ast.Stmt {
+	t.Helper()
+
+	buf := new(bytes.Buffer)
+	buf.WriteString("fun dummy() {\n")
+	buf.WriteString(code)
+	buf.WriteString("\n}")
+	file, err := Parse(buf)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if file == nil {
+		t.Fatalf("expected not to be nil")
+	}
+
+	if len(file.FunList) != 1 {
+		t.Errorf("expected FunList size to be 1, got %d", len(file.FunList))
+	}
+
+	return file.FunList[0].Body.Stmts
+}
+
+func setupFun(t *testing.T, code string, size int) *ast.FunDecl {
 	t.Helper()
 
 	input := bytes.NewBufferString(code)
@@ -35,14 +59,35 @@ func setupTest(t *testing.T, code string, expectStmts int) []ast.Stmt {
 		t.Fatalf("expected not to be nil")
 	}
 
-	if len(file.Stmts) != expectStmts {
-		t.Errorf("expected statements to be %d, got %d", expectStmts, len(file.Stmts))
+	if len(file.FunList) != size {
+		t.Fatalf("expected FunList size to be %d, got %d", size, len(file.FunList))
 	}
 
-	return file.Stmts
+	return file.FunList[0]
 }
 
-func testIdent(t *testing.T, expr ast.Expr, expectedName string) {
+func setupObject(t *testing.T, code string, size int) *ast.ObjectDecl {
+	t.Helper()
+
+	input := bytes.NewBufferString(code)
+	file, err := Parse(input)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if file == nil {
+		t.Fatalf("expected not to be nil")
+	}
+
+	if len(file.ObjectList) != size {
+		t.Fatalf("expected ObjectList to be %d, got %d", size, len(file.ObjectList))
+	}
+
+	return file.ObjectList[0]
+}
+
+func assetIdent(t *testing.T, expr ast.Expr, expectedName string) {
 	t.Helper()
 
 	ident, ok := expr.(*ast.Ident)
@@ -55,7 +100,7 @@ func testIdent(t *testing.T, expr ast.Expr, expectedName string) {
 	}
 }
 
-func testConst(t *testing.T, expr ast.Expr, expectedName string) {
+func assertConst(t *testing.T, expr ast.Expr, expectedName string) {
 	t.Helper()
 
 	ident, ok := expr.(*ast.Ident)
@@ -72,7 +117,7 @@ func testConst(t *testing.T, expr ast.Expr, expectedName string) {
 	}
 }
 
-func testArguments(t *testing.T, args []ast.Expr, expectedArgs []string) {
+func assertArgumentList(t *testing.T, args []ast.Expr, expectedArgs []string) {
 	t.Helper()
 
 	if len(args) != len(expectedArgs) {
@@ -96,7 +141,7 @@ func testArguments(t *testing.T, args []ast.Expr, expectedArgs []string) {
 	}
 }
 
-func testLit(t *testing.T, expr ast.Expr, expectedValue string) {
+func assertLit(t *testing.T, expr ast.Expr, expectedValue string) {
 	t.Helper()
 
 	lit, ok := expr.(*ast.BasicLit)
@@ -119,7 +164,7 @@ func assertFunDecl(t *testing.T, stmt ast.Stmt, name string, fn assertParam) *as
 		t.Fatalf("expected first stmt to be *ast.FunDecl, got %T", stmt)
 	}
 
-	testIdent(t, funDecl.Name, name)
+	assetIdent(t, funDecl.Name, name)
 
 	for i, field := range funDecl.Parameters {
 		fn(t, i, field)

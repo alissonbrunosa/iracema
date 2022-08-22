@@ -10,14 +10,14 @@ func TestParseSwitchStmt(t *testing.T) {
 			   case 10: puts(10)
 			 }`
 
-	stmts := setupTest(t, code, 1)
+	stmts := setupFunBody(t, code)
 
 	switchStmt, ok := stmts[0].(*ast.SwitchStmt)
 	if !ok {
 		t.Errorf("expected to be *ast.SwitchStmt, got %T", stmts[0])
 	}
 
-	testLit(t, switchStmt.Key, "10")
+	assertLit(t, switchStmt.Key, "10")
 
 	for _, cc := range switchStmt.Cases {
 		exprStmt, ok := cc.Body.Stmts[0].(*ast.ExprStmt)
@@ -26,8 +26,8 @@ func TestParseSwitchStmt(t *testing.T) {
 		}
 
 		callExpr := exprStmt.Expr.(*ast.CallExpr)
-		testIdent(t, callExpr.Method, "puts")
-		testArguments(t, callExpr.Arguments, []string{"10"})
+		assetIdent(t, callExpr.Method, "puts")
+		assertArgumentList(t, callExpr.Arguments, []string{"10"})
 	}
 
 	if switchStmt.Default != nil {
@@ -37,18 +37,18 @@ func TestParseSwitchStmt(t *testing.T) {
 
 func TestParseSwitchStmt_with_Default(t *testing.T) {
 	code := `switch 50 {
-			   case 10: puts(10)
-			   default: puts("Default")
-			 }`
+  case 10: puts(10)
+  default: puts("Default")
+}`
 
-	stmts := setupTest(t, code, 1)
+	stmts := setupFunBody(t, code)
 
 	switchStmt, ok := stmts[0].(*ast.SwitchStmt)
 	if !ok {
 		t.Errorf("expected to be *ast.SwitchStmt, got %T", stmts[0])
 	}
 
-	testLit(t, switchStmt.Key, "50")
+	assertLit(t, switchStmt.Key, "50")
 
 	for _, cc := range switchStmt.Cases {
 		exprStmt, ok := cc.Body.Stmts[0].(*ast.ExprStmt)
@@ -57,8 +57,8 @@ func TestParseSwitchStmt_with_Default(t *testing.T) {
 		}
 
 		callExpr := exprStmt.Expr.(*ast.CallExpr)
-		testIdent(t, callExpr.Method, "puts")
-		testArguments(t, callExpr.Arguments, []string{"10"})
+		assetIdent(t, callExpr.Method, "puts")
+		assertArgumentList(t, callExpr.Arguments, []string{"10"})
 	}
 
 	exprStmt, ok := switchStmt.Default.Body.Stmts[0].(*ast.ExprStmt)
@@ -67,24 +67,24 @@ func TestParseSwitchStmt_with_Default(t *testing.T) {
 	}
 
 	callExpr := exprStmt.Expr.(*ast.CallExpr)
-	testIdent(t, callExpr.Method, "puts")
-	testArguments(t, callExpr.Arguments, []string{"Default"})
+	assetIdent(t, callExpr.Method, "puts")
+	assertArgumentList(t, callExpr.Arguments, []string{"Default"})
 }
 
 func TestParseSwitchStmt_with_MultipleCases(t *testing.T) {
 	code := `switch 50 {
-			   case 10: puts(10)
-			   case 20: puts(20)
-			 }`
+  case 10: puts(10)
+  case 20: puts(20)
+}`
 
-	stmts := setupTest(t, code, 1)
+	stmts := setupFunBody(t, code)
 
 	switchStmt, ok := stmts[0].(*ast.SwitchStmt)
 	if !ok {
 		t.Errorf("expected to be *ast.SwitchStmt, got %T", stmts[0])
 	}
 
-	testLit(t, switchStmt.Key, "50")
+	assertLit(t, switchStmt.Key, "50")
 
 	params := [][]string{
 		[]string{"10"},
@@ -98,8 +98,8 @@ func TestParseSwitchStmt_with_MultipleCases(t *testing.T) {
 		}
 
 		callExpr := exprStmt.Expr.(*ast.CallExpr)
-		testIdent(t, callExpr.Method, "puts")
-		testArguments(t, callExpr.Arguments, params[i])
+		assetIdent(t, callExpr.Method, "puts")
+		assertArgumentList(t, callExpr.Arguments, params[i])
 	}
 
 	if switchStmt.Default != nil {
@@ -109,19 +109,19 @@ func TestParseSwitchStmt_with_MultipleCases(t *testing.T) {
 
 func TestParseSwitchStmt_Full(t *testing.T) {
 	code := `switch 50 {
-			   case 10: puts(10)
-			   case 20: puts(20)
-			   default: puts("Default")
-			 }`
+  case 10: puts(10)
+  case 20: puts(20)
+  default: puts("Default")
+}`
 
-	stmts := setupTest(t, code, 1)
+	stmts := setupFunBody(t, code)
 
 	switchStmt, ok := stmts[0].(*ast.SwitchStmt)
 	if !ok {
 		t.Errorf("expected to be *ast.SwitchStmt, got %T", stmts[0])
 	}
 
-	testLit(t, switchStmt.Key, "50")
+	assertLit(t, switchStmt.Key, "50")
 
 	params := [][]string{
 		[]string{"10"},
@@ -135,8 +135,8 @@ func TestParseSwitchStmt_Full(t *testing.T) {
 		}
 
 		callExpr := exprStmt.Expr.(*ast.CallExpr)
-		testIdent(t, callExpr.Method, "puts")
-		testArguments(t, callExpr.Arguments, params[i])
+		assetIdent(t, callExpr.Method, "puts")
+		assertArgumentList(t, callExpr.Arguments, params[i])
 	}
 
 	exprStmt, ok := switchStmt.Default.Body.Stmts[0].(*ast.ExprStmt)
@@ -145,13 +145,16 @@ func TestParseSwitchStmt_Full(t *testing.T) {
 	}
 
 	callExpr := exprStmt.Expr.(*ast.CallExpr)
-	testIdent(t, callExpr.Method, "puts")
-	testArguments(t, callExpr.Arguments, []string{"Default"})
+	assetIdent(t, callExpr.Method, "puts")
+	assertArgumentList(t, callExpr.Arguments, []string{"Default"})
 
 }
 
 func TestSwitch_WithInvalidBlock(t *testing.T) {
-	code := `switch 10 { puts(10) }`
+	code := `fun dummy {
+  switch 10 {
+    puts(10)
+}`
 
-	testParserError(t, code, "[Lin: 1 Col: 13] syntax error: expected case, default or }")
+	assertError(t, code, "[Lin: 3 Col: 5] syntax error: expected case, default or }")
 }

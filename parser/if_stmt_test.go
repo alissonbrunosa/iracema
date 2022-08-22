@@ -11,7 +11,7 @@ func TestParseIfStmt(t *testing.T) {
 			   "Equal"
 			 }`
 
-	stmts := setupTest(t, code, 1)
+	stmts := setupFunBody(t, code)
 
 	ifStmt, ok := stmts[0].(*ast.IfStmt)
 	if !ok {
@@ -23,8 +23,8 @@ func TestParseIfStmt(t *testing.T) {
 		t.Errorf("expected to be *ast.BinaryExpr, got %T", ifStmt.Cond)
 	}
 
-	testIdent(t, predicate.Left, "value")
-	testLit(t, predicate.Right, "10")
+	assetIdent(t, predicate.Left, "value")
+	assertLit(t, predicate.Right, "10")
 
 	if predicate.Operator.Type != token.Equal {
 		t.Errorf("expected operator to be token.Equal, got %q", predicate.Operator)
@@ -35,7 +35,7 @@ func TestParseIfStmt(t *testing.T) {
 		t.Errorf("expected to be *ast.ExprStmt, got %T", ifStmt.Then.Stmts[0])
 	}
 
-	testLit(t, exprStmt.Expr, "Equal")
+	assertLit(t, exprStmt.Expr, "Equal")
 }
 
 func TestParseIfStmtWithElse(t *testing.T) {
@@ -45,7 +45,7 @@ func TestParseIfStmtWithElse(t *testing.T) {
 			   "Not Equal"
 			 }`
 
-	stmts := setupTest(t, code, 1)
+	stmts := setupFunBody(t, code)
 
 	ifStmt, ok := stmts[0].(*ast.IfStmt)
 	if !ok {
@@ -57,8 +57,8 @@ func TestParseIfStmtWithElse(t *testing.T) {
 		t.Errorf("expected to be *ast.BinaryExpr, got %T", ifStmt.Cond)
 	}
 
-	testIdent(t, predicate.Left, "value")
-	testLit(t, predicate.Right, "10")
+	assetIdent(t, predicate.Left, "value")
+	assertLit(t, predicate.Right, "10")
 
 	if predicate.Operator.Type != token.Equal {
 		t.Errorf("expected operator to be token.Equal, got %q", predicate.Operator)
@@ -69,7 +69,7 @@ func TestParseIfStmtWithElse(t *testing.T) {
 		t.Errorf("expected to be *ast.ExprStmt, got %T", ifStmt.Then.Stmts[0])
 	}
 
-	testLit(t, exprStmt.Expr, "Equal")
+	assertLit(t, exprStmt.Expr, "Equal")
 
 	elseBlock, ok := ifStmt.Else.(*ast.BlockStmt)
 	if !ok {
@@ -80,7 +80,7 @@ func TestParseIfStmtWithElse(t *testing.T) {
 	if !ok {
 		t.Errorf("expected to be *ast.ExprStmt, got %T", elseBlock.Stmts[0])
 	}
-	testLit(t, exprStmt.Expr, "Not Equal")
+	assertLit(t, exprStmt.Expr, "Not Equal")
 }
 
 func TestParseIfStmt_WithElseIfStmt(t *testing.T) {
@@ -90,7 +90,7 @@ func TestParseIfStmt_WithElseIfStmt(t *testing.T) {
 			   "path 2"
 			 }`
 
-	stmts := setupTest(t, code, 1)
+	stmts := setupFunBody(t, code)
 
 	ifStmt, ok := stmts[0].(*ast.IfStmt)
 	if !ok {
@@ -102,8 +102,8 @@ func TestParseIfStmt_WithElseIfStmt(t *testing.T) {
 		t.Errorf("expected to be *ast.BinaryExpr, got %T", ifStmt.Cond)
 	}
 
-	testIdent(t, predicate.Left, "value")
-	testLit(t, predicate.Right, "20")
+	assetIdent(t, predicate.Left, "value")
+	assertLit(t, predicate.Right, "20")
 
 	if predicate.Operator.Type != token.Equal {
 		t.Errorf("expected operator to be token.Equal, got %q", predicate.Operator)
@@ -114,7 +114,7 @@ func TestParseIfStmt_WithElseIfStmt(t *testing.T) {
 		t.Errorf("expected to be *ast.ExprStmt, got %T", ifStmt.Then.Stmts[0])
 	}
 
-	testLit(t, exprStmt.Expr, "path 1")
+	assertLit(t, exprStmt.Expr, "path 1")
 
 	ifStmt, ok = ifStmt.Else.(*ast.IfStmt)
 	if !ok {
@@ -126,8 +126,8 @@ func TestParseIfStmt_WithElseIfStmt(t *testing.T) {
 		t.Errorf("expected to be *ast.BinaryExpr, got %T", ifStmt.Cond)
 	}
 
-	testIdent(t, predicate.Left, "value")
-	testLit(t, predicate.Right, "30")
+	assetIdent(t, predicate.Left, "value")
+	assertLit(t, predicate.Right, "30")
 
 	if predicate.Operator.Type != token.Equal {
 		t.Errorf("expected operator to be token.Equal, got %q", predicate.Operator)
@@ -138,11 +138,15 @@ func TestParseIfStmt_WithElseIfStmt(t *testing.T) {
 		t.Errorf("expected to be *ast.ExprStmt, got %T", ifStmt.Then.Stmts[0])
 	}
 
-	testLit(t, exprStmt.Expr, "path 2")
+	assertLit(t, exprStmt.Expr, "path 2")
 }
 
 func TestIfWithInvalidElseBlock(t *testing.T) {
-	code := `if value == 20 { puts("path 1") } else 100`
+	code := `fun dummy() {
+  if value == 20 {
+    puts("path 1")
+  } else 100
+}`
 
-	testParserError(t, code, "[Lin: 1 Col: 40] syntax error: expected left brace or if statement")
+	assertError(t, code, "[Lin: 4 Col: 10] syntax error: expected left brace or if statement")
 }

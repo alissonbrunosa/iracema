@@ -29,11 +29,33 @@ type stmt struct{ node }
 func (*stmt) aStmt() {}
 
 type File struct {
-	Imports []string
-	Name    string
-	Stmts   []Stmt
+	Name       string
+	Imports    []string
+	ObjectList []*ObjectDecl
+	VarList    []*VarDecl
+	FunList    []*FunDecl
 
 	stmt
+}
+
+func (f *File) String() string {
+	var buf strings.Builder
+
+	for _, v := range f.VarList {
+		buf.WriteString(v.String())
+	}
+
+	buf.WriteByte('\n')
+	for _, f := range f.FunList {
+		buf.WriteString(f.String())
+	}
+
+	buf.WriteByte('\n')
+	for _, o := range f.ObjectList {
+		buf.WriteString(o.String())
+	}
+
+	return buf.String()
 }
 
 type Import struct {
@@ -43,16 +65,6 @@ type Import struct {
 }
 
 func (i *Import) String() string { return i.Name }
-
-func (f *File) String() string {
-	var buf strings.Builder
-
-	for _, s := range f.Stmts {
-		buf.WriteString(s.String())
-	}
-
-	return buf.String()
-}
 
 type BlockStmt struct {
 	Stmts []Stmt

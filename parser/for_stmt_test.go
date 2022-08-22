@@ -7,14 +7,13 @@ import (
 
 func TestParseForStmt(t *testing.T) {
 	code := `for el in elements {}`
-
-	stmts := setupTest(t, code, 1)
+	stmts := setupFunBody(t, code)
 
 	forStmt, ok := stmts[0].(*ast.ForStmt)
 	if !ok {
 		t.Errorf("expected to be *ast.ForStmt, got %T", stmts[0])
 	}
 
-	testIdent(t, forStmt.Element, "el")
-	testIdent(t, forStmt.Iterable, "elements")
+	assetIdent(t, forStmt.Element, "el")
+	assetIdent(t, forStmt.Iterable, "elements")
 }
