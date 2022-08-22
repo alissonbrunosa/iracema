@@ -67,7 +67,7 @@ func (f *frame) NewObjectFrame(this lang.IrObject, meth *lang.Method) *frame {
 
 func (f *frame) NewFrame(this lang.IrObject, argc byte, meth *lang.Method, flags byte) *frame {
 	locals := meth.LocalCount() - meth.Arity()
-	for i := f.stackPointer; i <= f.stackPointer+locals; i++ {
+	for i := f.stackPointer; i < f.stackPointer+locals; i++ {
 		f.stack[i] = lang.None
 	}
 
