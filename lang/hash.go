@@ -194,7 +194,7 @@ func InitHash() {
 	HashClass.AddGoMethod("get", oneArg(hashLookup))
 	HashClass.AddGoMethod("key?", oneArg(hashHasKey))
 	HashClass.AddGoMethod("keys", zeroArgs(hashKeys))
-	HashClass.AddGoMethod("keys", zeroArgs(hashValues))
+	HashClass.AddGoMethod("values", zeroArgs(hashValues))
 	HashClass.AddGoMethod("size", zeroArgs(hashSize))
 	HashClass.AddGoMethod("values_at", nArgs(hashValuesAt))
 	HashClass.AddGoMethod("inspect", zeroArgs(hashInspect))

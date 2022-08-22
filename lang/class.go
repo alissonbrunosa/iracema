@@ -32,6 +32,7 @@ type Class struct {
 
 	name      string
 	super     *Class
+	fields    map[string]byte
 	methods   map[string]*Method
 	allocator func(*Class) IrObject
 }
@@ -66,6 +67,12 @@ func (c *Class) LookupMethod(name string) *Method {
 	return nil
 }
 
+func (c *Class) AddField(name IrObject) {
+	pos := len(c.fields)
+	n := GoString(name)
+	c.fields[n] = byte(pos)
+}
+
 func (c *Class) AddMethod(name string, fun *Method) {
 	c.methods[name] = fun
 }
@@ -86,6 +93,7 @@ func NewClass(name string, super *Class) *Class {
 	return &Class{
 		name:    name,
 		super:   super,
+		fields:  make(map[string]byte),
 		methods: make(map[string]*Method),
 
 		base: &base{class: irClass},

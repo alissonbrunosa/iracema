@@ -13,16 +13,21 @@ func checkObject(obj IrObject) (*Object, *ErrorObject) {
 	return o, nil
 }
 
-func SetAttr(obj IrObject, attr IrObject, value IrObject) (err *ErrorObject) {
-	var object *Object
-
-	if object, err = checkObject(obj); err != nil {
+func SetAttr(obj IrObject, attr IrObject, value IrObject) *ErrorObject {
+	object, err := checkObject(obj)
+	if err != nil {
 		return err
 	}
 
-	name := unwrapString(attr)
-	object.Set(string(name), value)
-	return
+	class := obj.Class()
+	name := GoString(attr)
+	pos, ok := class.fields[name]
+	if !ok {
+		return NewError("'%s' object has no field '%s'", RuntimeError, class, name)
+	}
+
+	object.Set(pos, value)
+	return nil
 }
 
 func GetAttr(obj IrObject, attr IrObject) (IrObject, *ErrorObject) {
@@ -33,6 +38,12 @@ func GetAttr(obj IrObject, attr IrObject) (IrObject, *ErrorObject) {
 		return nil, err
 	}
 
-	name := unwrapString(attr)
-	return object.Get(string(name)), nil
+	class := obj.Class()
+	name := GoString(attr)
+	pos, ok := class.fields[name]
+	if !ok {
+		return nil, NewError("'%s' object has no field '%s'", RuntimeError, class, name)
+	}
+
+	return object.Get(pos), nil
 }

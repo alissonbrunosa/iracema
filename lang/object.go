@@ -54,15 +54,15 @@ func objectUnaryNot(rt Runtime, this IrObject) IrObject {
 type Object struct {
 	*base
 
-	attrs map[string]IrObject
+	values []IrObject
 }
 
-func (o *Object) Set(name string, value IrObject) {
-	o.attrs[name] = value
+func (o *Object) Set(pos byte, value IrObject) {
+	o.values[pos] = value
 }
 
-func (o *Object) Get(name string) IrObject {
-	return o.attrs[name]
+func (o *Object) Get(pos byte) IrObject {
+	return o.values[pos]
 }
 
 func (o *Object) String() string {
@@ -86,8 +86,8 @@ func InitObject() {
 
 	ObjectClass.allocator = func(class *Class) IrObject {
 		return &Object{
-			base:  &base{class: class},
-			attrs: make(map[string]IrObject, 3),
+			base:   &base{class: class},
+			values: make([]IrObject, len(class.fields)),
 		}
 	}
 
