@@ -148,7 +148,7 @@ func (i *Interpreter) dispatch() (lang.IrObject, error) {
 			i.Push(val)
 			goto next_instr
 
-		case bytecode.SetAttr:
+		case bytecode.SetField:
 			attr := constants[operand]
 			value := i.Pop()
 
@@ -159,7 +159,7 @@ func (i *Interpreter) dispatch() (lang.IrObject, error) {
 
 			goto next_instr
 
-		case bytecode.GetAttr:
+		case bytecode.GetField:
 			attr := constants[operand]
 
 			value, err := lang.GetAttr(this, attr)
@@ -195,6 +195,12 @@ func (i *Interpreter) dispatch() (lang.IrObject, error) {
 			lang.DefineType(body.Name(), class)
 			i.PushObjectFrame(class, body)
 			goto start_frame
+
+		case bytecode.DefineField:
+			class := i.class
+			name := constants[operand]
+			class.AddField(name)
+			goto next_instr
 
 		case bytecode.DefineFunction:
 			class := i.class
