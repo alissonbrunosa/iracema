@@ -719,3 +719,54 @@ func TestFieldSel(t *testing.T) {
 
 	testIdent(t, fs.Name, "name")
 }
+
+func TestVarDecl(t *testing.T) {
+	table := []struct {
+		scenario      string
+		input         string
+		expectedIdent string
+		expectedType  string
+		expectedValue string
+	}{
+		{
+			scenario:      "without value",
+			input:         "var age Int",
+			expectedIdent: "age",
+			expectedType:  "Int",
+		},
+		{
+			scenario:      "with value",
+			input:         "var age Int = 40",
+			expectedIdent: "age",
+			expectedType:  "Int",
+			expectedValue: "40",
+		},
+		{
+			scenario:      "without type with value",
+			input:         "var age = 40",
+			expectedIdent: "age",
+			expectedValue: "40",
+		},
+	}
+
+	for _, test := range table {
+		t.Run(test.scenario, func(t *testing.T) {
+			stmts := setupTest(t, test.input, 1)
+
+			vd, ok := stmts[0].(*ast.VarDecl)
+			if !ok {
+				t.Fatalf("expected first stmt to be *ast.VarDecl, got %T", stmts[0])
+			}
+
+			testIdent(t, vd.Name, test.expectedIdent)
+
+			if vd.Type != nil {
+				testIdent(t, vd.Type, test.expectedType)
+			}
+
+			if vd.Value != nil {
+				testLit(t, vd.Value, test.expectedValue)
+			}
+		})
+	}
+}
