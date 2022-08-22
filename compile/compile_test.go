@@ -790,7 +790,7 @@ func TestCompileFunDecl(t *testing.T) {
 		expect(bytecode.Return),
 	}
 
-	code := "fun div(a, b) { a / b } catch(err: ZeroDivisionError) { puts(err) }"
+	code := "fun div(a Int, b Int) { a / b } catch(err: ZeroDivisionError) { puts(err) }"
 
 	meth := compile(code)
 	for i, instr := range meth.Instrs() {
@@ -815,7 +815,7 @@ func TestCompileFunDecl_withCallSuperImplictArgs(t *testing.T) {
 		expect(bytecode.Return),
 	}
 
-	meth := compile("fun do_stuff(a, b) { super }")
+	meth := compile("fun do_stuff(a Int, b Int) { super }")
 	for i, instr := range meth.Instrs() {
 		top[i].Match(t, instr, meth.Constants())
 	}
@@ -838,7 +838,7 @@ func TestCompileFunDecl_withCallSuperImplicitArgs(t *testing.T) {
 		expect(bytecode.Return),
 	}
 
-	meth := compile("fun do_stuff(a, b) { super }")
+	meth := compile("fun do_stuff(a Int, b Int) { super }")
 	for i, instr := range meth.Instrs() {
 		top[i].Match(t, instr, meth.Constants())
 	}
@@ -861,7 +861,7 @@ func TestCompileFunDecl_withCallSuperExplicitArgs(t *testing.T) {
 		expect(bytecode.Return),
 	}
 
-	meth := compile("fun do_stuff(a, b) { super(a, 10) }")
+	meth := compile("fun do_stuff(a Int, b Int) { super(a, 10) }")
 	for i, instr := range meth.Instrs() {
 		top[i].Match(t, instr, meth.Constants())
 	}
@@ -926,7 +926,7 @@ func TestCompileFunDecl_withDefaultParams(t *testing.T) {
 		expect(bytecode.Return),
 	}
 
-	fun := compile("fun sum(a = 10, b) {}")
+	fun := compile("fun sum(a Int = 10, b Int) {}")
 
 	for i, instr := range fun.Instrs() {
 		top[i].Match(t, instr, fun.Constants())

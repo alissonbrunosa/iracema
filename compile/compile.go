@@ -275,18 +275,20 @@ func (c *compiler) compileStmt(stmt ast.Stmt) error {
 	case *ast.ExprStmt:
 		return c.compileExpr(node.Expr, false)
 
+	case *ast.VarDecl:
+		local := c.defineLocal(node.Name, false)
+		if node.Value != nil {
+			if err := c.compileExpr(node.Value, true); err != nil {
+				return err
+			}
+			local.initialized = true
+			c.add(bytecode.SetLocal, local.index)
+		}
+
 	case *ast.AssignStmt:
 		for i, value := range node.Right {
 			switch lhs := node.Left[i].(type) {
 			case *ast.Ident:
-				if lhs.IsAttr() {
-					if err := c.compileExpr(value, true); err != nil {
-						return err
-					}
-					c.add(bytecode.SetAttr, c.addConstant(lhs.Value))
-					continue
-				}
-
 				local := c.defineLocal(lhs, false)
 				if err := c.compileExpr(value, true); err != nil {
 					return err
@@ -310,6 +312,11 @@ func (c *compiler) compileStmt(stmt ast.Stmt) error {
 				ci := lang.NewCallInfo("insert", 2)
 				c.add(bytecode.CallMethod, c.addConstant(ci))
 				c.add(bytecode.Pop, 0)
+			case *ast.FieldSel:
+				if err := c.compileExpr(value, true); err != nil {
+					return err
+				}
+				c.add(bytecode.SetField, c.addConstant(lhs.Name.Value))
 			}
 		}
 
@@ -350,11 +357,6 @@ func (c *compiler) compileStmt(stmt ast.Stmt) error {
 func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) error {
 	switch node := expr.(type) {
 	case *ast.Ident:
-		if node.IsAttr() {
-			c.add(bytecode.GetAttr, c.addConstant(node.Value))
-			return nil
-		}
-
 		if node.IsConstant() {
 			c.add(bytecode.GetConstant, c.addConstant(node.Value))
 			return nil
@@ -467,6 +469,9 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) error {
 		if !isEvaluated {
 			c.add(bytecode.Pop, 0)
 		}
+
+	case *ast.FieldSel:
+		c.add(bytecode.GetField, c.addConstant(node.Name.Value))
 
 	default:
 		return errors.New("unknown expr: " + expr.String())
@@ -837,7 +842,7 @@ func (c *compiler) closeScope() {
 
 func (c *compiler) compileObjectDecl(obj *ast.ObjectDecl) error {
 	if c.scope != TOP_SCOPE {
-		return errors.New("can only there declare object in the top most scope")
+		return errors.New("can only declare an object in the top most scope")
 	}
 
 	if obj.Parent != nil {
@@ -847,10 +852,19 @@ func (c *compiler) compileObjectDecl(obj *ast.ObjectDecl) error {
 	}
 
 	c.openScope(obj.Name.Value, OBJECT_SCOPE)
-	if err := c.compileBlock(obj.Body, true); err != nil {
-		return err
+
+	for _, field := range obj.FieldList {
+		c.add(bytecode.DefineField, c.addConstant(field.Name.Value))
 	}
 
+	for _, fun := range obj.FunList {
+		if err := c.compileFunDecl(fun); err != nil {
+			return err
+		}
+	}
+
+	c.add(bytecode.PushNone, 0)
+	c.add(bytecode.Return, 0)
 	objBody := c.assemble()
 	c.closeScope()
 

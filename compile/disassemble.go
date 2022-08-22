@@ -29,7 +29,7 @@ func (c *compiler) Disassemble(file *ast.File) {
 				fmt.Printf("%04d ", i)
 				i += 2
 				switch ins.opcode {
-				case bytecode.Push, bytecode.MatchType, bytecode.GetConstant, bytecode.LoadFile:
+				case bytecode.Push, bytecode.MatchType, bytecode.GetConstant, bytecode.LoadFile, bytecode.DefineField:
 					fmt.Fprintf(w, "%-30s%s\n", ins.opcode, fragment.consts[ins.operand])
 				case bytecode.CallMethod, bytecode.CallSuper:
 					ci := fragment.consts[ins.operand].(*lang.CallInfo)
@@ -38,11 +38,13 @@ func (c *compiler) Disassemble(file *ast.File) {
 					fmt.Fprintf(w, "%-30s%s\n", ins.opcode, fragment.locals[ins.operand])
 				case bytecode.JumpIfFalse, bytecode.Jump, bytecode.JumpIfTrue:
 					fmt.Fprintf(w, "%-30s%d\n", ins.opcode, ins.operand*2)
-				case bytecode.DefineObject:
+				case bytecode.DefineObject, bytecode.DefineFunction:
 					m := fragment.consts[ins.operand].(*lang.Method)
 					fmt.Fprintf(w, "%-30s%s\n", ins.opcode, m.Name())
 				case bytecode.BuildArray, bytecode.BuildHash:
 					fmt.Fprintf(w, "%-30ssize: %d\n", ins.opcode, ins.operand)
+				case bytecode.GetField:
+					fmt.Fprintf(w, "%-30s%q\n", ins.opcode, fragment.consts[ins.operand])
 				default:
 					fmt.Fprintln(w, ins.opcode)
 				}
