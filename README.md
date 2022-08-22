@@ -6,7 +6,7 @@
 
 ```iracema
 object Lang {
-  fun init(name) {
+  fun init(name String) {
     puts("called when object is created")
   }
 
