@@ -297,13 +297,7 @@ func TestParseCallExpr(t *testing.T) {
 	}
 }
 
-func TestInvalidObjectDecl(t *testing.T) {
-	code := `object car {}`
-
-	testParserError(t, code, "[Lin: 1 Col: 8] syntax error: expected ident to be a constant")
-}
-
-func TestInvalidFunDecl(t *testing.T) {
+func TestErrorParse(t *testing.T) {
 	tests := []struct {
 		Scenario    string
 		Code        string
@@ -318,6 +312,16 @@ func TestInvalidFunDecl(t *testing.T) {
 			Scenario:    "Missing closing brace",
 			Code:        "fun name {\n",
 			ExpectedErr: "[Lin: 2 Col: 1] syntax error: expected '}', found 'EOF'",
+		},
+		{
+			Scenario:    "var decl without type and value",
+			Code:        "var a",
+			ExpectedErr: "[Lin: 1 Col: 5] syntax error: expected 'Ident', found 'EOF'",
+		},
+		{
+			Scenario:    "object declaration without a constant",
+			Code:        "object car {}",
+			ExpectedErr: "[Lin: 1 Col: 8] syntax error: expected ident to be a constant",
 		},
 	}
 
