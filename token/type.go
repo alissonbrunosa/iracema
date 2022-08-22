@@ -30,6 +30,7 @@ const (
 	And     // and
 	This    // this
 	Use     // use
+	Var     // var
 
 	Int    // Int
 	Float  // Float
