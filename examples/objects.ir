@@ -11,13 +11,12 @@ puts(l.name)
 
 # With "constructor"
 object Person {
-  fun init(name) {
+  fun init(name String) {
     puts(name)
   }
 }
 
 Person.new("John")
-
 
 # inheritance
 object Animal {
@@ -26,13 +25,21 @@ object Animal {
   }
 }
 
-object Dog is Animal {
+object Dog  is Animal {
+  var name String
+  var age  Int
+
+  fun init(name String, age Int){
+    this.name = name
+    this.age = age
+  }
+
   fun walk {
     puts("Dog walking")
   }
 }
 
-d = Dog.new
+d = Dog.new("Miuda", 16)
 d.make_noise # prints "animal making noise"
 d.walk       # prints "Dog walking"
 
