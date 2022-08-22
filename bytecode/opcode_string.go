@@ -14,8 +14,8 @@ func _() {
 	_ = x[Throw-3]
 	_ = x[Return-4]
 	_ = x[PushNone-5]
-	_ = x[SetAttr-6]
-	_ = x[GetAttr-7]
+	_ = x[SetField-6]
+	_ = x[GetField-7]
 	_ = x[PushThis-8]
 	_ = x[SetLocal-9]
 	_ = x[GetLocal-10]
@@ -27,19 +27,20 @@ func _() {
 	_ = x[SetConstant-16]
 	_ = x[GetConstant-17]
 	_ = x[DefineObject-18]
-	_ = x[DefineFunction-19]
-	_ = x[Jump-20]
-	_ = x[JumpIfFalse-21]
-	_ = x[JumpIfTrue-22]
-	_ = x[Iterate-23]
-	_ = x[NewIterator-24]
-	_ = x[LoadFile-25]
-	_ = x[WithCatch-26]
+	_ = x[DefineField-19]
+	_ = x[DefineFunction-20]
+	_ = x[Jump-21]
+	_ = x[JumpIfFalse-22]
+	_ = x[JumpIfTrue-23]
+	_ = x[Iterate-24]
+	_ = x[NewIterator-25]
+	_ = x[LoadFile-26]
+	_ = x[WithCatch-27]
 }
 
-const _Opcode_name = "NOPPOPPUSHTHROWRETURNPUSH_NONESET_ATTRGET_ATTRPUSH_THISSET_LOCALGET_LOCALMATCH_TYPEBUILD_ARRAYBUILD_HASHCALL_METHODCALL_SUPERSET_CONSTANTGET_CONSTANTDEFINE_OBJECTDEFINE_FUNCTIONJUMPJUMP_IF_FALSEJUMP_IF_TRUEITERATENEWITERATORLOAD_FILEWITH_CATCH"
+const _Opcode_name = "NOPPOPPUSHTHROWRETURNPUSH_NONESET_FIELDGET_FIELDPUSH_THISSET_LOCALGET_LOCALMATCH_TYPEBUILD_ARRAYBUILD_HASHCALL_METHODCALL_SUPERSET_CONSTANTGET_CONSTANTDEFINE_OBJECTDEFINE_FIELDDEFINE_FUNCTIONJUMPJUMP_IF_FALSEJUMP_IF_TRUEITERATENEWITERATORLOAD_FILEWITH_CATCH"
 
-var _Opcode_index = [...]uint8{0, 3, 6, 10, 15, 21, 30, 38, 46, 55, 64, 73, 83, 94, 104, 115, 125, 137, 149, 162, 177, 181, 194, 206, 213, 224, 233, 243}
+var _Opcode_index = [...]uint16{0, 3, 6, 10, 15, 21, 30, 39, 48, 57, 66, 75, 85, 96, 106, 117, 127, 139, 151, 164, 176, 191, 195, 208, 220, 227, 238, 247, 257}
 
 func (i Opcode) String() string {
 	if i >= Opcode(len(_Opcode_index)-1) {

@@ -10,8 +10,8 @@ const (
 	Throw                        // THROW
 	Return                       // RETURN
 	PushNone                     // PUSH_NONE
-	SetAttr                      // SET_ATTR
-	GetAttr                      // GET_ATTR
+	SetField                     // SET_FIELD
+	GetField                     // GET_FIELD
 	PushThis                     // PUSH_THIS
 	SetLocal                     // SET_LOCAL
 	GetLocal                     // GET_LOCAL
@@ -23,6 +23,7 @@ const (
 	SetConstant                  // SET_CONSTANT
 	GetConstant                  // GET_CONSTANT
 	DefineObject                 // DEFINE_OBJECT
+	DefineField                  // DEFINE_FIELD
 	DefineFunction               // DEFINE_FUNCTION
 	Jump                         // JUMP
 	JumpIfFalse                  // JUMP_IF_FALSE
