@@ -89,38 +89,38 @@ func (tc *typechecker) check() ErrList {
 	return tc.errs
 }
 
-func (tc *typechecker) checkStatement(stmts []ast.Stmt) {
-	for _, stmt := range stmts {
-		switch s := stmt.(type) {
+func (tc *typechecker) checkStmt(stmt ast.Stmt) {
+	switch node := stmt.(type) {
+	case *ast.VarDecl:
+		tc.checkLetDecl(node)
 
-		case *ast.VarDecl:
-			tc.checkLetDecl(s)
+	case *ast.AssignStmt:
+		tc.checkAssignStmt(node)
 
-		case *ast.AssignStmt:
-			tc.checkAssignStmt(s)
+	case *ast.ReturnStmt:
+		tc.checkReturnStmt(node)
 
-		case *ast.ReturnStmt:
-			tc.checkReturnStmt(s)
+	case *ast.ExprStmt:
+		tc.checkExpr(node.Expr)
 
-		case *ast.ExprStmt:
-			tc.checkExpr(s.Expr)
+	case *ast.IfStmt:
+		tc.checkIfStmt(node)
 
-		case *ast.IfStmt:
-			//TODO: check this
+	case *ast.ForStmt:
+		// TODO: check this as well
 
-		case *ast.ForStmt:
-			// TODO: check this as well
+	case *ast.WhileStmt:
+		// TODO: check this as well
 
-		case *ast.WhileStmt:
-			// TODO: check this as well
+	case *ast.SwitchStmt:
+		// TODO: check this as well
 
-		case *ast.SwitchStmt:
-			// TODO: check this as well
+	case *ast.BlockStmt:
+		tc.checkBlockStmt(node)
 
-		default:
-			fmt.Printf("%+v\n", s)
-			panic("unreacheble")
-		}
+	default:
+		fmt.Printf("%+v -> %T\n", node, node)
+		panic("unreacheble")
 	}
 }
 
@@ -140,7 +140,7 @@ func (tc *typechecker) checkFunDecl(fun *ast.FunDecl) {
 		tc.env[param.Name.Value] = tc.sig.params[i]
 	}
 
-	tc.checkBodyStmt(fun.Body)
+	tc.checkBlockStmt(fun.Body)
 	if tc.sig.ret != NONE && !tc.hasReturn(fun.Body) {
 		tc.errorf(fun, "missing return for function: %s", fun.Name.Value)
 	}
@@ -197,8 +197,10 @@ func (tc *typechecker) checkObjectDecl(obj *ast.ObjectDecl) {
 	}
 }
 
-func (tc *typechecker) checkBodyStmt(body *ast.BlockStmt) {
-	tc.checkStatement(body.Stmts)
+func (tc *typechecker) checkBlockStmt(body *ast.BlockStmt) {
+	for _, stmt := range body.Stmts {
+		tc.checkStmt(stmt)
+	}
 }
 
 func (tc *typechecker) checkLetDecl(let *ast.VarDecl) {
@@ -373,10 +375,25 @@ func (tc *typechecker) checkReturnStmt(ret *ast.ReturnStmt) {
 		return
 	}
 
-	valueType := tc.checkExpr(ret.Value)
+	if ret.Value != nil {
+		valueType := tc.checkExpr(ret.Value)
 
-	if !valueType.Is(tc.sig.ret) {
-		tc.errorf(ret.Value, "cannot use '%s' as '%s' value in return statement", valueType, tc.sig.ret)
+		if !valueType.Is(tc.sig.ret) {
+			tc.errorf(ret.Value, "cannot use '%s' as '%s' value in return statement", valueType, tc.sig.ret)
+		}
+	}
+}
+
+func (tc *typechecker) checkIfStmt(ifStmt *ast.IfStmt) {
+	condType := tc.checkExpr(ifStmt.Cond)
+
+	if condType != BOOL {
+		tc.errorf(ifStmt.Cond, "expected 'Bool', found '%s'", condType)
+	}
+
+	tc.checkBlockStmt(ifStmt.Then)
+	if ifStmt.Else != nil {
+		tc.checkStmt(ifStmt.Else)
 	}
 }
 

@@ -144,3 +144,24 @@ func TestBinaryExpr(t *testing.T) {
 	assertError(t, Check(fileAST), expectedErrors)
 
 }
+
+func TestIfStmt(t *testing.T) {
+	expectedErrors := []string{
+		"[Lin: 3 Col: 11] expected 'Bool', found 'Int'",
+		"[Lin: 47 Col: 8] expected 'Bool', found 'Float'",
+	}
+
+	file, err := os.Open("testdata/ifstmt.ir")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+
+	fileAST, err := parser.Parse(file)
+	if err != nil {
+		t.Errorf("expected no error: %s", err.Error())
+	}
+
+	assertError(t, Check(fileAST), expectedErrors)
+
+}
