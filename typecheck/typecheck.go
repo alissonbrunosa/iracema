@@ -447,7 +447,9 @@ func (tc *typechecker) defineObject(decl *ast.ObjectDecl) Type {
 				ret:    retType,
 			}
 
-			objType.addMethod(sig)
+			if m := objType.addMethod(sig); m != nil {
+				tc.errorf(f, "method %s is already defined in object %s", sig.name, objType)
+			}
 		}
 
 		objType.complete()
