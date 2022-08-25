@@ -67,7 +67,8 @@ type Import struct {
 func (i *Import) String() string { return i.Name }
 
 type BlockStmt struct {
-	Stmts []Stmt
+	Stmts      []Stmt
+	RightBrace *token.Token
 
 	stmt
 }
@@ -132,6 +133,7 @@ type Field struct {
 func (f *Field) String() string { return "ast.Field" }
 
 type VarDecl struct {
+	Token *token.Token
 	Name  *Ident
 	Type  *Ident
 	Value Expr
@@ -362,6 +364,7 @@ type BlockExpr struct {
 func (*BlockExpr) String() string { return "CodeBlock" }
 
 type CallExpr struct {
+	LeftParen *token.Token
 	Receiver  Expr
 	Method    *Ident
 	Arguments []Expr

@@ -209,9 +209,10 @@ func (p *parser) parseObjectDecl() *ast.ObjectDecl {
 }
 
 func (p *parser) parseVarDecl() *ast.VarDecl {
-	p.expect(token.Var)
+	varTok := p.expect(token.Var)
 
 	decl := new(ast.VarDecl)
+	decl.Token = varTok
 	decl.Name = p.parseIdent()
 	if p.consume(token.Assign) {
 		decl.Value = p.parseExpr()
@@ -262,10 +263,11 @@ func (p *parser) parseCatchList() (list []*ast.CatchDecl) {
 
 func (p *parser) parseBlockStmt() *ast.BlockStmt {
 	p.expect(token.LeftBrace)
-	stmts := p.parseStmtList()
-	p.expect(token.RightBrace)
 
-	return &ast.BlockStmt{Stmts: stmts}
+	return &ast.BlockStmt{
+		Stmts:      p.parseStmtList(),
+		RightBrace: p.expect(token.RightBrace),
+	}
 }
 
 func (p *parser) parseIfStmt() ast.Stmt {
@@ -567,10 +569,6 @@ func (p *parser) parseCallExpr(receiver ast.Expr) ast.Expr {
 }
 
 func (p *parser) parseArgumentList() (list []ast.Expr) {
-	if !p.at(token.LeftParen) {
-		return
-	}
-
 	p.expect(token.LeftParen)
 	for p.tok.Type != token.RightParen && p.tok.Type != token.EOF {
 		list = append(list, p.parseExpr())
@@ -581,7 +579,6 @@ func (p *parser) parseArgumentList() (list []ast.Expr) {
 	}
 
 	p.expect(token.RightParen)
-
 	return
 }
 

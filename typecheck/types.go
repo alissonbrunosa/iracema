@@ -1,34 +1,60 @@
 package typecheck
 
+type Type interface {
+	Name() string
+	Is(Type) bool
+	LookupMethod(string) *signature
+}
+
 var (
-	INT     Type
-	FLOAT   Type
-	BOOL    Type
-	NONE    Type
-	STRING  Type
-	INVALID Type
+	INT     *object
+	FLOAT   *object
+	BOOL    *object
+	NONE    *object
+	STRING  *object
+	OBJECT  *object
+	SCRIPT  *object
+	INVALID *object
 )
 
 var LIT_TYPES map[string]Type
 
-func define(name string) Type {
-	obj := &object{name: name}
-	return obj
-}
-
 func init() {
-	INT = define("Int")
-	FLOAT = define("Float")
-	BOOL = define("Bool")
-	NONE = define("None")
-	STRING = define("String")
-	INVALID = define("INVALID")
+	OBJECT = &object{name: "Object", parent: nil}
+	INT = &object{name: "Int", parent: OBJECT}
+	FLOAT = &object{name: "Float", parent: OBJECT}
+	BOOL = &object{name: "Bool", parent: OBJECT}
+	NONE = &object{name: "None", parent: OBJECT}
+	STRING = &object{name: "String", parent: OBJECT}
+	INVALID = &object{name: "INVALID", parent: nil}
+
+	OBJECT.defineMethodSet(
+		[]*signature{
+			{name: "new", params: nil, ret: OBJECT},
+			{name: "==", params: []Type{OBJECT}, ret: BOOL},
+			{name: "!=", params: []Type{OBJECT}, ret: BOOL},
+			{name: "hash", params: nil, ret: INT},
+			{name: "puts", params: []Type{OBJECT}, ret: NONE},
+			{name: "object_id", params: nil, ret: INT},
+			{name: "inspect", params: nil, ret: STRING},
+			{name: "to_str", params: nil, ret: STRING},
+			{name: "nil?", params: nil, ret: BOOL},
+			{name: "unot", params: nil, ret: OBJECT},
+		},
+	)
+
+	SCRIPT = &object{
+		name:      "Script",
+		parent:    OBJECT,
+		methodSet: make(map[string]*signature),
+	}
 
 	LIT_TYPES = map[string]Type{
 		"Int":    INT,
 		"Float":  FLOAT,
 		"Bool":   BOOL,
 		"String": STRING,
+		"Object": OBJECT,
 		"None":   NONE,
 	}
 }

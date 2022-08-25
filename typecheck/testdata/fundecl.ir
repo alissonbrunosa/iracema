@@ -1,0 +1,94 @@
+object FunDeclTest {
+  fun one() -> Int {
+    return 10
+  }
+
+  fun two() -> String {
+    return ""
+  }
+
+  fun three() -> Bool {
+    return false
+  }
+
+  fun four() {
+    if true {
+      return
+    }
+  }
+
+  fun five() -> Int {
+    if true {
+      return 10
+    } else {
+      return 20
+    }
+  }
+
+  fun six(x Int) -> Int {
+    switch x {
+      case 10: return 10
+      case 20: return 20
+      default: return 30
+    }
+  }
+
+  # Invalid return
+
+  fun sever() -> Int {
+    return ""
+  }
+
+  fun eight() -> Float {
+    return 1
+  }
+
+  # Missing Return
+
+  fun nine() -> Int {
+  }
+
+  fun ten() -> Float {
+    if true {
+      return 10.540
+    }
+  }
+
+  fun eleven(str String) -> String {
+    for e in str {
+      return e
+    }
+  }
+
+  fun twelve() -> String {
+    switch 10 {
+      case 10:
+        return ""
+    }
+  }
+
+  fun thirteen(x Int) -> Float {
+    if x == 10 {
+      return 1.0
+    } else if x < 10 {
+      return 2.0
+    }
+  }
+
+
+  fun fourteen(x Int) -> Float {
+    if x == 10 {
+      return 1.0
+    } else if x < 10 {
+      return 2.0
+    } else {
+      one()
+    }
+  }
+
+  # Return when nothign is expected
+
+  fun fiveteen() {
+    return 10
+  }
+}

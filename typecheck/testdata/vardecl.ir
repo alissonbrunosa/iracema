@@ -1,0 +1,11 @@
+## assign string to int variable in declaration
+var a Int = ""
+
+## assign Float to int variable in declaration
+var a Int = 30.40
+
+## assign Int to Float variable in declaration
+var a Float = 3
+
+## assign bool to variable of type String
+var x String = 10

@@ -1,89 +1,117 @@
 package typecheck
 
 import (
-	"bytes"
 	"iracema/parser"
+	"os"
 	"testing"
 )
 
-func assertError(t *testing.T, err error, expected string) {
+func assertError(t *testing.T, err ErrList, expected []string) {
 	t.Helper()
 
-	if err.Error() != expected {
-		t.Errorf("\nexpected: %v\n     got: %v", expected, err.Error())
+	err = err.Clean()
+
+	if len(err) != len(expected) {
+		t.Fatalf("expected %d errors, got: %d", len(expected), len(err))
+	}
+
+	for i, e := range err {
+		if e.Error() != expected[i] {
+			t.Errorf("at %d pos is expected: %v got: %v", i, expected[i], e.Error())
+		}
 	}
 
 }
 
 func TestVarDecl(t *testing.T) {
-	table := []struct {
-		scenario      string
-		input         string
-		expectedError string
-	}{
-		{
-			scenario:      "full variable declaration",
-			input:         "var a Int = 10",
-			expectedError: "",
-		},
-		{
-			scenario:      "without type",
-			input:         "var a = 10",
-			expectedError: "",
-		},
-		{
-			scenario:      "without value",
-			input:         "var a Int",
-			expectedError: "",
-		},
-
-		{
-			scenario:      "when type and value don't match",
-			input:         "var a Int = 3.90",
-			expectedError: "cannot use Float as Int value in assignment",
-		},
+	expectedErrors := []string{
+		"[Lin: 2 Col: 1] cannot use 'String' as 'Int' value in declaration",
+		"[Lin: 5 Col: 1] cannot use 'Float' as 'Int' value in declaration",
+		"[Lin: 8 Col: 1] cannot use 'Int' as 'Float' value in declaration",
+		"[Lin: 11 Col: 1] cannot use 'Int' as 'String' value in declaration",
 	}
 
-	for _, test := range table {
-		in := bytes.NewBufferString(test.input)
-		fileAST, err := parser.Parse(in)
-
-		if err != nil {
-			t.Errorf("expected no error: %s", err.Error())
-		}
-
-		err = Check(fileAST)
-		assertError(t, err, test.expectedError)
+	file, err := os.Open("testdata/vardecl.ir")
+	if err != nil {
+		t.Fatal(err)
 	}
+	defer file.Close()
+
+	fileAST, err := parser.Parse(file)
+	if err != nil {
+		t.Errorf("expected no error: %s", err.Error())
+	}
+
+	assertError(t, Check(fileAST), expectedErrors)
 }
 
 func TestAssignStmt(t *testing.T) {
-	table := []struct {
-		scenario      string
-		input         string
-		expectedError string
-	}{
-		{
-			scenario:      "when variable does not exist",
-			input:         "x = 10",
-			expectedError: "undefined: x",
-		},
-		{
-			scenario:      "assing different type",
-			input:         "var x Float; x = 10",
-			expectedError: "cannot use Int as Float value in assignment",
-		},
+	expectedErrors := []string{
+		"[Lin: 7 Col: 7] cannot use 'Int' as 'String' value in assignment",
+		"[Lin: 10 Col: 10] assignment mismatch: 2 variables but 1 values",
+		"[Lin: 11 Col: 7] assignment mismatch: 1 variables but 2 values",
+		"[Lin: 14 Col: 10] cannot use 'Int' as 'String' value in assignment",
+		"[Lin: 17 Col: 5] undefined: z",
 	}
 
-	for _, test := range table {
-		in := bytes.NewBufferString(test.input)
-		fileAST, err := parser.Parse(in)
-
-		if err != nil {
-			t.Errorf("expected no error: %s", err.Error())
-		}
-
-		err = Check(fileAST)
-		assertError(t, err, test.expectedError)
+	file, err := os.Open("testdata/assignstmt.ir")
+	if err != nil {
+		t.Fatal(err)
 	}
+	defer file.Close()
+
+	fileAST, err := parser.Parse(file)
+	if err != nil {
+		t.Errorf("expected no error: %s", err.Error())
+	}
+
+	assertError(t, Check(fileAST), expectedErrors)
+}
+
+func TestCallExpr(t *testing.T) {
+	expectedErrors := []string{
+		"[Lin: 9 Col: 5] cannot use 'Int' as 'Float' value in declaration",
+		"object 'Object' has no method 'do'",
+		"cannot use 'String' as 'Int' in argument to do",
+	}
+
+	file, err := os.Open("testdata/callexpr.ir")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+
+	fileAST, err := parser.Parse(file)
+	if err != nil {
+		t.Errorf("expected no error: %s", err.Error())
+	}
+
+	assertError(t, Check(fileAST), expectedErrors)
+}
+
+func TestFunDecl(t *testing.T) {
+	expectedErrors := []string{
+		"[Lin: 39 Col: 5] cannot use 'String' as 'Int' value in return statement",
+		"[Lin: 43 Col: 5] cannot use 'Int' as 'Float' value in return statement",
+		"[Lin: 49 Col: 3] missing return",
+		"[Lin: 55 Col: 3] missing return",
+		"[Lin: 61 Col: 3] missing return",
+		"[Lin: 68 Col: 3] missing return",
+		"[Lin: 76 Col: 3] missing return",
+		"[Lin: 87 Col: 3] missing return",
+		"[Lin: 92 Col: 5] unexpected return value",
+	}
+
+	file, err := os.Open("testdata/fundecl.ir")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+
+	fileAST, err := parser.Parse(file)
+	if err != nil {
+		t.Errorf("expected no error: %s", err.Error())
+	}
+
+	assertError(t, Check(fileAST), expectedErrors)
 }

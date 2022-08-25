@@ -1,0 +1,33 @@
+object CallExprTest {
+  fun do -> Int {
+    return 10
+  }
+
+  fun call {
+    var y Int = do()
+    # cannot assign Int as Float value in declaration
+    var x Float = do()
+  }
+}
+
+object CallExprTestMethodMissing {
+  fun do -> Int {
+    return 10
+  }
+
+  fun call {
+    var o = Object.new()
+    # Object has no method do
+    var x Float = o.do()
+  }
+}
+
+object CallExprTestWrongArgument {
+  fun do(a Int) -> Int {
+    return a
+  }
+
+  fun call {
+    var x Int = do("")
+  }
+}

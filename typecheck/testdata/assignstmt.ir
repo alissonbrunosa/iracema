@@ -1,0 +1,19 @@
+object AssignTest {
+  fun dummy {
+    var x String
+    var y String
+
+    # assign int to variable of type string
+    x = 10
+
+    # assignment mismatch
+    x, y = 10
+    y = 10, 20
+
+    # wrong type
+    x, y = "", 10
+
+    # undefined
+    z = 100
+  }
+}

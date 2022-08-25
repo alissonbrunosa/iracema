@@ -113,10 +113,26 @@ func (c *compiler) Compile(file *ast.File) (*lang.Method, error) {
 		c.add(bytecode.LoadFile, c.addConstant(name))
 	}
 
-	if err := c.compileStmt(file); err != nil {
-		return nil, err
+	for _, vd := range file.VarList {
+		if err := c.compileStmt(vd); err != nil {
+			return nil, err
+		}
 	}
 
+	for _, fd := range file.FunList {
+		if err := c.compileStmt(fd); err != nil {
+			return nil, err
+		}
+	}
+
+	for _, od := range file.FunList {
+		if err := c.compileStmt(od); err != nil {
+			return nil, err
+		}
+	}
+
+	c.add(bytecode.PushNone, 0)
+	c.add(bytecode.Return, 0)
 	return c.assemble(), nil
 }
 
@@ -256,22 +272,6 @@ func (c *compiler) patchJumps() {
 
 func (c *compiler) compileStmt(stmt ast.Stmt) error {
 	switch node := stmt.(type) {
-	case *ast.File:
-		if len(node.Stmts) == 0 {
-			c.add(bytecode.PushNone, 0)
-			c.add(bytecode.Return, 0)
-			return nil
-		}
-
-		for _, stmt := range node.Stmts {
-			if err := c.compileStmt(stmt); err != nil {
-				return err
-			}
-		}
-
-		c.add(bytecode.PushNone, 0)
-		c.add(bytecode.Return, 0)
-
 	case *ast.ExprStmt:
 		return c.compileExpr(node.Expr, false)
 
