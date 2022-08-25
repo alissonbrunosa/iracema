@@ -67,7 +67,7 @@ func isDone(tok *token.Token) bool {
 func (p *parser) parse() *ast.File {
 	file := new(ast.File)
 
-	for !isDone(p.tok) {
+	for p.tok.Type != token.EOF {
 		switch p.tok.Type {
 		case token.Use:
 			for p.consume(token.Use) {
@@ -95,9 +95,11 @@ func (p *parser) parse() *ast.File {
 		if !p.consume(token.NewLine) && p.tok.Type != token.EOF {
 			err := fmt.Sprintf("unexpected %s, expecting EOF or new line", p.tok)
 			p.setError(p.tok.Position, err)
-			p.sync(startStmt)
+			p.sync(startDecl)
 		}
 	}
+
+	p.expect(token.EOF)
 
 	return file
 }
@@ -185,7 +187,7 @@ func (p *parser) parseObjectDecl() *ast.ObjectDecl {
 	}
 
 	p.expect(token.LeftBrace)
-	for p.tok.Type != token.RightBrace {
+	for p.tok.Type != token.RightBrace && p.tok.Type != token.EOF {
 		switch p.tok.Type {
 		case token.Var:
 			obj.FieldList = append(obj.FieldList, p.parseVarDecl())
