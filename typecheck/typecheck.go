@@ -3,6 +3,7 @@ package typecheck
 import (
 	"fmt"
 	"iracema/ast"
+	"iracema/token"
 	"strings"
 )
 
@@ -269,6 +270,9 @@ func (tc *typechecker) checkExpr(expr ast.Expr) Type {
 		// TODO: check this
 		return INVALID
 
+	case *ast.BinaryExpr:
+		return tc.checkBinary(node)
+
 	default:
 		fmt.Printf("%+v\n", node)
 		panic("unreacheble")
@@ -317,6 +321,24 @@ func (tc *typechecker) checkCallExpr(call *ast.CallExpr) Type {
 
 	tc.checkArguments(sig, argTypes)
 	return sig.ret
+}
+
+func (tc *typechecker) checkBinary(node *ast.BinaryExpr) Type {
+	lhsType := tc.checkExpr(node.Left)
+	rhsType := tc.checkExpr(node.Right)
+
+	if typ := binary(node.Operator.Type, lhsType, rhsType); typ != nil {
+		return typ
+	}
+
+	fn := lhsType.LookupMethod(node.Operator.Type.String())
+	if fn == nil {
+		tc.errorf(node, "object '%s' do not implement '%s' operator", lhsType, node.Operator)
+		return INVALID
+	}
+
+	tc.checkArguments(fn, []Type{rhsType})
+	return fn.ret
 }
 
 func (tc *typechecker) checkArguments(sig *signature, argTypes []Type) {
@@ -426,4 +448,60 @@ func (tc *typechecker) paramTypes(fields []*ast.Field) []Type {
 	}
 
 	return list
+}
+
+func isNumber(t Type) bool {
+	return t == INT || t == FLOAT
+}
+
+func isComparable(t Type) bool {
+	return isNumber(t) || t == STRING
+}
+
+func binary(operator token.Type, lhsType, rhsType Type) Type {
+	if lhsType == INVALID || rhsType == INVALID {
+		return INVALID
+	}
+
+	number := func(lhs, rhs Type) Type {
+		if !isNumber(lhs) || !isNumber(rhs) {
+			return nil
+		}
+
+		if lhs == FLOAT || rhs == FLOAT {
+			return FLOAT
+		}
+
+		return INT
+	}
+
+	switch operator {
+	case token.Plus:
+		if t := number(lhsType, rhsType); t != nil {
+			return t
+		}
+
+		if lhsType == STRING && rhsType == STRING {
+			return STRING
+		}
+
+	case token.Minus, token.Slash, token.Star:
+		return number(lhsType, rhsType)
+
+	case token.Great, token.GreatEqual, token.Less, token.LessEqual:
+		if isComparable(lhsType) && isComparable(rhsType) {
+			return BOOL
+		}
+
+	case token.Equal, token.NotEqual:
+		if isComparable(lhsType) && isComparable(rhsType) {
+			return BOOL
+		}
+
+		if lhsType == BOOL && rhsType == BOOL {
+			return BOOL
+		}
+	}
+
+	return nil
 }

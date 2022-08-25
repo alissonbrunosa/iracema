@@ -426,16 +426,20 @@ func (p *parser) parseExpr() ast.Expr {
 }
 
 func (p *parser) parseBinaryExpr(precedence int) ast.Expr {
-	left := p.parseUnaryExpr()
+	expr := p.parseUnaryExpr()
 
 	for p.tok.Precedence() > precedence {
 		tok := p.expect(p.tok.Type)
-		right := p.parseBinaryExpr(tok.Precedence())
 
-		left = &ast.BinaryExpr{Left: left, Operator: tok, Right: right}
+		bExpr := new(ast.BinaryExpr)
+		bExpr.Left = expr
+		bExpr.Operator = tok
+		bExpr.Pos = tok.Position
+		bExpr.Right = p.parseBinaryExpr(tok.Precedence())
+		expr = bExpr
 	}
 
-	return left
+	return expr
 }
 
 func (p *parser) parseUnaryExpr() (expr ast.Expr) {

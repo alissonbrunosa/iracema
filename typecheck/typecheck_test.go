@@ -115,3 +115,32 @@ func TestFunDecl(t *testing.T) {
 
 	assertError(t, Check(fileAST), expectedErrors)
 }
+
+func TestBinaryExpr(t *testing.T) {
+	expectedErrors := []string{
+		"[Lin: 193 Col: 19] cannot use 'Float' as 'Int' value in declaration",
+		"[Lin: 199 Col: 10] object 'Bool' do not implement '>' operator",
+		"[Lin: 202 Col: 10] object 'Bool' do not implement '>=' operator",
+		"[Lin: 205 Col: 10] object 'Bool' do not implement '<' operator",
+		"[Lin: 208 Col: 10] object 'Bool' do not implement '<=' operator",
+		"[Lin: 217 Col: 20] cannot use 'String' as 'Int' value in declaration",
+		"[Lin: 220 Col: 16] object 'String' do not implement '*' operator",
+		"[Lin: 223 Col: 16] object 'String' do not implement '/' operator",
+		"[Lin: 226 Col: 16] object 'String' do not implement '-' operator",
+		"[Lin: 232 Col: 16] object 'Object' do not implement '+' operator",
+	}
+
+	file, err := os.Open("testdata/binaryexpr.ir")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+
+	fileAST, err := parser.Parse(file)
+	if err != nil {
+		t.Errorf("expected no error: %s", err.Error())
+	}
+
+	assertError(t, Check(fileAST), expectedErrors)
+
+}
