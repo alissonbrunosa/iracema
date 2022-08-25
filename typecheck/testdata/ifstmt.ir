@@ -1,0 +1,57 @@
+object IfStmtTest {
+  fun do {
+    if 10 + 20 {}
+  }
+
+  fun do2 {
+    if 10 > 20 {}
+  }
+
+  fun do3 {
+    if 10 < 20 {}
+  }
+
+  fun do4 {
+    if 10 == 20 {}
+  }
+
+  fun do5 {
+    if 10 != 20 {}
+  }
+
+  fun do6 {
+    if 10 >= 20 {}
+  }
+
+  fun do7 {
+    if 10 <= 20 {}
+  }
+
+  fun do8 {
+    if 10 == 20 {}
+  }
+
+  fun do9 {
+    if false {}
+  }
+
+  fun do10 {
+    if true {}
+  }
+
+  fun does_not_return_bool() -> Float {
+    return 1.0
+  }
+
+  fun do11 {
+    if does_not_return_bool() {}
+  }
+
+  fun does_return_bool() -> Bool {
+    return false
+  }
+
+  fun do12 {
+    if does_return_bool() {}
+  }
+}

@@ -1,0 +1,234 @@
+object TestBinaryExpr {
+  # Int operator Float
+  # Float operator Int
+  fun int_plus_float() -> Float {
+    return 1 + 1.0
+  }
+
+  fun float_plus_int() -> Float {
+    return 1.0 + 1
+  }
+
+  fun int_minus_float() -> Float {
+    return 1 - 1.0
+  }
+
+  fun float_minus_int() -> Float {
+    return 1.0 - 1
+  }
+
+  fun int_mul_float() -> Float {
+    return 1 * 1.0
+  }
+
+  fun float_mul_int() -> Float {
+    return 1.0 * 1
+  }
+
+  fun int_div_float() -> Float {
+    return 1 / 1.0
+  }
+
+  fun float_div_int() -> Float {
+    return 1.0 / 1
+  }
+
+  # Int operator Int
+  fun int_plus_int() -> Int {
+    return 1 + 1
+  }
+
+  fun int_minus_int() -> Int {
+    return 1 - 1
+  }
+
+  fun int_mul_int() -> Int {
+    return 1 * 1
+  }
+
+  fun int_div_int() -> Int {
+    return 1 / 1
+  }
+
+  fun int_eq_int() -> Bool {
+    return 1 == 1
+  }
+
+  fun int_not_eq_int() -> Bool {
+    return 1 != 1
+  }
+
+  fun int_gt_int() -> Bool {
+    return 1 > 1
+  }
+
+  fun int_gt_eq_int() -> Bool {
+    return 1 >= 1
+  }
+
+  fun int_lt_int() -> Bool {
+    return 1 < 1
+  }
+
+  fun int_lt_eq_int() -> Bool {
+    return 1 <= 1
+  }
+
+  # Float operator Float
+  fun float_plus_float() -> Float {
+    return 10.5 + 10.5
+  }
+
+  fun float_minus_float() -> Float {
+    return 10.5 - 10.5
+  }
+
+  fun float_mul_float() -> Float {
+    return 10.5 * 10.5
+  }
+
+  fun float_div_float() -> Float {
+    return 10.5 / 10.5
+  }
+
+  fun float_eq_float() -> Bool {
+    return 10.5 == 10.5
+  }
+
+  fun float_not_eq_float() -> Bool {
+    return 10.5 != 10.5
+  }
+
+  fun float_gt_float() -> Bool {
+    return 10.5 > 10.5
+  }
+
+  fun float_gt_eq_float() -> Bool {
+    return 10.5 >= 10.5
+  }
+
+  fun float_lt_float() -> Bool {
+    return 10.5 < 10.5
+  }
+
+  fun float_lt_eq_float() -> Bool {
+    return 10.5 <= 10.5
+  }
+
+  # Comparison Int and Float
+  fun int_eq_float() -> Bool {
+    return 10 == 10.0
+  }
+
+  fun float_eq_int() -> Bool {
+    return 10.0 == 10
+  }
+
+  fun int_not_eq_float() -> Bool {
+    return 10 != 10.0
+  }
+
+  fun float_not_eq_int() -> Bool {
+    return 10.0 != 10
+  }
+
+  fun int_gt_float() -> Bool {
+    return 10 > 10.0
+  }
+
+  fun float_gt_int() -> Bool {
+    return 10.0 > 10
+  }
+
+  fun int_gt_eq_float() -> Bool {
+    return 10 >= 10.0
+  }
+
+  fun float_gt_eq_int() -> Bool {
+    return 10.0 >= 10
+  }
+
+  fun int_lt_eq_float() -> Bool {
+    return 10 <= 10.0
+  }
+
+  fun float_lt_eq_int() -> Bool {
+    return 10.0 <= 10
+  }
+
+  fun bool_eq_bool() -> Bool {
+    return true == true
+  }
+
+  fun bool_not_eq_bool() -> Bool {
+    return false != true
+  }
+
+  ## String Comparison
+  fun string_eq_string() -> Bool {
+    return "" == ""
+  }
+
+  fun string_not_eq_string() -> Bool {
+    return "" != ""
+  }
+
+  fun string_gt_string() -> Bool {
+    return "" > ""
+  }
+
+  fun string_gt_eq_string() -> Bool {
+    return "" >= ""
+  }
+
+  fun string_lt_string() -> Bool {
+    return "" < ""
+  }
+
+  fun string_lt_eq_string() -> Bool {
+    return "" <= ""
+  }
+
+  fun witherror() {
+    var a Int = 1 + 1.0
+
+    var y Bool = true
+    var x Bool = false
+
+    # operand > is not implemented for Bool
+    if x > y {}
+
+    # operand >= is not implemented for Bool
+    if x >= y {}
+
+    # operand < is not implemented for Bool
+    if x < y {}
+
+    # operand <= is not implemented for Bool
+    if x <= y {}
+
+    var v String = "A"
+    var z String = "B"
+
+    # string PLUS string
+    var vz String = v + z
+
+    # string PLUS string asssign to wrong variable type
+    var zv Int = z + v
+
+    # string MUL string
+    var vz = v * z
+
+    # string DIV string
+    var vz = v / z
+
+    # string MINUS string
+    var vz = v - z
+
+
+    # Object
+
+    var o = Object.new()
+    var o2 = o + o
+  }
+}
