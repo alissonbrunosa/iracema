@@ -86,7 +86,7 @@ object FunDeclTest {
     }
   }
 
-  # Return when nothign is expected
+  # Return when nothing is expected
 
   fun fiveteen() {
     return 10

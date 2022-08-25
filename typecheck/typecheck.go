@@ -3,7 +3,6 @@ package typecheck
 import (
 	"fmt"
 	"iracema/ast"
-	"iracema/token"
 	"strings"
 )
 
@@ -142,7 +141,7 @@ func (tc *typechecker) checkFunDecl(fun *ast.FunDecl) {
 
 	tc.checkBodyStmt(fun.Body)
 	if tc.sig.ret != NONE && !tc.hasReturn(fun.Body) {
-		tc.errorf(fun.Body.RightBrace, "missing return")
+		tc.errorf(fun, "missing return for function: %s", fun.Name.Value)
 	}
 }
 
@@ -217,7 +216,7 @@ func (tc *typechecker) checkLetDecl(let *ast.VarDecl) {
 		if let.Value != nil {
 			value := tc.checkExpr(let.Value)
 			if !value.Is(typ) {
-				tc.errorf(let.Token, "cannot use '%s' as '%s' value in declaration", value.Name(), typ.Name())
+				tc.errorf(let.Value, "cannot use '%s' as '%s' value in declaration", value.Name(), typ.Name())
 			}
 		}
 
@@ -229,7 +228,7 @@ func (tc *typechecker) checkLetDecl(let *ast.VarDecl) {
 
 func (tc *typechecker) checkAssignStmt(assign *ast.AssignStmt) {
 	if len(assign.Left) != len(assign.Right) {
-		tc.errorf(assign.Token, "assignment mismatch: %d variables but %d values", len(assign.Left), len(assign.Right))
+		tc.errorf(assign, "assignment mismatch: %d variables but %d values", len(assign.Left), len(assign.Right))
 		return
 	}
 
@@ -242,7 +241,7 @@ func (tc *typechecker) checkAssignStmt(assign *ast.AssignStmt) {
 		rhsType := tc.checkExpr(rhs)
 
 		if !rhsType.Is(lhsType) {
-			tc.errorf(assign.Token, "cannot use '%s' as '%s' value in assignment", rhsType.Name(), lhsType.Name())
+			tc.errorf(rhs, "cannot use '%s' as '%s' value in assignment", rhsType.Name(), lhsType.Name())
 		}
 	}
 }
@@ -250,7 +249,7 @@ func (tc *typechecker) checkAssignStmt(assign *ast.AssignStmt) {
 func (tc *typechecker) checkExpr(expr ast.Expr) Type {
 	switch node := expr.(type) {
 	case *ast.BasicLit:
-		if litType := LIT_TYPES[node.Token.Type.String()]; litType != nil {
+		if litType := LIT_TYPES[node.T.String()]; litType != nil {
 			return litType
 		}
 
@@ -260,11 +259,15 @@ func (tc *typechecker) checkExpr(expr ast.Expr) Type {
 			return t
 		}
 
-		tc.errorf(node.Token, "undefined: %s", node.Value)
+		tc.errorf(node, "undefined: %s", node.Value)
 		return INVALID
 
 	case *ast.CallExpr:
 		return tc.checkCallExpr(node)
+
+	case *ast.SuperExpr:
+		// TODO: check this
+		return INVALID
 
 	default:
 		fmt.Printf("%+v\n", node)
@@ -326,11 +329,12 @@ func (tc *typechecker) checkArguments(sig *signature, argTypes []Type) {
 	}
 }
 
-func (tc *typechecker) errorf(tok *token.Token, format string, args ...any) {
-	if tok != nil {
+func (tc *typechecker) errorf(node ast.Node, format string, args ...any) {
+	if node != nil {
+		pos := node.Position()
 		format = "[Lin: %d Col: %d] " + format
-		args = append([]any{tok.Column()}, args...)
-		args = append([]any{tok.Line()}, args...)
+		args = append([]any{pos.Column()}, args...)
+		args = append([]any{pos.Line()}, args...)
 	}
 	err := fmt.Errorf(format, args...)
 	tc.errs = append(tc.errs, err)
@@ -338,19 +342,19 @@ func (tc *typechecker) errorf(tok *token.Token, format string, args ...any) {
 
 func (tc *typechecker) checkReturnStmt(ret *ast.ReturnStmt) {
 	if tc.sig == nil {
-		tc.errorf(ret.Token, "return outside function")
+		tc.errorf(ret, "return outside function")
 		return
 	}
 
 	if tc.sig.ret == NONE && ret.Value != nil {
-		tc.errorf(ret.Token, "unexpected return value")
+		tc.errorf(ret.Value, "unexpected return value")
 		return
 	}
 
 	valueType := tc.checkExpr(ret.Value)
 
 	if !valueType.Is(tc.sig.ret) {
-		tc.errorf(ret.Token, "cannot use '%s' as '%s' value in return statement", valueType, tc.sig.ret)
+		tc.errorf(ret.Value, "cannot use '%s' as '%s' value in return statement", valueType, tc.sig.ret)
 	}
 }
 
@@ -376,7 +380,7 @@ func (tc *typechecker) defineObject(decl *ast.ObjectDecl) Type {
 		for _, f := range decl.FieldList {
 			fieldType := tc.checkExpr(f.Type)
 			if field := objType.addField(f.Name.Value, fieldType); field != nil {
-				tc.errorf(f.Token, "field %s is already defined in object %s", f.Name.Value, objType)
+				tc.errorf(f, "field %s is already defined in object %s", f.Name.Value, objType)
 			}
 		}
 
@@ -387,7 +391,7 @@ func (tc *typechecker) defineObject(decl *ast.ObjectDecl) Type {
 
 			if name == "init" {
 				if f.Return != nil {
-					tc.errorf(f.Return.Token, "init fun can not have return value")
+					tc.errorf(f.Return, "init fun can not have return value")
 				}
 
 				name = "new"

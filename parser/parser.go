@@ -227,9 +227,10 @@ func (p *parser) parseVarDecl() *ast.VarDecl {
 }
 
 func (p *parser) parseFunDecl() *ast.FunDecl {
-	p.expect(token.Fun)
+	funToken := p.expect(token.Fun)
 
 	fun := new(ast.FunDecl)
+	fun.Pos = funToken.Position
 	fun.Name = p.parseIdent()
 	fun.Parameters = p.parseParameterList()
 
@@ -262,12 +263,15 @@ func (p *parser) parseCatchList() (list []*ast.CatchDecl) {
 }
 
 func (p *parser) parseBlockStmt() *ast.BlockStmt {
-	p.expect(token.LeftBrace)
+	lBrace := p.expect(token.LeftBrace)
+	stmts := p.parseStmtList()
+	rBrace := p.expect(token.RightBrace)
 
-	return &ast.BlockStmt{
-		Stmts:      p.parseStmtList(),
-		RightBrace: p.expect(token.RightBrace),
-	}
+	block := new(ast.BlockStmt)
+	block.Pos = lBrace.Position
+	block.Stmts = stmts
+	block.RightBrace = rBrace.Position
+	return block
 }
 
 func (p *parser) parseIfStmt() ast.Stmt {
@@ -389,18 +393,19 @@ func (p *parser) parseParameterList() (list []*ast.Field) {
 }
 
 func (p *parser) parseSimpleStmt() ast.Stmt {
-	leftExpr := p.parseExprList()
+	lhsExpr := p.parseExprList()
 
 	switch p.tok.Type {
 	case token.Assign:
-		return &ast.AssignStmt{
-			Left:  leftExpr,
-			Token: p.expect(token.Assign),
-			Right: p.parseExprList(),
-		}
+		assign := new(ast.AssignStmt)
+		assign.Pos = p.tok.Position
+		assign.Left = lhsExpr
+		p.expect(token.Assign)
+		assign.Right = p.parseExprList()
+		return assign
 	}
 
-	return &ast.ExprStmt{Expr: leftExpr[0]}
+	return &ast.ExprStmt{Expr: lhsExpr[0]}
 }
 
 func (p *parser) parseExprList() (list []ast.Expr) {
@@ -454,12 +459,15 @@ func (p *parser) parsePrimaryExpr() (expr ast.Expr) {
 			expr = p.parseCallExpr(expr)
 
 		case token.LeftParen:
-			ident, ok := expr.(*ast.Ident)
-			if !ok {
+			if ident, ok := expr.(*ast.Ident); ok {
+				call := new(ast.CallExpr)
+				call.Pos = ident.Pos
+				call.Method = ident
+				call.Arguments = p.parseArgumentList()
+				expr = call
+			} else {
 				expr = new(ast.BadExpr)
 				p.advance()
-			} else {
-				expr = &ast.CallExpr{Method: ident, Arguments: p.parseArgumentList()}
 			}
 
 		case token.LeftBracket:
@@ -500,7 +508,10 @@ func (p *parser) parseOperand() ast.Expr {
 			return &ast.FieldSel{Name: p.parseIdent()}
 		}
 
-		return &ast.BasicLit{Token: thisTok}
+		this := new(ast.BasicLit)
+		this.T = thisTok.Type
+		this.Pos = thisTok.Position
+		return this
 
 	case token.Super:
 		return p.parseSuperExpr()
@@ -513,15 +524,21 @@ func (p *parser) parseOperand() ast.Expr {
 	}
 }
 
-func (p *parser) parseBasicLit() (lit *ast.BasicLit) {
+func (p *parser) parseBasicLit() *ast.BasicLit {
 	defer p.advance()
 
-	switch p.tok.Type {
+	lit := new(ast.BasicLit)
+	lit.T = p.tok.Type
+	lit.Pos = p.tok.Position
+
+	switch lit.T {
 	case token.String:
-		return &ast.BasicLit{Token: p.tok, Value: readEscape(p.tok.Literal)}
+		lit.Value = readEscape(p.tok.Literal)
 	default:
-		return &ast.BasicLit{Token: p.tok, Value: p.tok.Literal}
+		lit.Value = p.tok.Literal
 	}
+
+	return lit
 }
 
 func (p *parser) parseBlockExpr() *ast.BlockExpr {
@@ -535,8 +552,10 @@ func (p *parser) parseBlockExpr() *ast.BlockExpr {
 
 func (p *parser) parseIdent() *ast.Ident {
 	tok := p.expect(token.Ident)
-
-	return &ast.Ident{Token: tok, Value: tok.Literal}
+	ident := new(ast.Ident)
+	ident.Pos = tok.Position
+	ident.Value = tok.Literal
+	return ident
 }
 
 func (p *parser) parseConst() *ast.Ident {
@@ -552,20 +571,20 @@ func (p *parser) parseConst() *ast.Ident {
 
 func (p *parser) parseGroupExpr() ast.Expr {
 	p.expect(token.LeftParen)
-	expr := p.parseExpr()
-	p.expect(token.RightParen)
+	defer p.expect(token.RightParen)
 
-	return &ast.GroupExpr{Expr: expr}
+	return &ast.GroupExpr{Expr: p.parseExpr()}
 }
 
 func (p *parser) parseCallExpr(receiver ast.Expr) ast.Expr {
 	p.expect(token.Dot)
 
-	return &ast.CallExpr{
-		Receiver:  receiver,
-		Method:    p.parseIdent(),
-		Arguments: p.parseArgumentList(),
-	}
+	call := new(ast.CallExpr)
+	call.Pos = receiver.Position()
+	call.Receiver = receiver
+	call.Method = p.parseIdent()
+	call.Arguments = p.parseArgumentList()
+	return call
 }
 
 func (p *parser) parseArgumentList() (list []ast.Expr) {
@@ -610,11 +629,10 @@ func (p *parser) parseArrayLit() (ary *ast.ArrayLit) {
 }
 
 func (p *parser) parseHashLit() *ast.HashLit {
-	return &ast.HashLit{
-		LeftBrace:  p.expect(token.LeftBrace),
-		Entries:    p.parseHashEntries(),
-		RightBrace: p.expect(token.RightBrace),
-	}
+	p.expect(token.LeftBrace)
+	defer p.expect(token.RightBrace)
+
+	return &ast.HashLit{Entries: p.parseHashEntries()}
 }
 
 func (p *parser) parseHashEntries() (list []*ast.HashEntry) {
@@ -638,20 +656,19 @@ func (p *parser) parseHashEntry() *ast.HashEntry {
 }
 
 func (p *parser) parseIndexExpr(expr ast.Expr) ast.Expr {
-	return &ast.IndexExpr{
-		Expr:         expr,
-		LeftBracket:  p.expect(token.LeftBracket),
-		Index:        p.parseExpr(),
-		RightBracket: p.expect(token.RightBracket),
-	}
+	p.expect(token.LeftBracket)
+	defer p.expect(token.RightBracket)
+
+	return &ast.IndexExpr{Expr: expr, Index: p.parseExpr()}
 }
 
 func (p *parser) parseSuperExpr() ast.Expr {
-	return &ast.SuperExpr{
-		Token:        p.expect(token.Super),
-		ExplicitArgs: p.at(token.LeftParen),
-		Arguments:    p.parseArgumentList(),
-	}
+	superTok := p.expect(token.Super)
+
+	expr := new(ast.SuperExpr)
+	expr.Pos = superTok.Position
+	expr.Arguments = p.parseArgumentList()
+	return expr
 }
 
 func (p *parser) parseField() *ast.Field {

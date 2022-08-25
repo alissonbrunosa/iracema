@@ -249,7 +249,7 @@ func TestParseCallExpr(t *testing.T) {
 		ExpectedArgs     []string
 	}{
 		{
-			Code:             "author.name",
+			Code:             "author.name()",
 			ExpectedReceiver: "author",
 			ExpectedMethod:   "name",
 			ExpectedArgs:     []string{},
@@ -603,27 +603,23 @@ func Test_ParseSuperExpr(t *testing.T) {
 	}{
 		{
 			scenario: "without args",
-			code:     "super",
+			code:     "super()",
 			testFun: func(expr *ast.SuperExpr) {
-				if expr.ExplicitArgs {
-					t.Error("expected .ExplictArgs to be false")
-				}
-
 				if len(expr.Arguments) != 0 {
 					t.Errorf("expected .Arguments len to be 0, got %d", len(expr.Arguments))
 				}
 			},
 		},
 		{
-			scenario: "explict empty args",
-			code:     "super()",
+			scenario: "with arguments",
+			code:     "super(value)",
 			testFun: func(expr *ast.SuperExpr) {
-				if !expr.ExplicitArgs {
-					t.Error("expected .ExplicitArgs to be true")
+				if len(expr.Arguments) != 1 {
+					t.Errorf("expected .Arguments len to be 1, got %d", len(expr.Arguments))
 				}
 
-				if len(expr.Arguments) != 0 {
-					t.Errorf("expected .Arguments len to be 0, got %d", len(expr.Arguments))
+				for _, arg := range expr.Arguments {
+					assetIdent(t, arg, "value")
 				}
 			},
 		},

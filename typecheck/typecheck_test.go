@@ -25,10 +25,10 @@ func assertError(t *testing.T, err ErrList, expected []string) {
 
 func TestVarDecl(t *testing.T) {
 	expectedErrors := []string{
-		"[Lin: 2 Col: 1] cannot use 'String' as 'Int' value in declaration",
-		"[Lin: 5 Col: 1] cannot use 'Float' as 'Int' value in declaration",
-		"[Lin: 8 Col: 1] cannot use 'Int' as 'Float' value in declaration",
-		"[Lin: 11 Col: 1] cannot use 'Int' as 'String' value in declaration",
+		"[Lin: 2 Col: 13] cannot use 'String' as 'Int' value in declaration",
+		"[Lin: 5 Col: 13] cannot use 'Float' as 'Int' value in declaration",
+		"[Lin: 8 Col: 15] cannot use 'Int' as 'Float' value in declaration",
+		"[Lin: 11 Col: 16] cannot use 'Int' as 'String' value in declaration",
 	}
 
 	file, err := os.Open("testdata/vardecl.ir")
@@ -47,10 +47,10 @@ func TestVarDecl(t *testing.T) {
 
 func TestAssignStmt(t *testing.T) {
 	expectedErrors := []string{
-		"[Lin: 7 Col: 7] cannot use 'Int' as 'String' value in assignment",
+		"[Lin: 7 Col: 9] cannot use 'Int' as 'String' value in assignment",
 		"[Lin: 10 Col: 10] assignment mismatch: 2 variables but 1 values",
 		"[Lin: 11 Col: 7] assignment mismatch: 1 variables but 2 values",
-		"[Lin: 14 Col: 10] cannot use 'Int' as 'String' value in assignment",
+		"[Lin: 14 Col: 16] cannot use 'Int' as 'String' value in assignment",
 		"[Lin: 17 Col: 5] undefined: z",
 	}
 
@@ -70,7 +70,7 @@ func TestAssignStmt(t *testing.T) {
 
 func TestCallExpr(t *testing.T) {
 	expectedErrors := []string{
-		"[Lin: 9 Col: 5] cannot use 'Int' as 'Float' value in declaration",
+		"[Lin: 9 Col: 19] cannot use 'Int' as 'Float' value in declaration",
 		"object 'Object' has no method 'do'",
 		"cannot use 'String' as 'Int' in argument to do",
 	}
@@ -91,15 +91,15 @@ func TestCallExpr(t *testing.T) {
 
 func TestFunDecl(t *testing.T) {
 	expectedErrors := []string{
-		"[Lin: 39 Col: 5] cannot use 'String' as 'Int' value in return statement",
-		"[Lin: 43 Col: 5] cannot use 'Int' as 'Float' value in return statement",
-		"[Lin: 49 Col: 3] missing return",
-		"[Lin: 55 Col: 3] missing return",
-		"[Lin: 61 Col: 3] missing return",
-		"[Lin: 68 Col: 3] missing return",
-		"[Lin: 76 Col: 3] missing return",
-		"[Lin: 87 Col: 3] missing return",
-		"[Lin: 92 Col: 5] unexpected return value",
+		"[Lin: 39 Col: 12] cannot use 'String' as 'Int' value in return statement",
+		"[Lin: 43 Col: 12] cannot use 'Int' as 'Float' value in return statement",
+		"[Lin: 48 Col: 3] missing return for function: nine",
+		"[Lin: 51 Col: 3] missing return for function: ten",
+		"[Lin: 57 Col: 3] missing return for function: eleven",
+		"[Lin: 63 Col: 3] missing return for function: twelve",
+		"[Lin: 70 Col: 3] missing return for function: thirteen",
+		"[Lin: 79 Col: 3] missing return for function: fourteen",
+		"[Lin: 92 Col: 12] unexpected return value",
 	}
 
 	file, err := os.Open("testdata/fundecl.ir")

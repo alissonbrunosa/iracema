@@ -8,12 +8,17 @@ import (
 type Node interface {
 	aNode()
 	String() string
+	Position() *token.Position
 }
 
-type node struct{}
+type node struct {
+	Pos *token.Position
+}
 
-func (*node) aNode()         {}
-func (*node) String() string { return "" }
+func (*node) aNode() {}
+func (n *node) Position() *token.Position {
+	return n.Pos
+}
 
 //
 // Statement
@@ -59,16 +64,19 @@ func (f *File) String() string {
 }
 
 type Import struct {
-	Name string
+	Token *token.Token
+	Name  string
 
 	stmt
 }
+
+func (i *Import) Position() *token.Position { return i.Token.Position }
 
 func (i *Import) String() string { return i.Name }
 
 type BlockStmt struct {
 	Stmts      []Stmt
-	RightBrace *token.Token
+	RightBrace *token.Position
 
 	stmt
 }
@@ -127,7 +135,7 @@ type Field struct {
 	Type  *Ident
 	Value Expr
 
-	stmt
+	node
 }
 
 func (f *Field) String() string { return "ast.Field" }
@@ -258,7 +266,6 @@ type expr struct{ node }
 func (*expr) aExpr() {}
 
 type Ident struct {
-	Token *token.Token
 	Value string
 
 	expr
@@ -304,14 +311,14 @@ func (b *BinaryExpr) String() string {
 }
 
 type BasicLit struct {
-	Token *token.Token
+	T     token.Type
 	Value string
 
 	expr
 }
 
 func (b *BasicLit) String() string   { return b.Value }
-func (b *BasicLit) Type() token.Type { return b.Token.Type }
+func (b *BasicLit) Type() token.Type { return b.T }
 
 type ArrayLit struct {
 	LeftBracket  *token.Token
@@ -328,15 +335,13 @@ type HashEntry struct {
 	Colon *token.Token
 	Value Expr
 
-	expr
+	node
 }
 
 func (*HashEntry) String() string { return "KeyValueExpr" }
 
 type HashLit struct {
-	LeftBrace  *token.Token
-	Entries    []*HashEntry
-	RightBrace *token.Token
+	Entries []*HashEntry
 
 	expr
 }
@@ -344,10 +349,8 @@ type HashLit struct {
 func (*HashLit) String() string { return "HashLit" }
 
 type IndexExpr struct {
-	Expr         Expr
-	LeftBracket  *token.Token
-	Index        Expr
-	RightBracket *token.Token
+	Expr  Expr
+	Index Expr
 
 	expr
 }
@@ -364,7 +367,6 @@ type BlockExpr struct {
 func (*BlockExpr) String() string { return "CodeBlock" }
 
 type CallExpr struct {
-	LeftParen *token.Token
 	Receiver  Expr
 	Method    *Ident
 	Arguments []Expr
@@ -391,7 +393,6 @@ type GroupExpr struct {
 func (g *GroupExpr) String() string { return g.Expr.String() }
 
 type SuperExpr struct {
-	Token        *token.Token
 	Arguments    []Expr
 	ExplicitArgs bool
 
