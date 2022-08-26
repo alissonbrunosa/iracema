@@ -163,5 +163,23 @@ func TestIfStmt(t *testing.T) {
 	}
 
 	assertError(t, Check(fileAST), expectedErrors)
+}
 
+func TestWhileStmt(t *testing.T) {
+	expectedErrors := []string{
+		"[Lin: 31 Col: 13] expected 'Bool', found 'Int'",
+	}
+
+	file, err := os.Open("testdata/whilestmt.ir")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+
+	fileAST, err := parser.Parse(file)
+	if err != nil {
+		t.Errorf("expected no error: %s", err.Error())
+	}
+
+	assertError(t, Check(fileAST), expectedErrors)
 }

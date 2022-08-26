@@ -1,0 +1,35 @@
+object TestWhileStmt {
+  fun true_as_cond {
+    while true {
+      puts("hi")
+    }
+  }
+
+  fun false_as_cond {
+    while false {
+      puts("hi")
+    }
+  }
+
+  fun binary_expr_as_cond {
+    while 10 > 0 {
+      puts("hi")
+    }
+  }
+
+  fun valid_expr_as_cond {
+    var x = 100
+    var y = 100
+    while x == y {
+      puts("hi")
+    }
+  }
+
+  fun non_bool_expr_as_cond {
+    var x = 100
+    var y = 100
+    while x + y {
+      puts("hi")
+    }
+  }
+}

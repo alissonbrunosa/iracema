@@ -110,7 +110,7 @@ func (tc *typechecker) checkStmt(stmt ast.Stmt) {
 		// TODO: check this as well
 
 	case *ast.WhileStmt:
-		// TODO: check this as well
+		tc.checkWhileStmt(node)
 
 	case *ast.SwitchStmt:
 		// TODO: check this as well
@@ -303,9 +303,7 @@ func (tc *typechecker) checkCallExpr(call *ast.CallExpr) Type {
 
 	sig := recvType.LookupMethod(call.Method.Value)
 	if sig == nil {
-		// TODO: fix the token position
-
-		tc.errorf(nil, "object '%s' has no method '%s'", recvType, call.Method.Value)
+		tc.errorf(call.Method, "object '%s' has no method '%s'", recvType, call.Method.Value)
 		return INVALID
 	}
 
@@ -386,7 +384,6 @@ func (tc *typechecker) checkReturnStmt(ret *ast.ReturnStmt) {
 
 func (tc *typechecker) checkIfStmt(ifStmt *ast.IfStmt) {
 	condType := tc.checkExpr(ifStmt.Cond)
-
 	if condType != BOOL {
 		tc.errorf(ifStmt.Cond, "expected 'Bool', found '%s'", condType)
 	}
@@ -395,6 +392,15 @@ func (tc *typechecker) checkIfStmt(ifStmt *ast.IfStmt) {
 	if ifStmt.Else != nil {
 		tc.checkStmt(ifStmt.Else)
 	}
+}
+
+func (tc *typechecker) checkWhileStmt(while *ast.WhileStmt) {
+	condType := tc.checkExpr(while.Cond)
+	if condType != BOOL {
+		tc.errorf(while.Cond, "expected 'Bool', found '%s'", condType)
+	}
+
+	tc.checkBlockStmt(while.Body)
 }
 
 func Check(file *ast.File) ErrList {
