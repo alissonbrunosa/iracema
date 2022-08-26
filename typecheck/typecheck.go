@@ -409,7 +409,7 @@ func Check(file *ast.File) ErrList {
 }
 
 func (tc *typechecker) defineObject(decl *ast.ObjectDecl) Type {
-	objType := newObject(decl.Name.Value)
+	objType := newObject(decl.Name.Value, OBJECT)
 
 	tc.laterChecks = append(tc.laterChecks, func() {
 		if decl.Parent != nil {

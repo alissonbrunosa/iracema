@@ -16,7 +16,15 @@ func (o *object) Name() string {
 }
 
 func (o *object) LookupMethod(name string) *signature {
-	return o.methodSet[name]
+	if m, ok := o.methodSet[name]; ok {
+		return m
+	}
+
+	if o.parent != nil {
+		return o.parent.LookupMethod(name)
+	}
+
+	return nil
 }
 
 func (o *object) addMethod(sig *signature) *signature {
@@ -69,9 +77,10 @@ func (o *object) complete() {
 	}
 }
 
-func newObject(name string) *object {
+func newObject(name string, parent Type) *object {
 	return &object{
 		name:      name,
+		parent:    parent,
 		fieldSet:  make(FieldSet),
 		methodSet: make(MethodSet),
 	}
