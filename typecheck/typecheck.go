@@ -247,7 +247,7 @@ func (tc *typechecker) checkVarDecl(decl *ast.VarDecl) {
 		if decl.Value != nil {
 			value := tc.checkExpr(decl.Value)
 			if !value.Is(typ) {
-				tc.errorf(decl.Value, "cannot use '%s' as '%s' value in declaration", value.Name(), typ.Name())
+				tc.errorf(decl.Value, "expected '%s', found '%s' in declaration", typ.Name(), value.Name())
 			}
 		}
 
@@ -274,7 +274,7 @@ func (tc *typechecker) checkAssignStmt(assign *ast.AssignStmt) {
 		rhsType := tc.checkExpr(rhs)
 
 		if !rhsType.Is(lhsType) {
-			tc.errorf(rhs, "cannot use '%s' as '%s' value in assignment", rhsType.Name(), lhsType.Name())
+			tc.errorf(rhs, "expected '%s', found '%s' in assignment", lhsType.Name(), rhsType.Name())
 		}
 	}
 }
@@ -407,7 +407,7 @@ func (tc *typechecker) checkReturnStmt(ret *ast.ReturnStmt) {
 		valueType := tc.checkExpr(ret.Value)
 
 		if !valueType.Is(tc.sig.ret) {
-			tc.errorf(ret.Value, "cannot use '%s' as '%s' value in return statement", valueType, tc.sig.ret)
+			tc.errorf(ret.Value, "expected '%s', found '%s' in return statement", tc.sig.ret, valueType)
 		}
 	}
 }
@@ -457,7 +457,6 @@ func (tc *typechecker) checkStmtSwitch(stmt *ast.SwitchStmt) {
 		}
 
 		if eqFun != nil {
-			fmt.Println(eqFun)
 			tc.checkArguments(eqFun, c.Value)
 		}
 		tc.checkStmt(c.Body)
@@ -519,7 +518,7 @@ func (tc *typechecker) defineObject(decl *ast.ObjectDecl) Type {
 			}
 
 			if m := objType.addMethod(sig); m != nil {
-				tc.errorf(f, "method %s is already defined in object %s", sig.name, objType)
+				tc.errorf(f, "function %s is already defined in object %s", sig.name, objType)
 			}
 		}
 
