@@ -39,6 +39,15 @@ type gamma struct {
 	env    map[string]Type
 }
 
+func (g *gamma) Insert(name string, t Type) bool {
+	if _, ok := g.env[name]; ok {
+		return false
+	}
+
+	g.env[name] = t
+	return true
+}
+
 func (s *gamma) lookup(name string) Type {
 	if s.parent == nil {
 		return s.env[name]
@@ -152,7 +161,9 @@ func (tc *typechecker) checkFunDecl(fun *ast.FunDecl) {
 	}
 
 	for i, param := range fun.Parameters {
-		tc.env[param.Name.Value] = tc.sig.params[i]
+		if !tc.Insert(param.Name.Value, tc.sig.params[i]) {
+			tc.errorf(param.Name, "variable %s is already defined in function %s", param.Name.Value, tc.sig.name)
+		}
 	}
 
 	tc.checkBlockStmt(fun.Body)
@@ -229,7 +240,9 @@ func (tc *typechecker) checkVarDecl(decl *ast.VarDecl) {
 	var typ Type
 	if decl.Type != nil {
 		typ = tc.checkExpr(decl.Type)
-		tc.env[name] = typ
+		if !tc.Insert(name, typ) {
+			tc.errorf(decl.Name, "variable %s is already defined in function %s", name, tc.sig.name)
+		}
 
 		if decl.Value != nil {
 			value := tc.checkExpr(decl.Value)
@@ -241,7 +254,9 @@ func (tc *typechecker) checkVarDecl(decl *ast.VarDecl) {
 		return
 	}
 
-	tc.env[name] = tc.checkExpr(decl.Value)
+	if !tc.Insert(name, tc.checkExpr(decl.Value)) {
+		tc.errorf(decl.Name, "variable %s is already defined in function %s", name, tc.sig.name)
+	}
 }
 
 func (tc *typechecker) checkAssignStmt(assign *ast.AssignStmt) {

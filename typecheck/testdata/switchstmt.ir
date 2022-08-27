@@ -51,7 +51,7 @@ object TestSwitchStmt {
     case 10:
       var x Int = 10
     default:
-      var x Float = 10
+      var y Float = 10
     }
   }
 }

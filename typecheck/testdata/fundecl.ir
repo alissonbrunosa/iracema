@@ -91,4 +91,12 @@ object FunDeclTest {
   fun fiveteen() {
     return 10
   }
+
+  # duplicate parameter
+  fun sixteen(a Int, a Int) {}
+
+  # duplicate variable in body
+  fun seventeen(a Int) {
+    var a Int
+  }
 }

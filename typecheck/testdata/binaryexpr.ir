@@ -217,13 +217,13 @@ object TestBinaryExpr {
     var zv Int = z + v
 
     # string MUL string
-    var vz = v * z
+    vz = v * z
 
     # string DIV string
-    var vz = v / z
+    vz = v / z
 
     # string MINUS string
-    var vz = v - z
+    vz = v - z
 
 
     # Object
