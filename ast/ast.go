@@ -205,6 +205,8 @@ func (*WhileStmt) String() string { return "WhileStmt" }
 type CaseClause struct {
 	Value Expr
 	Body  *BlockStmt
+
+	node
 }
 
 func (*CaseClause) String() string { return "CaseClause" }

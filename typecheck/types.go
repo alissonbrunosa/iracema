@@ -49,6 +49,12 @@ func init() {
 		methodSet: make(map[string]*signature),
 	}
 
+	STRING.defineMethodSet(
+		[]*signature{
+			{name: "==", params: []Type{STRING}, ret: BOOL},
+		},
+	)
+
 	LIT_TYPES = map[string]Type{
 		"Int":    INT,
 		"Float":  FLOAT,

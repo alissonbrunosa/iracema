@@ -1,12 +1,12 @@
 object CallExprTest {
-  fun do -> Int {
-    return 10
-  }
-
   fun call {
     var y Int = do()
     # cannot assign Int as Float value in declaration
     var x Float = do()
+  }
+
+  fun do -> Int {
+    return 10
   }
 }
 

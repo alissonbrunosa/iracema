@@ -1,0 +1,57 @@
+object TestSwitchStmt {
+  fun duplicated_cases {
+    switch 10 {
+      case 1:
+        puts("OI")
+
+      case 2:
+        puts("OI")
+
+      case 4:
+        puts("OI")
+
+      case 5:
+        puts("OI")
+
+      case 1:
+        puts("OI")
+
+      default:
+    }
+  }
+
+  fun do_not_implements_eq {
+    # x inherits == from Object
+
+    var x = TestSwitchStmt.new()
+    switch x {
+      case 1:
+        puts("hi")
+      default:
+    }
+  }
+
+  fun comparing_with_different_types {
+    # String overwrites == to compare only with another String
+    switch "str" {
+    case 10:
+      puts("hi")
+    }
+  }
+
+  fun error_in_cases_body {
+    switch 10 {
+    case 10:
+      var x Int = 10.50
+    }
+  }
+
+  fun error_in_default_body {
+    switch 10 {
+    case 10:
+      var x Int = 10
+    default:
+      var x Float = 10
+    }
+  }
+}

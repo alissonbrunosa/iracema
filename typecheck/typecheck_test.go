@@ -70,8 +70,8 @@ func TestAssignStmt(t *testing.T) {
 
 func TestCallExpr(t *testing.T) {
 	expectedErrors := []string{
-		"[Lin: 9 Col: 19] cannot use 'Int' as 'Float' value in declaration",
-		"object 'Object' has no method 'do'",
+		"[Lin: 5 Col: 19] cannot use 'Int' as 'Float' value in declaration",
+		"[Lin: 21 Col: 21] object 'Object' has no method 'do'",
 		"cannot use 'String' as 'Int' in argument to do",
 	}
 
@@ -171,6 +171,29 @@ func TestWhileStmt(t *testing.T) {
 	}
 
 	file, err := os.Open("testdata/whilestmt.ir")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+
+	fileAST, err := parser.Parse(file)
+	if err != nil {
+		t.Errorf("expected no error: %s", err.Error())
+	}
+
+	assertError(t, Check(fileAST), expectedErrors)
+}
+
+func TestSwitchStmt(t *testing.T) {
+	expectedErrors := []string{
+		"[Lin: 16 Col: 12] duplicate case",
+		"[Lin: 4 Col: 12] previous case",
+		"cannot use 'Int' as 'String' in argument to ==",
+		"[Lin: 45 Col: 19] cannot use 'Float' as 'Int' value in declaration",
+		"[Lin: 54 Col: 21] cannot use 'Int' as 'Float' value in declaration",
+	}
+
+	file, err := os.Open("testdata/switchstmt.ir")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -113,7 +113,7 @@ func (tc *typechecker) checkStmt(stmt ast.Stmt) {
 		tc.checkWhileStmt(node)
 
 	case *ast.SwitchStmt:
-		// TODO: check this as well
+		tc.checkStmtSwitch(node)
 
 	case *ast.BlockStmt:
 		tc.checkBlockStmt(node)
@@ -401,6 +401,43 @@ func (tc *typechecker) checkWhileStmt(while *ast.WhileStmt) {
 	}
 
 	tc.checkBlockStmt(while.Body)
+}
+
+func (tc *typechecker) checkStmtSwitch(stmt *ast.SwitchStmt) {
+	keyType := tc.checkExpr(stmt.Key)
+
+	eqFun := keyType.LookupMethod("==")
+	if eqFun == nil {
+		tc.errorf(stmt.Key, "object '%s' do not implement '==' operator", keyType)
+	}
+
+	seen := make(map[string]ast.Expr)
+	for _, c := range stmt.Cases {
+		caseType := tc.checkExpr(c.Value)
+		if caseType == INVALID {
+			continue
+		}
+
+		if lit, ok := c.Value.(*ast.BasicLit); ok {
+			if prev, ok := seen[lit.Value]; ok {
+				tc.errorf(lit, "duplicate case")
+				tc.errorf(prev, "previous case")
+				continue
+			}
+
+			seen[lit.Value] = c.Value
+		}
+
+		if eqFun != nil {
+			fmt.Println(eqFun)
+			tc.checkArguments(eqFun, []Type{caseType})
+		}
+		tc.checkStmt(c.Body)
+	}
+
+	if stmt.Default != nil {
+		tc.checkStmt(stmt.Default.Body)
+	}
 }
 
 func Check(file *ast.File) ErrList {
