@@ -344,12 +344,7 @@ func (tc *typechecker) checkCallExpr(call *ast.CallExpr) Type {
 		return sig.ret
 	}
 
-	var argTypes = make([]Type, argc)
-	for i, arg := range call.Arguments {
-		argTypes[i] = tc.checkExpr(arg)
-	}
-
-	tc.checkArguments(sig, argTypes)
+	tc.checkArguments(sig, call.Arguments...)
 	return sig.ret
 }
 
@@ -367,22 +362,27 @@ func (tc *typechecker) checkBinary(node *ast.BinaryExpr) Type {
 		return INVALID
 	}
 
-	tc.checkArguments(fn, []Type{rhsType})
+	tc.checkArguments(fn, node.Right)
 	return fn.ret
 }
 
-func (tc *typechecker) checkArguments(sig *signature, argTypes []Type) {
+func (tc *typechecker) checkArguments(sig *signature, args ...ast.Expr) {
+	argTypes := make([]Type, len(args))
+	for i, arg := range args {
+		argTypes[i] = tc.checkExpr(arg)
+	}
+
 	for i, paramType := range sig.params {
 		argType := argTypes[i]
 		if !argType.Is(paramType) {
-			// TODO: fix this
-			tc.errorf(nil, "cannot use '%s' as '%s' in argument to %s", argType, paramType, sig.name)
+			tc.errorf(args[i], "cannot use '%s' as '%s' in argument to %s", argType, paramType, sig.name)
 		}
 	}
 }
 
 func (tc *typechecker) errorf(node ast.Node, format string, args ...any) {
 	if node != nil {
+		fmt.Printf("%T\n", node)
 		pos := node.Position()
 		format = "[Lin: %d Col: %d] " + format
 		args = append([]any{pos.Column()}, args...)
@@ -446,11 +446,6 @@ func (tc *typechecker) checkStmtSwitch(stmt *ast.SwitchStmt) {
 
 	seen := make(map[string]ast.Expr)
 	for _, c := range stmt.Cases {
-		caseType := tc.checkExpr(c.Value)
-		if caseType == INVALID {
-			continue
-		}
-
 		if lit, ok := c.Value.(*ast.BasicLit); ok {
 			if prev, ok := seen[lit.Value]; ok {
 				tc.errorf(lit, "duplicate case")
@@ -463,7 +458,7 @@ func (tc *typechecker) checkStmtSwitch(stmt *ast.SwitchStmt) {
 
 		if eqFun != nil {
 			fmt.Println(eqFun)
-			tc.checkArguments(eqFun, []Type{caseType})
+			tc.checkArguments(eqFun, c.Value)
 		}
 		tc.checkStmt(c.Body)
 	}
