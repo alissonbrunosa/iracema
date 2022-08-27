@@ -75,7 +75,7 @@ func (tc *typechecker) check() ErrList {
 	}
 
 	for _, varDecl := range tc.file.VarList {
-		tc.checkLetDecl(varDecl)
+		tc.checkVarDecl(varDecl)
 	}
 
 	for _, funDecl := range tc.file.FunList {
@@ -92,7 +92,7 @@ func (tc *typechecker) check() ErrList {
 func (tc *typechecker) checkStmt(stmt ast.Stmt) {
 	switch node := stmt.(type) {
 	case *ast.VarDecl:
-		tc.checkLetDecl(node)
+		tc.checkVarDecl(node)
 
 	case *ast.AssignStmt:
 		tc.checkAssignStmt(node)
@@ -203,30 +203,30 @@ func (tc *typechecker) checkBlockStmt(body *ast.BlockStmt) {
 	}
 }
 
-func (tc *typechecker) checkLetDecl(let *ast.VarDecl) {
-	name := let.Name.Value
+func (tc *typechecker) checkVarDecl(decl *ast.VarDecl) {
+	name := decl.Name.Value
 
-	if let.Type == nil && let.Value == nil {
+	if decl.Type == nil && decl.Value == nil {
 		tc.env[name] = INVALID
 		return
 	}
 
 	var typ Type
-	if let.Type != nil {
-		typ = tc.checkExpr(let.Type)
+	if decl.Type != nil {
+		typ = tc.checkExpr(decl.Type)
 		tc.env[name] = typ
 
-		if let.Value != nil {
-			value := tc.checkExpr(let.Value)
+		if decl.Value != nil {
+			value := tc.checkExpr(decl.Value)
 			if !value.Is(typ) {
-				tc.errorf(let.Value, "cannot use '%s' as '%s' value in declaration", value.Name(), typ.Name())
+				tc.errorf(decl.Value, "cannot use '%s' as '%s' value in declaration", value.Name(), typ.Name())
 			}
 		}
 
 		return
 	}
 
-	tc.env[name] = tc.checkExpr(let.Value)
+	tc.env[name] = tc.checkExpr(decl.Value)
 }
 
 func (tc *typechecker) checkAssignStmt(assign *ast.AssignStmt) {
