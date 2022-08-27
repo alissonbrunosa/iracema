@@ -65,7 +65,7 @@ func TestCallExpr(t *testing.T) {
 	expectedErrors := []string{
 		"[Lin: 5 Col: 19] expected 'Float', found 'Int' in declaration",
 		"[Lin: 21 Col: 21] object 'Object' has no method 'do'",
-		"[Lin: 31 Col: 20] cannot use 'String' as 'Int' in argument to do",
+		"[Lin: 31 Col: 20] expected 'Int', found 'String' in argument to do",
 	}
 
 	assertErrorInFiles(t, "testdata/callexpr.ir", expectedErrors)
@@ -108,8 +108,8 @@ func TestBinaryExpr(t *testing.T) {
 
 func TestIfStmt(t *testing.T) {
 	expectedErrors := []string{
-		"[Lin: 3 Col: 11] expected 'Bool', found 'Int'",
-		"[Lin: 47 Col: 8] expected 'Bool', found 'Float'",
+		"[Lin: 3 Col: 11] expected 'Bool', found 'Int' in if statement",
+		"[Lin: 47 Col: 8] expected 'Bool', found 'Float' in if statement",
 	}
 
 	assertErrorInFiles(t, "testdata/ifstmt.ir", expectedErrors)
@@ -117,7 +117,7 @@ func TestIfStmt(t *testing.T) {
 
 func TestWhileStmt(t *testing.T) {
 	expectedErrors := []string{
-		"[Lin: 31 Col: 13] expected 'Bool', found 'Int'",
+		"[Lin: 31 Col: 13] expected 'Bool', found 'Int' in while statement",
 		"[Lin: 37 Col: 5] stop statement outside loop",
 		"[Lin: 41 Col: 5] next statement outside loop",
 		"[Lin: 70 Col: 5] stop statement outside loop",
@@ -130,7 +130,7 @@ func TestSwitchStmt(t *testing.T) {
 	expectedErrors := []string{
 		"[Lin: 16 Col: 12] duplicate case",
 		"[Lin: 4 Col: 12] previous case",
-		"[Lin: 37 Col: 10] cannot use 'Int' as 'String' in argument to ==",
+		"[Lin: 37 Col: 10] expected 'String', found 'Int' in argument to ==",
 		"[Lin: 45 Col: 19] expected 'Int', found 'Float' in declaration",
 		"[Lin: 54 Col: 21] expected 'Float', found 'Int' in declaration",
 	}

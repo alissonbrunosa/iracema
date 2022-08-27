@@ -245,10 +245,7 @@ func (tc *typechecker) checkVarDecl(decl *ast.VarDecl) {
 		}
 
 		if decl.Value != nil {
-			value := tc.checkExpr(decl.Value)
-			if !value.Is(typ) {
-				tc.errorf(decl.Value, "expected '%s', found '%s' in declaration", typ.Name(), value.Name())
-			}
+			tc.assign(decl.Value, tc.checkExpr(decl.Value), typ, "in declaration")
 		}
 
 		return
@@ -270,12 +267,7 @@ func (tc *typechecker) checkAssignStmt(assign *ast.AssignStmt) {
 		rhs := assign.Right[i]
 		lhs := assign.Left[i]
 
-		lhsType := tc.checkExpr(lhs)
-		rhsType := tc.checkExpr(rhs)
-
-		if !rhsType.Is(lhsType) {
-			tc.errorf(rhs, "expected '%s', found '%s' in assignment", lhsType.Name(), rhsType.Name())
-		}
+		tc.assign(rhs, tc.checkExpr(rhs), tc.checkExpr(lhs), "in assignment")
 	}
 }
 
@@ -367,22 +359,15 @@ func (tc *typechecker) checkBinary(node *ast.BinaryExpr) Type {
 }
 
 func (tc *typechecker) checkArguments(sig *signature, args ...ast.Expr) {
-	argTypes := make([]Type, len(args))
-	for i, arg := range args {
-		argTypes[i] = tc.checkExpr(arg)
-	}
+	context := fmt.Sprintf("in argument to %s", sig.name)
 
 	for i, paramType := range sig.params {
-		argType := argTypes[i]
-		if !argType.Is(paramType) {
-			tc.errorf(args[i], "cannot use '%s' as '%s' in argument to %s", argType, paramType, sig.name)
-		}
+		tc.assign(args[i], tc.checkExpr(args[i]), paramType, context)
 	}
 }
 
 func (tc *typechecker) errorf(node ast.Node, format string, args ...any) {
 	if node != nil {
-		fmt.Printf("%T\n", node)
 		pos := node.Position()
 		format = "[Lin: %d Col: %d] " + format
 		args = append([]any{pos.Column()}, args...)
@@ -404,19 +389,12 @@ func (tc *typechecker) checkReturnStmt(ret *ast.ReturnStmt) {
 	}
 
 	if ret.Value != nil {
-		valueType := tc.checkExpr(ret.Value)
-
-		if !valueType.Is(tc.sig.ret) {
-			tc.errorf(ret.Value, "expected '%s', found '%s' in return statement", tc.sig.ret, valueType)
-		}
+		tc.assign(ret.Value, tc.checkExpr(ret.Value), tc.sig.ret, "in return statement")
 	}
 }
 
 func (tc *typechecker) checkIfStmt(ifStmt *ast.IfStmt) {
-	condType := tc.checkExpr(ifStmt.Cond)
-	if condType != BOOL {
-		tc.errorf(ifStmt.Cond, "expected 'Bool', found '%s'", condType)
-	}
+	tc.assign(ifStmt.Cond, tc.checkExpr(ifStmt.Cond), BOOL, "in if statement")
 
 	tc.checkBlockStmt(ifStmt.Then)
 	if ifStmt.Else != nil {
@@ -428,11 +406,7 @@ func (tc *typechecker) checkWhileStmt(while *ast.WhileStmt) {
 	defer func(f byte) { tc.flag = f }(tc.flag)
 
 	tc.flag |= loop
-	condType := tc.checkExpr(while.Cond)
-	if condType != BOOL {
-		tc.errorf(while.Cond, "expected 'Bool', found '%s'", condType)
-	}
-
+	tc.assign(while.Cond, tc.checkExpr(while.Cond), BOOL, "in while statement")
 	tc.checkBlockStmt(while.Body)
 }
 
@@ -537,6 +511,14 @@ func (tc *typechecker) paramTypes(fields []*ast.Field) []Type {
 	}
 
 	return list
+}
+
+func (tc *typechecker) assign(node ast.Node, value, typ Type, context string) {
+	if value.Is(typ) {
+		return
+	}
+
+	tc.errorf(node, "expected '%s', found '%s' %s", typ, value, context)
 }
 
 func isNumber(t Type) bool {
