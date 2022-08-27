@@ -7,6 +7,10 @@ import (
 	"strings"
 )
 
+const (
+	loop = 1 << iota
+)
+
 type ErrList []error
 
 func (el ErrList) Error() string {
@@ -56,6 +60,7 @@ type signature struct {
 type typechecker struct {
 	*gamma
 
+	flag        byte
 	this        Type
 	sig         *signature
 	file        *ast.File
@@ -117,6 +122,16 @@ func (tc *typechecker) checkStmt(stmt ast.Stmt) {
 
 	case *ast.BlockStmt:
 		tc.checkBlockStmt(node)
+
+	case *ast.StopStmt:
+		if tc.flag&loop == 0 {
+			tc.errorf(node, "stop statement outside loop")
+		}
+
+	case *ast.NextStmt:
+		if tc.flag&loop == 0 {
+			tc.errorf(node, "next statement outside loop")
+		}
 
 	default:
 		fmt.Printf("%+v -> %T\n", node, node)
@@ -395,6 +410,9 @@ func (tc *typechecker) checkIfStmt(ifStmt *ast.IfStmt) {
 }
 
 func (tc *typechecker) checkWhileStmt(while *ast.WhileStmt) {
+	defer func(f byte) { tc.flag = f }(tc.flag)
+
+	tc.flag |= loop
 	condType := tc.checkExpr(while.Cond)
 	if condType != BOOL {
 		tc.errorf(while.Cond, "expected 'Bool', found '%s'", condType)

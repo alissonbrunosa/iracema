@@ -156,10 +156,16 @@ func (p *parser) parseStmt() ast.Stmt {
 		return p.parseSwitchStmt()
 
 	case token.Stop:
-		return p.parseStopStmt()
+		stop := new(ast.StopStmt)
+		stop.Pos = p.tok.Position
+		p.advance()
+		return stop
 
 	case token.Next:
-		return p.parseNextStmt()
+		next := new(ast.NextStmt)
+		next.Pos = p.tok.Position
+		p.advance()
+		return next
 
 	case token.Return:
 		return p.parseReturnStmt()
@@ -354,14 +360,6 @@ func (p *parser) parseCase() (*ast.CaseClause, bool) {
 	p.setError(p.tok.Position, "expected case, default or }")
 	p.sync(switchStartStmt)
 	return nil, false
-}
-
-func (p *parser) parseStopStmt() ast.Stmt {
-	return &ast.StopStmt{Token: p.expect(token.Stop)}
-}
-
-func (p *parser) parseNextStmt() ast.Stmt {
-	return &ast.NextStmt{Token: p.expect(token.Next)}
 }
 
 func (p *parser) parseReturnStmt() ast.Stmt {

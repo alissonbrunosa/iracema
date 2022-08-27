@@ -32,4 +32,41 @@ object TestWhileStmt {
       puts("hi")
     }
   }
+
+  fun stop_outside_loop {
+    stop
+  }
+
+  fun next_outside_loop {
+    next
+  }
+
+  fun stop_in_loop {
+    while true {
+      stop
+    }
+  }
+
+  fun next_in_loop {
+    while true {
+      next
+    }
+  }
+
+  fun loop_in_loop_with_next {
+    while true {
+      while true {
+        next
+      }
+    }
+  }
+
+  fun loop_in_loop_with_stop_outside {
+    while true {
+      while true {
+        next
+      }
+    }
+    stop
+  }
 }

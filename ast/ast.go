@@ -92,16 +92,12 @@ func (b *BlockStmt) String() string {
 }
 
 type StopStmt struct {
-	Token *token.Token
-
 	stmt
 }
 
 func (*StopStmt) String() string { return "stop" }
 
 type NextStmt struct {
-	Token *token.Token
-
 	stmt
 }
 

@@ -168,6 +168,9 @@ func TestIfStmt(t *testing.T) {
 func TestWhileStmt(t *testing.T) {
 	expectedErrors := []string{
 		"[Lin: 31 Col: 13] expected 'Bool', found 'Int'",
+		"[Lin: 37 Col: 5] stop statement outside loop",
+		"[Lin: 41 Col: 5] next statement outside loop",
+		"[Lin: 70 Col: 5] stop statement outside loop",
 	}
 
 	file, err := os.Open("testdata/whilestmt.ir")
