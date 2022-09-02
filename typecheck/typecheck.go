@@ -174,9 +174,7 @@ func (tc *typechecker) checkFunDecl(fun *ast.FunDecl) {
 
 func (tc *typechecker) hasReturn(stmt ast.Stmt) bool {
 	switch nd := stmt.(type) {
-	case *ast.VarDecl, *ast.AssignStmt, *ast.ExprStmt:
-		// ignore
-
+	case *ast.VarDecl, *ast.AssignStmt, *ast.ExprStmt: // ignore
 	case *ast.BlockStmt:
 		size := len(nd.Stmts) - 1
 		if size < 0 {
@@ -488,12 +486,7 @@ func (tc *typechecker) defineObject(decl *ast.ObjectDecl) Type {
 				retType = tc.lookupType(f.Return.Value)
 			}
 
-			sig := &signature{
-				name:   name,
-				params: paramTypes,
-				ret:    retType,
-			}
-
+			sig := &signature{name: name, params: paramTypes, ret: retType}
 			if m := objType.addMethod(sig); m != nil {
 				tc.errorf(f, "function %s is already defined in object %s", sig.name, objType)
 			}
@@ -502,7 +495,10 @@ func (tc *typechecker) defineObject(decl *ast.ObjectDecl) Type {
 		objType.complete()
 	})
 
-	tc.env[objType.name] = objType
+	if !tc.Insert(objType.name, objType) {
+		tc.errorf(decl.Name, "object %s is already declared", objType.Name())
+	}
+
 	return objType
 }
 
