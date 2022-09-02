@@ -398,3 +398,12 @@ type SuperExpr struct {
 }
 
 func (*SuperExpr) String() string { return "SuperExpr" }
+
+type NewExpr struct {
+	Type      *Ident
+	Arguments []Expr
+
+	expr
+}
+
+func (*NewExpr) String() string { return "NewExpr" }

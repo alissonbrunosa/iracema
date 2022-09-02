@@ -29,25 +29,25 @@ func (l *lexer) NextToken() *token.Token {
 	if isLetter(l.char) {
 		literal := l.readIdent()
 		kind := token.Lookup(literal)
-		return token.New(kind, literal, position)
+		return token.NewToken(kind, literal, position)
 	}
 
 	if isDecimal(l.char) {
 		kind, literal := l.readNumber()
-		return token.New(kind, literal, position)
+		return token.NewToken(kind, literal, position)
 	}
 
 	switch l.char {
 	case '"':
-		return token.New(token.String, l.readString(), position)
+		return token.NewToken(token.String, l.readString(), position)
 
 	case '.':
 		l.advance()
-		return token.New(token.Dot, "", position)
+		return token.NewToken(token.Dot, "", position)
 
 	case ':':
 		l.advance()
-		return token.New(token.Colon, "", position)
+		return token.NewToken(token.Colon, "", position)
 
 	case '=':
 		l.advance()
@@ -57,7 +57,7 @@ func (l *lexer) NextToken() *token.Token {
 			l.advance()
 			kind = token.Equal
 		}
-		return token.New(kind, "", position)
+		return token.NewToken(kind, "", position)
 
 	case '>':
 		l.advance()
@@ -68,7 +68,7 @@ func (l *lexer) NextToken() *token.Token {
 			kind = token.GreatEqual
 		}
 
-		return token.New(kind, "", position)
+		return token.NewToken(kind, "", position)
 
 	case '<':
 		l.advance()
@@ -78,38 +78,38 @@ func (l *lexer) NextToken() *token.Token {
 			l.advance()
 			kind = token.LessEqual
 		}
-		return token.New(kind, "", position)
+		return token.NewToken(kind, "", position)
 
 	case ',':
 		l.advance()
-		return token.New(token.Comma, "", position)
+		return token.NewToken(token.Comma, "", position)
 
 	case '(':
 		l.advance()
-		return token.New(token.LeftParen, "", position)
+		return token.NewToken(token.LeftParen, "", position)
 
 	case ')':
 		l.advance()
 		l.readNewLine = true
-		return token.New(token.RightParen, "", position)
+		return token.NewToken(token.RightParen, "", position)
 
 	case '[':
 		l.advance()
-		return token.New(token.LeftBracket, "", position)
+		return token.NewToken(token.LeftBracket, "", position)
 
 	case ']':
 		l.advance()
 		l.readNewLine = true
-		return token.New(token.RightBracket, "", position)
+		return token.NewToken(token.RightBracket, "", position)
 
 	case '{':
 		l.advance()
-		return token.New(token.LeftBrace, "", position)
+		return token.NewToken(token.LeftBrace, "", position)
 
 	case '}':
 		l.advance()
 		l.readNewLine = true
-		return token.New(token.RightBrace, "", position)
+		return token.NewToken(token.RightBrace, "", position)
 
 	case '-':
 		l.advance()
@@ -120,19 +120,19 @@ func (l *lexer) NextToken() *token.Token {
 			kind = token.Arrow
 		}
 
-		return token.New(kind, "", position)
+		return token.NewToken(kind, "", position)
 
 	case '+':
 		l.advance()
-		return token.New(token.Plus, "", position)
+		return token.NewToken(token.Plus, "", position)
 
 	case '/':
 		l.advance()
-		return token.New(token.Slash, "", position)
+		return token.NewToken(token.Slash, "", position)
 
 	case '*':
 		l.advance()
-		return token.New(token.Star, "", position)
+		return token.NewToken(token.Star, "", position)
 
 	case '!':
 		l.advance()
@@ -142,18 +142,18 @@ func (l *lexer) NextToken() *token.Token {
 			l.advance()
 			kind = token.NotEqual
 		}
-		return token.New(kind, "", position)
+		return token.NewToken(kind, "", position)
 
 	case '\n', ';':
 		l.advance()
-		return token.New(token.NewLine, "", position)
+		return token.NewToken(token.NewLine, "", position)
 
 	case 0:
-		return token.New(token.EOF, "", position)
+		return token.NewToken(token.EOF, "", position)
 
 	default:
 		l.advance()
-		return token.New(token.Illegal, "", position)
+		return token.NewToken(token.Illegal, "", position)
 	}
 }
 

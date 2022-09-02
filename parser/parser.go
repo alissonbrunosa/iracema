@@ -520,6 +520,9 @@ func (p *parser) parseOperand() ast.Expr {
 	case token.Super:
 		return p.parseSuperExpr()
 
+	case token.New:
+		return p.parseNewExpr()
+
 	default:
 		mesg := fmt.Sprintf("unexpected %s, expecting expression", p.tok)
 		p.setError(p.tok.Position, mesg)
@@ -565,7 +568,9 @@ func (p *parser) parseIdent() *ast.Ident {
 func (p *parser) parseConst() *ast.Ident {
 	tok := p.expect(token.Ident)
 
-	ident := &ast.Ident{Value: tok.Literal}
+	ident := new(ast.Ident)
+	ident.Pos = tok.Position
+	ident.Value = tok.Literal
 	if !ident.IsConstant() {
 		p.setError(tok.Position, "expected ident to be a constant")
 	}
@@ -671,6 +676,16 @@ func (p *parser) parseSuperExpr() ast.Expr {
 
 	expr := new(ast.SuperExpr)
 	expr.Pos = superTok.Position
+	expr.Arguments = p.parseArgumentList()
+	return expr
+}
+
+func (p *parser) parseNewExpr() ast.Expr {
+	tok := p.expect(token.New)
+
+	expr := new(ast.NewExpr)
+	expr.Pos = tok.Position
+	expr.Type = p.parseConst()
 	expr.Arguments = p.parseArgumentList()
 	return expr
 }

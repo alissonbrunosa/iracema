@@ -754,3 +754,30 @@ func TestVarDecl(t *testing.T) {
 		})
 	}
 }
+
+func TestNewExpr(t *testing.T) {
+	stmts := setupFunBody(t, "var o = new Object()")
+
+	vd, ok := stmts[0].(*ast.VarDecl)
+	if !ok {
+		t.Fatalf("expected first stmt to be *ast.VarDecl, got %T", stmts[0])
+	}
+
+	assetIdent(t, vd.Name, "o")
+
+	newExpr, ok := vd.Value.(*ast.NewExpr)
+	if !ok {
+		t.Fatalf("expected *ast.NewExpr, got %T", vd.Value)
+	}
+
+	assertConst(t, newExpr.Type, "Object")
+}
+
+func TestNewExpr_WithArguments(t *testing.T) {
+	stmts := setupFunBody(t, "var o = new Object(10,10)")
+
+	vd := stmts[0].(*ast.VarDecl)
+	newExpr := vd.Value.(*ast.NewExpr)
+
+	assertArgumentList(t, newExpr.Arguments, []string{"10", "10"})
+}

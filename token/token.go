@@ -26,6 +26,7 @@ var keywords = map[string]Type{
 	"this":    This,
 	"use":     Use,
 	"var":     Var,
+	"new":     New,
 }
 
 const LowestPrecedence = 0
@@ -65,7 +66,7 @@ func Lookup(ident string) Type {
 	return Ident
 }
 
-func New(tokenType Type, literal string, pos *Position) *Token {
+func NewToken(tokenType Type, literal string, pos *Position) *Token {
 	return &Token{
 		Type:     tokenType,
 		Literal:  literal,
