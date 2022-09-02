@@ -16,7 +16,7 @@ object CallExprTestMethodMissing {
   }
 
   fun call {
-    var o = Object.new()
+    var o = new Object()
     # Object has no method do
     var x Float = o.do()
   }
@@ -29,5 +29,17 @@ object CallExprTestWrongArgument {
 
   fun call {
     var x Int = do("")
+  }
+}
+
+object CallNewObject {
+  fun init(a Int, b Float) {}
+
+  fun test() {
+    var cno = new CallNewObject(10, 10.50)
+  }
+
+  fun test_with_wrong_args() {
+    var cno = new CallNewObject(10.50, 10)
   }
 }

@@ -297,6 +297,9 @@ func (tc *typechecker) checkExpr(expr ast.Expr) Type {
 	case *ast.BinaryExpr:
 		return tc.checkBinary(node)
 
+	case *ast.NewExpr:
+		return tc.checkNewExpr(node)
+
 	default:
 		fmt.Printf("%+v\n", node)
 		panic("unreacheble")
@@ -356,6 +359,13 @@ func (tc *typechecker) checkBinary(node *ast.BinaryExpr) Type {
 
 	tc.checkArguments(fn, node.Right)
 	return fn.ret
+}
+
+func (tc *typechecker) checkNewExpr(node *ast.NewExpr) Type {
+	objType := tc.lookupType(node.Type.Value)
+	initFun := objType.LookupMethod("init")
+	tc.checkArguments(initFun, node.Arguments...)
+	return objType
 }
 
 func (tc *typechecker) checkArguments(sig *signature, args ...ast.Expr) {
@@ -472,16 +482,9 @@ func (tc *typechecker) defineObject(decl *ast.ObjectDecl) Type {
 			paramTypes := tc.paramTypes(f.Parameters)
 			var retType Type = NONE
 
-			if name == "init" {
-				if f.Return != nil {
-					tc.errorf(f.Return, "init fun can not have return value")
-				}
-
-				name = "new"
-				retType = objType
-			}
-
-			if f.Return != nil {
+			if name == "init" && f.Return != nil {
+				tc.errorf(f.Return, "function init can not have return value")
+			} else if f.Return != nil {
 				retType = tc.lookupType(f.Return.Value)
 			}
 

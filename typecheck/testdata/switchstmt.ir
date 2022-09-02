@@ -23,7 +23,7 @@ object TestSwitchStmt {
   fun do_not_implements_eq {
     # x inherits == from Object
 
-    var x = TestSwitchStmt.new()
+    var x = new TestSwitchStmt()
     switch x {
       case 1:
         puts("hi")

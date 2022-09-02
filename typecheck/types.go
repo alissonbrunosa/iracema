@@ -30,7 +30,7 @@ func init() {
 
 	OBJECT.defineMethodSet(
 		[]*signature{
-			{name: "new", params: nil, ret: OBJECT},
+			{name: "init", params: nil, ret: NONE},
 			{name: "==", params: []Type{OBJECT}, ret: BOOL},
 			{name: "!=", params: []Type{OBJECT}, ret: BOOL},
 			{name: "hash", params: nil, ret: INT},

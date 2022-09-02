@@ -66,6 +66,8 @@ func TestCallExpr(t *testing.T) {
 		"[Lin: 5 Col: 19] expected 'Float', found 'Int' in declaration",
 		"[Lin: 21 Col: 21] object 'Object' has no method 'do'",
 		"[Lin: 31 Col: 20] expected 'Int', found 'String' in argument to do",
+		"[Lin: 43 Col: 33] expected 'Int', found 'Float' in argument to init",
+		"[Lin: 43 Col: 40] expected 'Float', found 'Int' in argument to init",
 	}
 
 	assertErrorInFiles(t, "testdata/callexpr.ir", expectedErrors)
@@ -73,6 +75,7 @@ func TestCallExpr(t *testing.T) {
 
 func TestFunDecl(t *testing.T) {
 	expectedErrors := []string{
+		"[Lin: 109 Col: 17] function init can not have return value",
 		"[Lin: 39 Col: 12] expected 'Int', found 'String' in return statement",
 		"[Lin: 43 Col: 12] expected 'Float', found 'Int' in return statement",
 		"[Lin: 48 Col: 3] missing return for function: nine",
@@ -84,6 +87,7 @@ func TestFunDecl(t *testing.T) {
 		"[Lin: 92 Col: 12] unexpected return value",
 		"[Lin: 96 Col: 22] variable a is already defined in function sixteen",
 		"[Lin: 100 Col: 9] variable a is already defined in function seventeen",
+		"[Lin: 103 Col: 3] missing return for function: infinity_loop",
 	}
 
 	assertErrorInFiles(t, "testdata/fundecl.ir", expectedErrors)

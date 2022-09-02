@@ -228,7 +228,7 @@ object TestBinaryExpr {
 
     # Object
 
-    var o = Object.new()
+    var o = new Object()
     var o2 = o + o
   }
 }
