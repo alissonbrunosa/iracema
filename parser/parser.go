@@ -460,19 +460,10 @@ func (p *parser) parsePrimaryExpr() (expr ast.Expr) {
 	for {
 		switch p.tok.Type {
 		case token.Dot:
-			expr = p.parseCallExpr(expr)
+			expr = p.parseMemberSelector(expr)
 
 		case token.LeftParen:
-			if ident, ok := expr.(*ast.Ident); ok {
-				call := new(ast.CallExpr)
-				call.Pos = ident.Pos
-				call.Method = ident
-				call.Arguments = p.parseArgumentList()
-				expr = call
-			} else {
-				expr = new(ast.BadExpr)
-				p.advance()
-			}
+			expr = p.parseCallExpr(expr)
 
 		case token.LeftBracket:
 			expr = p.parseIndexExpr(expr)
@@ -505,16 +496,11 @@ func (p *parser) parseOperand() ast.Expr {
 		return p.parseHashLit()
 
 	case token.This:
-		// TODO: make some improvements in this section
-		thisTok := p.tok
+		tok := p.tok
 		p.advance()
-		if p.consume(token.Dot) {
-			return &ast.FieldSel{Name: p.parseIdent()}
-		}
-
 		this := new(ast.BasicLit)
-		this.T = thisTok.Type
-		this.Pos = thisTok.Position
+		this.T = tok.Type
+		this.Pos = tok.Position
 		return this
 
 	case token.Super:
@@ -585,15 +571,38 @@ func (p *parser) parseGroupExpr() ast.Expr {
 	return &ast.GroupExpr{Expr: p.parseExpr()}
 }
 
-func (p *parser) parseCallExpr(receiver ast.Expr) ast.Expr {
+func (p *parser) parseMemberSelector(base ast.Expr) ast.Expr {
 	p.expect(token.Dot)
 
-	call := new(ast.CallExpr)
-	call.Pos = receiver.Position()
-	call.Receiver = receiver
-	call.Method = p.parseIdent()
-	call.Arguments = p.parseArgumentList()
-	return call
+	mSel := new(ast.MemberSelector)
+	mSel.Base = base
+	mSel.Pos = base.Position()
+	mSel.Member = p.parseIdent()
+
+	return mSel
+}
+
+func (p *parser) parseCallExpr(base ast.Expr) ast.Expr {
+	switch node := base.(type) {
+	case *ast.MemberSelector:
+		mCall := new(ast.MethodCallExpr)
+		mCall.Pos = node.Position()
+		mCall.Selector = node
+		mCall.Arguments = p.parseArgumentList()
+		return mCall
+
+	case *ast.Ident:
+		fCall := new(ast.FunctionCallExpr)
+		fCall.Pos = node.Position()
+		fCall.Name = node
+		fCall.Arguments = p.parseArgumentList()
+		return fCall
+
+	default:
+		p.setError(p.tok.Position, "invalid call expr")
+		p.sync(startStmt)
+		return new(ast.BadExpr)
+	}
 }
 
 func (p *parser) parseArgumentList() (list []ast.Expr) {

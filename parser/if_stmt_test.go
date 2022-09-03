@@ -23,7 +23,7 @@ func TestParseIfStmt(t *testing.T) {
 		t.Errorf("expected to be *ast.BinaryExpr, got %T", ifStmt.Cond)
 	}
 
-	assetIdent(t, predicate.Left, "value")
+	assertIdent(t, predicate.Left, "value")
 	assertLit(t, predicate.Right, "10")
 
 	if predicate.Operator.Type != token.Equal {
@@ -57,7 +57,7 @@ func TestParseIfStmtWithElse(t *testing.T) {
 		t.Errorf("expected to be *ast.BinaryExpr, got %T", ifStmt.Cond)
 	}
 
-	assetIdent(t, predicate.Left, "value")
+	assertIdent(t, predicate.Left, "value")
 	assertLit(t, predicate.Right, "10")
 
 	if predicate.Operator.Type != token.Equal {
@@ -102,7 +102,7 @@ func TestParseIfStmt_WithElseIfStmt(t *testing.T) {
 		t.Errorf("expected to be *ast.BinaryExpr, got %T", ifStmt.Cond)
 	}
 
-	assetIdent(t, predicate.Left, "value")
+	assertIdent(t, predicate.Left, "value")
 	assertLit(t, predicate.Right, "20")
 
 	if predicate.Operator.Type != token.Equal {
@@ -126,7 +126,7 @@ func TestParseIfStmt_WithElseIfStmt(t *testing.T) {
 		t.Errorf("expected to be *ast.BinaryExpr, got %T", ifStmt.Cond)
 	}
 
-	assetIdent(t, predicate.Left, "value")
+	assertIdent(t, predicate.Left, "value")
 	assertLit(t, predicate.Right, "30")
 
 	if predicate.Operator.Type != token.Equal {

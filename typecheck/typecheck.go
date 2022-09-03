@@ -276,6 +276,10 @@ func (tc *typechecker) checkExpr(expr ast.Expr) Type {
 			return litType
 		}
 
+		if node.T == token.This {
+			return tc.this
+		}
+
 		return INVALID
 	case *ast.Ident:
 		if t := tc.lookupType(node.Value); t != nil {
@@ -285,8 +289,11 @@ func (tc *typechecker) checkExpr(expr ast.Expr) Type {
 		tc.errorf(node, "undefined: %s", node.Value)
 		return INVALID
 
-	case *ast.CallExpr:
-		return tc.checkCallExpr(node)
+	case *ast.MethodCallExpr:
+		return tc.checkMethodCallExpr(node)
+
+	case *ast.FunctionCallExpr:
+		return tc.checkFunctionCallExpr(node)
 
 	case *ast.SuperExpr:
 		// TODO: check this
@@ -297,6 +304,9 @@ func (tc *typechecker) checkExpr(expr ast.Expr) Type {
 
 	case *ast.NewExpr:
 		return tc.checkNewExpr(node)
+
+	case *ast.MemberSelector:
+		return tc.checkMemberSelector(node)
 
 	default:
 		fmt.Printf("%+v\n", node)
@@ -316,28 +326,44 @@ func (tc *typechecker) lookupType(name string) Type {
 	return nil
 }
 
-func (tc *typechecker) checkCallExpr(call *ast.CallExpr) Type {
-	var recvType Type
-	if call.Receiver != nil {
-		recvType = tc.checkExpr(call.Receiver)
-	} else {
-		recvType = tc.this
-	}
+func (tc *typechecker) checkMethodCallExpr(mCall *ast.MethodCallExpr) Type {
+	path := mCall.Selector
+	baseType := tc.checkExpr(path.Base)
 
-	sig := recvType.LookupMethod(call.Method.Value)
+	sig := baseType.LookupMethod(path.Member.Value)
 	if sig == nil {
-		tc.errorf(call.Method, "object '%s' has no method '%s'", recvType, call.Method.Value)
+		tc.errorf(path.Member, "object '%s' has no method '%s'", baseType, path.Member.Value)
 		return INVALID
 	}
 
-	argc := len(call.Arguments)
+	argc := len(mCall.Arguments)
 	if len(sig.params) != argc {
 		// TODO: fix the token position
 		tc.errorf(nil, "wrong number of arguments (given %d, expected %d)", argc, len(sig.params))
 		return sig.ret
 	}
 
-	tc.checkArguments(sig, call.Arguments...)
+	tc.checkArguments(sig, mCall.Arguments...)
+	return sig.ret
+}
+
+func (tc *typechecker) checkFunctionCallExpr(fCall *ast.FunctionCallExpr) Type {
+	baseType := tc.this
+
+	sig := baseType.LookupMethod(fCall.Name.Value)
+	if sig == nil {
+		tc.errorf(fCall.Name, "object '%s' has no method '%s'", baseType, fCall.Name.Value)
+		return INVALID
+	}
+
+	argc := len(fCall.Arguments)
+	if len(sig.params) != argc {
+		// TODO: fix the token position
+		tc.errorf(nil, "wrong number of arguments (given %d, expected %d)", argc, len(sig.params))
+		return sig.ret
+	}
+
+	tc.checkArguments(sig, fCall.Arguments...)
 	return sig.ret
 }
 
@@ -364,6 +390,17 @@ func (tc *typechecker) checkNewExpr(node *ast.NewExpr) Type {
 	initFun := objType.LookupMethod("init")
 	tc.checkArguments(initFun, node.Arguments...)
 	return objType
+}
+
+func (tc *typechecker) checkMemberSelector(node *ast.MemberSelector) (field Type) {
+	objType := tc.checkExpr(node.Base)
+
+	if field = objType.Field(node.Member.Value); field == nil {
+		tc.errorf(node.Member, "'%s' object has no field '%s'", objType, node.Member.Value)
+		return INVALID
+	}
+
+	return field
 }
 
 func (tc *typechecker) checkArguments(sig *signature, args ...ast.Expr) {

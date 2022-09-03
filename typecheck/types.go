@@ -4,6 +4,7 @@ type Type interface {
 	Name() string
 	Is(Type) bool
 	LookupMethod(string) *signature
+	Field(string) Type
 }
 
 var (

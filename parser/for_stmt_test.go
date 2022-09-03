@@ -14,6 +14,6 @@ func TestParseForStmt(t *testing.T) {
 		t.Errorf("expected to be *ast.ForStmt, got %T", stmts[0])
 	}
 
-	assetIdent(t, forStmt.Element, "el")
-	assetIdent(t, forStmt.Iterable, "elements")
+	assertIdent(t, forStmt.Element, "el")
+	assertIdent(t, forStmt.Iterable, "elements")
 }

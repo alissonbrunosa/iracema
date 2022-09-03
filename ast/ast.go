@@ -242,14 +242,6 @@ func (r *ReturnStmt) String() string {
 	return buf.String()
 }
 
-type FieldSel struct {
-	Name *Ident
-
-	expr
-}
-
-func (*FieldSel) String() string { return "FieldSel" }
-
 //
 // Expressions
 //
@@ -364,15 +356,23 @@ type BlockExpr struct {
 
 func (*BlockExpr) String() string { return "CodeBlock" }
 
-type CallExpr struct {
-	Receiver  Expr
-	Method    *Ident
+type MethodCallExpr struct {
+	Selector  *MemberSelector
 	Arguments []Expr
 
 	expr
 }
 
-func (*CallExpr) String() string { return "CallExpr" }
+func (*MethodCallExpr) String() string { return "MethodCallExpr" }
+
+type FunctionCallExpr struct {
+	Name      *Ident
+	Arguments []Expr
+
+	expr
+}
+
+func (*FunctionCallExpr) String() string { return "FunctionCallExpr" }
 
 type BadExpr struct {
 	Expr Expr
@@ -398,6 +398,15 @@ type SuperExpr struct {
 }
 
 func (*SuperExpr) String() string { return "SuperExpr" }
+
+type MemberSelector struct {
+	Base   Expr
+	Member *Ident
+
+	expr
+}
+
+func (*MemberSelector) String() string { return "FieldSel" }
 
 type NewExpr struct {
 	Type      *Ident

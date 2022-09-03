@@ -21,7 +21,7 @@ func TestParseWhileStmt(t *testing.T) {
 		t.Errorf("expected to be *ast.BinaryExpr, got %T", whileStmt.Cond)
 	}
 
-	assetIdent(t, predicate.Left, "value")
+	assertIdent(t, predicate.Left, "value")
 	assertLit(t, predicate.Right, "10")
 
 	if predicate.Operator.Type != token.Great {
@@ -44,7 +44,7 @@ func TestParseWhileStmtWithStopStmt(t *testing.T) {
 		t.Errorf("expected to be *ast.BinaryExpr, got %T", whileStmt.Cond)
 	}
 
-	assetIdent(t, predicate.Left, "value")
+	assertIdent(t, predicate.Left, "value")
 	assertLit(t, predicate.Right, "10")
 
 	if predicate.Operator.Type != token.Great {

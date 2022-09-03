@@ -87,7 +87,19 @@ func setupObject(t *testing.T, code string, size int) *ast.ObjectDecl {
 	return file.ObjectList[0]
 }
 
-func assetIdent(t *testing.T, expr ast.Expr, expectedName string) {
+func assertMemberSelector(t *testing.T, expr ast.Expr, expectedBase, expectedMember string) {
+	t.Helper()
+
+	mSel, ok := expr.(*ast.MemberSelector)
+	if !ok {
+		t.Errorf("expected *ast.MemberSelector, got %T", expr)
+	}
+
+	assertIdent(t, mSel.Base, expectedBase)
+	assertIdent(t, mSel.Member, expectedMember)
+}
+
+func assertIdent(t *testing.T, expr ast.Expr, expectedName string) {
 	t.Helper()
 
 	ident, ok := expr.(*ast.Ident)
@@ -164,7 +176,7 @@ func assertFunDecl(t *testing.T, stmt ast.Stmt, name string, fn assertParam) *as
 		t.Fatalf("expected first stmt to be *ast.FunDecl, got %T", stmt)
 	}
 
-	assetIdent(t, funDecl.Name, name)
+	assertIdent(t, funDecl.Name, name)
 
 	for i, field := range funDecl.Parameters {
 		fn(t, i, field)

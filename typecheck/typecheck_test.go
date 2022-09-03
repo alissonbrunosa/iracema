@@ -141,3 +141,11 @@ func TestSwitchStmt(t *testing.T) {
 
 	assertErrorInFiles(t, "testdata/switchstmt.ir", expectedErrors)
 }
+
+func TestMemberSelector(t *testing.T) {
+	expectedErrors := []string{
+		"[Lin: 18 Col: 10] 'Car' object has no field 'year'",
+	}
+
+	assertErrorInFiles(t, "testdata/memberselector.ir", expectedErrors)
+}

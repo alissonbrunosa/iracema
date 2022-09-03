@@ -312,11 +312,11 @@ func (c *compiler) compileStmt(stmt ast.Stmt) error {
 				ci := lang.NewCallInfo("insert", 2)
 				c.add(bytecode.CallMethod, c.addConstant(ci))
 				c.add(bytecode.Pop, 0)
-			case *ast.FieldSel:
+			case *ast.MemberSelector:
 				if err := c.compileExpr(value, true); err != nil {
 					return err
 				}
-				c.add(bytecode.SetField, c.addConstant(lhs.Name.Value))
+				c.add(bytecode.SetField, c.addConstant(lhs.Member.Value))
 			}
 		}
 
@@ -424,9 +424,9 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) error {
 			c.add(bytecode.Pop, 0)
 		}
 
-	case *ast.CallExpr:
-		if node.Receiver != nil {
-			if err := c.compileExpr(node.Receiver, true); err != nil {
+	case *ast.MethodCallExpr:
+		if node.Selector != nil {
+			if err := c.compileExpr(node.Selector, true); err != nil {
 				return err
 			}
 		} else {
@@ -470,8 +470,8 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) error {
 			c.add(bytecode.Pop, 0)
 		}
 
-	case *ast.FieldSel:
-		c.add(bytecode.GetField, c.addConstant(node.Name.Value))
+	case *ast.MemberSelector:
+		c.add(bytecode.GetField, c.addConstant(node.Member.Value))
 
 	default:
 		return errors.New("unknown expr: " + expr.String())

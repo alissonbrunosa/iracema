@@ -1,0 +1,28 @@
+# with no missing field
+object Person {
+  var name String
+  var age Int
+
+  fun init(name String, age Int) {
+    this.name = name
+    this.age = age
+  }
+}
+
+# with missing field
+object Car {
+  var color String
+
+  fun init(color String, year Int) {
+    this.color = color
+    this.year = year
+  }
+
+  fun test() {
+    var x Int = this.getX()
+  }
+
+  fun getX() -> Int {
+    return 10
+  }
+}

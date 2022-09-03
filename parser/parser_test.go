@@ -243,34 +243,34 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 
 func TestParseCallExpr(t *testing.T) {
 	tests := []struct {
-		Code             string
-		ExpectedReceiver string
-		ExpectedMethod   string
-		ExpectedArgs     []string
+		Code           string
+		expectedBase   string
+		expectedMember string
+		ExpectedArgs   []string
 	}{
 		{
-			Code:             "author.name()",
-			ExpectedReceiver: "author",
-			ExpectedMethod:   "name",
-			ExpectedArgs:     []string{},
+			Code:           "author.name()",
+			expectedBase:   "author",
+			expectedMember: "name",
+			ExpectedArgs:   []string{},
 		},
 		{
-			Code:             "one.plus(2)",
-			ExpectedReceiver: "one",
-			ExpectedMethod:   "plus",
-			ExpectedArgs:     []string{"2"},
+			Code:           "one.plus(2)",
+			expectedBase:   "one",
+			expectedMember: "plus",
+			ExpectedArgs:   []string{"2"},
 		},
 		{
-			Code:             "math.pow(2, 3)",
-			ExpectedReceiver: "math",
-			ExpectedMethod:   "pow",
-			ExpectedArgs:     []string{"2", "3"},
+			Code:           "math.pow(2, 3)",
+			expectedBase:   "math",
+			expectedMember: "pow",
+			ExpectedArgs:   []string{"2", "3"},
 		},
 		{
-			Code:             "out.println(1 + 2)",
-			ExpectedReceiver: "out",
-			ExpectedMethod:   "println",
-			ExpectedArgs:     []string{"(1+2)"},
+			Code:           "out.println(1 + 2)",
+			expectedBase:   "out",
+			expectedMember: "println",
+			ExpectedArgs:   []string{"(1+2)"},
 		},
 	}
 
@@ -282,13 +282,12 @@ func TestParseCallExpr(t *testing.T) {
 			t.Errorf("expected *ast.ExprStmt, got %T", stmts[0])
 		}
 
-		callExpr, ok := exprStmt.Expr.(*ast.CallExpr)
+		callExpr, ok := exprStmt.Expr.(*ast.MethodCallExpr)
 		if !ok {
 			t.Errorf("expected *ast.CallExpr, got %T", exprStmt.Expr)
 		}
 
-		assetIdent(t, callExpr.Receiver, test.ExpectedReceiver)
-		assetIdent(t, callExpr.Method, test.ExpectedMethod)
+		assertMemberSelector(t, callExpr.Selector, test.expectedBase, test.expectedMember)
 		assertArgumentList(t, callExpr.Arguments, test.ExpectedArgs)
 	}
 }
@@ -335,30 +334,30 @@ func TestErrorParse(t *testing.T) {
 
 func TestFunctionCall(t *testing.T) {
 	tests := []struct {
-		Code                 string
-		ExpectedFunctionName string
-		ExpectedArgs         []string
+		code         string
+		expectedName string
+		expectedArgs []string
 	}{
 		{
-			Code:                 "println()",
-			ExpectedFunctionName: "println",
-			ExpectedArgs:         []string{},
+			code:         "println()",
+			expectedName: "println",
+			expectedArgs: []string{},
 		},
 		{
-			Code:                 `println("Hello")`,
-			ExpectedFunctionName: "println",
-			ExpectedArgs:         []string{"Hello"},
+			code:         `println("Hello")`,
+			expectedName: "println",
+			expectedArgs: []string{"Hello"},
 		},
 	}
 
 	for _, test := range tests {
-		stmts := setupFunBody(t, test.Code)
+		stmts := setupFunBody(t, test.code)
 
 		exprStmt := stmts[0].(*ast.ExprStmt)
 
-		callExpr := exprStmt.Expr.(*ast.CallExpr)
-		assetIdent(t, callExpr.Method, test.ExpectedFunctionName)
-		assertArgumentList(t, callExpr.Arguments, test.ExpectedArgs)
+		fCall := exprStmt.Expr.(*ast.FunctionCallExpr)
+		assertIdent(t, fCall.Name, test.expectedName)
+		assertArgumentList(t, fCall.Arguments, test.expectedArgs)
 	}
 }
 
@@ -382,8 +381,8 @@ func TestParseObjectDecl_withField(t *testing.T) {
 	assertConst(t, objDecl.Name, "Person")
 
 	for _, field := range objDecl.FieldList {
-		assetIdent(t, field.Type, "String")
-		assetIdent(t, field.Name, "name")
+		assertIdent(t, field.Type, "String")
+		assertIdent(t, field.Name, "name")
 	}
 }
 
@@ -431,7 +430,7 @@ func TestFunDecl(t *testing.T) {
 		fun := setupFun(t, test.code, 1)
 
 		assert := func(t *testing.T, pos int, field *ast.Field) {
-			assetIdent(t, field.Name, test.expectedParams[pos].name)
+			assertIdent(t, field.Name, test.expectedParams[pos].name)
 
 			if field.Value != nil {
 				assertLit(t, field.Value, test.expectedParams[pos].value)
@@ -466,7 +465,7 @@ func TestFunDeclWithCatch(t *testing.T) {
 		funDecl := assertFunDecl(t, fun, "walk", nil)
 
 		for i, catch := range funDecl.Catches {
-			assetIdent(t, catch.Ref, test.ExpectedRef)
+			assertIdent(t, catch.Ref, test.ExpectedRef)
 			assertConst(t, catch.Type, test.ExpectedTypes[i])
 		}
 	}
@@ -572,7 +571,7 @@ func TestParseIndexExpr(t *testing.T) {
 		t.Errorf("expected first stmt to be *ast.IndexExpr, got %T", exprStmt.Expr)
 	}
 
-	assetIdent(t, idxExpr.Expr, "value")
+	assertIdent(t, idxExpr.Expr, "value")
 	assertLit(t, idxExpr.Index, "10")
 }
 
@@ -619,7 +618,7 @@ func Test_ParseSuperExpr(t *testing.T) {
 				}
 
 				for _, arg := range expr.Arguments {
-					assetIdent(t, arg, "value")
+					assertIdent(t, arg, "value")
 				}
 			},
 		},
@@ -652,7 +651,7 @@ func TestParse_withStmtsInTheSameLine(t *testing.T) {
 		t.Fatalf("expected ast.AssignStmt, got %T", stmts[0])
 	}
 
-	assetIdent(t, first.Left[0], "a")
+	assertIdent(t, first.Left[0], "a")
 	assertLit(t, first.Right[0], "10")
 
 	second, ok := stmts[1].(*ast.AssignStmt)
@@ -660,7 +659,7 @@ func TestParse_withStmtsInTheSameLine(t *testing.T) {
 		t.Fatalf("expected ast.AssignStmt, got %T", stmts[1])
 	}
 
-	assetIdent(t, second.Left[0], "b")
+	assertIdent(t, second.Left[0], "b")
 	assertLit(t, second.Right[0], "20")
 }
 
@@ -688,20 +687,21 @@ func TestParseReturnStmt_withoutValue(t *testing.T) {
 	}
 }
 
-func TestFieldSel(t *testing.T) {
-	stmts := setupFunBody(t, "this.name")
+func TestMemberSelector(t *testing.T) {
+	stmts := setupFunBody(t, "a.name")
 
 	exprStmt, ok := stmts[0].(*ast.ExprStmt)
 	if !ok {
 		t.Fatalf("expected first stmt to be *ast.ExprStmt, got %T", stmts[0])
 	}
 
-	fs, ok := exprStmt.Expr.(*ast.FieldSel)
+	fs, ok := exprStmt.Expr.(*ast.MemberSelector)
 	if !ok {
 		t.Fatalf("expected first stmt to be *ast.FieldSel, got %T", exprStmt.Expr)
 	}
 
-	assetIdent(t, fs.Name, "name")
+	assertIdent(t, fs.Base, "a")
+	assertIdent(t, fs.Member, "name")
 }
 
 func TestVarDecl(t *testing.T) {
@@ -742,10 +742,10 @@ func TestVarDecl(t *testing.T) {
 				t.Fatalf("expected first stmt to be *ast.VarDecl, got %T", stmts[0])
 			}
 
-			assetIdent(t, vd.Name, test.expectedIdent)
+			assertIdent(t, vd.Name, test.expectedIdent)
 
 			if vd.Type != nil {
-				assetIdent(t, vd.Type, test.expectedType)
+				assertIdent(t, vd.Type, test.expectedType)
 			}
 
 			if vd.Value != nil {
@@ -763,7 +763,7 @@ func TestNewExpr(t *testing.T) {
 		t.Fatalf("expected first stmt to be *ast.VarDecl, got %T", stmts[0])
 	}
 
-	assetIdent(t, vd.Name, "o")
+	assertIdent(t, vd.Name, "o")
 
 	newExpr, ok := vd.Value.(*ast.NewExpr)
 	if !ok {
