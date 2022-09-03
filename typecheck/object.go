@@ -61,6 +61,8 @@ func (o *object) Is(typ Type) bool {
 	return false
 }
 
+func (o *object) Parent() Type { return o.parent }
+
 func (o *object) defineMethodSet(sigs []*signature) {
 	o.methodSet = make(MethodSet, len(sigs))
 

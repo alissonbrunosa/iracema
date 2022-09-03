@@ -2,6 +2,7 @@ package typecheck
 
 type Type interface {
 	Name() string
+	Parent() Type
 	Is(Type) bool
 	LookupMethod(string) *signature
 	Field(string) Type

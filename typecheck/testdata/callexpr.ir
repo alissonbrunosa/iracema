@@ -43,3 +43,33 @@ object CallNewObject {
     var cno = new CallNewObject(10.50, 10)
   }
 }
+
+
+# call super method
+object Animal {
+  fun walk() {}
+
+  fun eat(food String) {}
+
+  fun do_something() {
+    super() # expected error: no superclass of 'Animal' has method 'do_something'
+  }
+
+  fun age() -> Int { return 10 }
+}
+
+object Dog is Animal {
+  fun walk() {
+    super()
+  }
+
+  fun eat(food String) {
+    super(10) # expected error: expected 'String', found 'Int' in argument to eat
+  }
+
+  fun age() -> Int {
+    var x Int = super()
+    var y Float = super() # expected error: expected 'Float', found 'Int' in declaration
+    return x
+  }
+}

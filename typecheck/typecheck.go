@@ -296,8 +296,7 @@ func (tc *typechecker) checkExpr(expr ast.Expr) Type {
 		return tc.checkFunctionCallExpr(node)
 
 	case *ast.SuperExpr:
-		// TODO: check this
-		return INVALID
+		return tc.checkSuperExpr(node)
 
 	case *ast.BinaryExpr:
 		return tc.checkBinary(node)
@@ -364,6 +363,31 @@ func (tc *typechecker) checkFunctionCallExpr(fCall *ast.FunctionCallExpr) Type {
 	}
 
 	tc.checkArguments(sig, fCall.Arguments...)
+	return sig.ret
+}
+
+func (tc *typechecker) checkSuperExpr(node *ast.SuperExpr) Type {
+	parent := tc.this.Parent()
+
+	if parent == nil {
+		tc.errorf(node, "no superclass of '%s' has method '%s'", tc.this, tc.sig.name)
+		return INVALID
+	}
+
+	sig := parent.LookupMethod(tc.sig.name)
+	if sig == nil {
+		tc.errorf(node, "no superclass of '%s' has method '%s'", tc.this, tc.sig.name)
+		return INVALID
+	}
+
+	argc := len(node.Arguments)
+	if len(sig.params) != argc {
+		// TODO: fix the token position
+		tc.errorf(nil, "wrong number of arguments (given %d, expected %d)", argc, len(sig.params))
+		return sig.ret
+	}
+
+	tc.checkArguments(sig, node.Arguments...)
 	return sig.ret
 }
 
