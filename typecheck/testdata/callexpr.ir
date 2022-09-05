@@ -73,3 +73,18 @@ object Dog is Animal {
     return x
   }
 }
+
+
+object TestWrongArgc {
+  fun do() {}
+
+  fun testDo() {
+    do("") # expected error: wrong number of argument
+  }
+}
+
+object TestWrongArgcSuper is TestWrongArgc {
+  fun do() {
+    super("") # expected error: wrong number of argument
+  }
+}

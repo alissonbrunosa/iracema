@@ -346,8 +346,7 @@ func (tc *typechecker) checkMethodCallExpr(mCall *ast.MethodCallExpr) Type {
 
 	argc := len(mCall.Arguments)
 	if len(sig.params) != argc {
-		// TODO: fix the token position
-		tc.errorf(nil, "wrong number of arguments (given %d, expected %d)", argc, len(sig.params))
+		tc.errorf(mCall, "wrong number of arguments (given %d, expected %d)", argc, len(sig.params))
 		return sig.ret
 	}
 
@@ -366,8 +365,7 @@ func (tc *typechecker) checkFunctionCallExpr(fCall *ast.FunctionCallExpr) Type {
 
 	argc := len(fCall.Arguments)
 	if len(sig.params) != argc {
-		// TODO: fix the token position
-		tc.errorf(nil, "wrong number of arguments (given %d, expected %d)", argc, len(sig.params))
+		tc.errorf(fCall, "wrong number of arguments (given %d, expected %d)", argc, len(sig.params))
 		return sig.ret
 	}
 
@@ -395,8 +393,7 @@ func (tc *typechecker) checkSuperExpr(node *ast.SuperExpr) Type {
 
 	argc := len(node.Arguments)
 	if len(sig.params) != argc {
-		// TODO: fix the token position
-		tc.errorf(nil, "wrong number of arguments (given %d, expected %d)", argc, len(sig.params))
+		tc.errorf(node, "wrong number of arguments (given %d, expected %d)", argc, len(sig.params))
 		return sig.ret
 	}
 

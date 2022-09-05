@@ -71,6 +71,8 @@ func TestCallExpr(t *testing.T) {
 		"[Lin: 55 Col: 5] no superclass of 'Animal' has method 'do_something'",
 		"[Lin: 67 Col: 11] expected 'String', found 'Int' in argument to eat",
 		"[Lin: 72 Col: 19] expected 'Float', found 'Int' in declaration",
+		"[Lin: 82 Col: 5] wrong number of arguments (given 1, expected 0)",
+		"[Lin: 88 Col: 5] wrong number of arguments (given 1, expected 0)",
 	}
 
 	assertErrorInFiles(t, "testdata/callexpr.ir", expectedErrors)
