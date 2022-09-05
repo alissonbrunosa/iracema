@@ -15,13 +15,13 @@ func (o *object) Name() string {
 	return o.name
 }
 
-func (o *object) LookupMethod(name string) *signature {
+func (o *object) Method(name string) *signature {
 	if m, ok := o.methodSet[name]; ok {
 		return m
 	}
 
 	if o.parent != nil {
-		return o.parent.LookupMethod(name)
+		return o.parent.Method(name)
 	}
 
 	return nil

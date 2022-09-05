@@ -4,7 +4,7 @@ type Type interface {
 	Name() string
 	Parent() Type
 	Is(Type) bool
-	LookupMethod(string) *signature
+	Method(string) *signature
 	Field(string) Type
 }
 

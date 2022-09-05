@@ -154,7 +154,7 @@ func (tc *typechecker) checkFunDecl(fun *ast.FunDecl) {
 		tc.gamma = s
 	}(tc.gamma)
 
-	tc.sig = tc.this.LookupMethod(fun.Name.Value)
+	tc.sig = tc.this.Method(fun.Name.Value)
 	tc.gamma = &gamma{
 		parent: tc.gamma,
 		env:    make(map[string]Type),
@@ -272,22 +272,10 @@ func (tc *typechecker) checkAssignStmt(assign *ast.AssignStmt) {
 func (tc *typechecker) checkExpr(expr ast.Expr) Type {
 	switch node := expr.(type) {
 	case *ast.BasicLit:
-		if litType := LIT_TYPES[node.T.String()]; litType != nil {
-			return litType
-		}
+		return tc.checkBasicLit(node)
 
-		if node.T == token.This {
-			return tc.this
-		}
-
-		return INVALID
 	case *ast.Ident:
-		if t := tc.lookupType(node.Value); t != nil {
-			return t
-		}
-
-		tc.errorf(node, "undefined: %s", node.Value)
-		return INVALID
+		return tc.checkIdent(node)
 
 	case *ast.MethodCallExpr:
 		return tc.checkMethodCallExpr(node)
@@ -325,11 +313,32 @@ func (tc *typechecker) lookupType(name string) Type {
 	return nil
 }
 
+func (tc *typechecker) checkBasicLit(node *ast.BasicLit) Type {
+	if litType := LIT_TYPES[node.T.String()]; litType != nil {
+		return litType
+	}
+
+	if node.T == token.This {
+		return tc.this
+	}
+
+	return INVALID
+}
+
+func (tc *typechecker) checkIdent(node *ast.Ident) (t Type) {
+	if t = tc.lookupType(node.Value); t == nil {
+		tc.errorf(node, "undefined: %s", node.Value)
+		return INVALID
+	}
+
+	return
+}
+
 func (tc *typechecker) checkMethodCallExpr(mCall *ast.MethodCallExpr) Type {
 	path := mCall.Selector
 	baseType := tc.checkExpr(path.Base)
 
-	sig := baseType.LookupMethod(path.Member.Value)
+	sig := baseType.Method(path.Member.Value)
 	if sig == nil {
 		tc.errorf(path.Member, "object '%s' has no method '%s'", baseType, path.Member.Value)
 		return INVALID
@@ -349,7 +358,7 @@ func (tc *typechecker) checkMethodCallExpr(mCall *ast.MethodCallExpr) Type {
 func (tc *typechecker) checkFunctionCallExpr(fCall *ast.FunctionCallExpr) Type {
 	baseType := tc.this
 
-	sig := baseType.LookupMethod(fCall.Name.Value)
+	sig := baseType.Method(fCall.Name.Value)
 	if sig == nil {
 		tc.errorf(fCall.Name, "object '%s' has no method '%s'", baseType, fCall.Name.Value)
 		return INVALID
@@ -367,14 +376,18 @@ func (tc *typechecker) checkFunctionCallExpr(fCall *ast.FunctionCallExpr) Type {
 }
 
 func (tc *typechecker) checkSuperExpr(node *ast.SuperExpr) Type {
-	parent := tc.this.Parent()
+	if tc.sig == nil {
+		tc.errorf(node, "super called outside of method")
+		return INVALID
+	}
 
+	parent := tc.this.Parent()
 	if parent == nil {
 		tc.errorf(node, "no superclass of '%s' has method '%s'", tc.this, tc.sig.name)
 		return INVALID
 	}
 
-	sig := parent.LookupMethod(tc.sig.name)
+	sig := parent.Method(tc.sig.name)
 	if sig == nil {
 		tc.errorf(node, "no superclass of '%s' has method '%s'", tc.this, tc.sig.name)
 		return INVALID
@@ -399,7 +412,7 @@ func (tc *typechecker) checkBinary(node *ast.BinaryExpr) Type {
 		return typ
 	}
 
-	fn := lhsType.LookupMethod(node.Operator.Type.String())
+	fn := lhsType.Method(node.Operator.Type.String())
 	if fn == nil {
 		tc.errorf(node, "object '%s' do not implement '%s' operator", lhsType, node.Operator)
 		return INVALID
@@ -411,7 +424,7 @@ func (tc *typechecker) checkBinary(node *ast.BinaryExpr) Type {
 
 func (tc *typechecker) checkNewExpr(node *ast.NewExpr) Type {
 	objType := tc.lookupType(node.Type.Value)
-	initFun := objType.LookupMethod("init")
+	initFun := objType.Method("init")
 	tc.checkArguments(initFun, node.Arguments...)
 	return objType
 }
@@ -482,7 +495,7 @@ func (tc *typechecker) checkWhileStmt(while *ast.WhileStmt) {
 func (tc *typechecker) checkStmtSwitch(stmt *ast.SwitchStmt) {
 	keyType := tc.checkExpr(stmt.Key)
 
-	eqFun := keyType.LookupMethod("==")
+	eqFun := keyType.Method("==")
 	if eqFun == nil {
 		tc.errorf(stmt.Key, "object '%s' do not implement '==' operator", keyType)
 	}
