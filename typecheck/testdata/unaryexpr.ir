@@ -1,0 +1,59 @@
+object TestUnaryExpr {
+  fun unary_minus() {
+    var x Int = -10
+  }
+
+  fun unary_plus() {
+    var x Int = +10
+  }
+
+  fun unary_not() {
+    var x = true
+    var y Bool = !x
+  }
+
+  fun non_numeric_uminus() -> Object {
+    var o = new Object()
+    return -o # expected error: object 'Object' do not implement '-' unary operator
+  }
+
+  fun non_numeric_uplus() -> Object {
+    var o = new Object()
+    return +o # expected error: object 'Object' do not implement '+' unary operator
+  }
+
+  fun not_in_int() -> Int {
+    var x = 10
+    return !x # expected error: object 'Int' do not implement '!' unary operator
+  }
+
+  fun not_in_float() -> Int {
+    var x = 10.40
+    return !x # expected error: object 'Float' do not implement '!' unary operator
+  }
+
+  fun not_in_string() -> Int {
+    var x = ""
+    return !x # expected error: object 'String' do not implement '!' unary operator
+  }
+
+  fun uplus_in_string() -> Int {
+    var x = ""
+    return +x # expected error: object 'String' do not implement '+' unary operator
+  }
+
+  fun uminus_in_string() -> Int {
+    var x = ""
+    return -x # expected error: object 'String' do not implement '-' unary operator
+  }
+
+  fun uminus_in_bool() -> Int {
+    var x = true
+    return -x # expected error: object 'Bool' do not implement '-' unary operator
+  }
+
+  fun uplus_in_bool() -> Int {
+    var x = false
+    return +x # expected error: object 'Bool' do not implement '-' unary operator
+  }
+}

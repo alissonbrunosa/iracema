@@ -440,18 +440,19 @@ func (p *parser) parseBinaryExpr(precedence int) ast.Expr {
 	return expr
 }
 
-func (p *parser) parseUnaryExpr() (expr ast.Expr) {
+func (p *parser) parseUnaryExpr() ast.Expr {
 	switch p.tok.Type {
 	case token.Not, token.Plus, token.Minus:
-		expr = &ast.UnaryExpr{
-			Operator: p.expect(p.tok.Type),
-			Expr:     p.parseUnaryExpr(),
-		}
-	default:
-		expr = p.parsePrimaryExpr()
-	}
+		uExpr := new(ast.UnaryExpr)
+		uExpr.Pos = p.tok.Position
+		uExpr.Operator = p.tok
+		p.advance()
+		uExpr.Expr = p.parseUnaryExpr()
+		return uExpr
 
-	return
+	default:
+		return p.parsePrimaryExpr()
+	}
 }
 
 func (p *parser) parsePrimaryExpr() (expr ast.Expr) {

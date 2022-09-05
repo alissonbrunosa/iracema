@@ -286,6 +286,9 @@ func (tc *typechecker) checkExpr(expr ast.Expr) Type {
 	case *ast.SuperExpr:
 		return tc.checkSuperExpr(node)
 
+	case *ast.UnaryExpr:
+		return tc.checkUnary(node)
+
 	case *ast.BinaryExpr:
 		return tc.checkBinary(node)
 
@@ -299,18 +302,6 @@ func (tc *typechecker) checkExpr(expr ast.Expr) Type {
 		fmt.Printf("%+v\n", node)
 		panic("unreacheble")
 	}
-}
-
-func (tc *typechecker) lookupType(name string) Type {
-	if k, ok := LIT_TYPES[name]; ok {
-		return k
-	}
-
-	if typ := tc.lookup(name); typ != nil {
-		return typ
-	}
-
-	return nil
 }
 
 func (tc *typechecker) checkBasicLit(node *ast.BasicLit) Type {
@@ -332,6 +323,18 @@ func (tc *typechecker) checkIdent(node *ast.Ident) (t Type) {
 	}
 
 	return
+}
+
+func (tc *typechecker) lookupType(name string) Type {
+	if t, ok := LIT_TYPES[name]; ok {
+		return t
+	}
+
+	if t := tc.lookup(name); t != nil {
+		return t
+	}
+
+	return nil
 }
 
 func (tc *typechecker) checkMethodCallExpr(mCall *ast.MethodCallExpr) Type {
@@ -401,6 +404,21 @@ func (tc *typechecker) checkSuperExpr(node *ast.SuperExpr) Type {
 	return sig.ret
 }
 
+func (tc *typechecker) checkUnary(node *ast.UnaryExpr) Type {
+	operandType := tc.checkExpr(node.Expr)
+	if t := unary(node.Operator.Type, operandType); t != nil {
+		return t
+	}
+
+	fn := operandType.Method(node.Operator.String())
+	if fn == nil {
+		tc.errorf(node, "object '%s' do not implement '%s' unary operator", operandType, node.Operator)
+		return INVALID
+	}
+
+	return INVALID
+}
+
 func (tc *typechecker) checkBinary(node *ast.BinaryExpr) Type {
 	lhsType := tc.checkExpr(node.Left)
 	rhsType := tc.checkExpr(node.Right)
@@ -409,7 +427,7 @@ func (tc *typechecker) checkBinary(node *ast.BinaryExpr) Type {
 		return typ
 	}
 
-	fn := lhsType.Method(node.Operator.Type.String())
+	fn := lhsType.Method(node.Operator.String())
 	if fn == nil {
 		tc.errorf(node, "object '%s' do not implement '%s' operator", lhsType, node.Operator)
 		return INVALID
@@ -597,6 +615,18 @@ func isNumber(t Type) bool {
 
 func isComparable(t Type) bool {
 	return isNumber(t) || t == STRING
+}
+
+func unary(operator token.Type, operandType Type) Type {
+	if isNumber(operandType) && (operator == token.Plus || operator == token.Minus) {
+		return operandType
+	}
+
+	if operandType == BOOL && operator == token.Not {
+		return operandType
+	}
+
+	return nil
 }
 
 func binary(operator token.Type, lhsType, rhsType Type) Type {

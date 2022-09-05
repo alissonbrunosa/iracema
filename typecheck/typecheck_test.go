@@ -154,3 +154,19 @@ func TestMemberSelector(t *testing.T) {
 
 	assertErrorInFiles(t, "testdata/memberselector.ir", expectedErrors)
 }
+
+func TestUnaryExpr(t *testing.T) {
+	expectedErrors := []string{
+		"[Lin: 17 Col: 12] object 'Object' do not implement '-' unary operator",
+		"[Lin: 22 Col: 12] object 'Object' do not implement '+' unary operator",
+		"[Lin: 27 Col: 12] object 'Int' do not implement '!' unary operator",
+		"[Lin: 32 Col: 12] object 'Float' do not implement '!' unary operator",
+		"[Lin: 37 Col: 12] object 'String' do not implement '!' unary operator",
+		"[Lin: 42 Col: 12] object 'String' do not implement '+' unary operator",
+		"[Lin: 47 Col: 12] object 'String' do not implement '-' unary operator",
+		"[Lin: 52 Col: 12] object 'Bool' do not implement '-' unary operator",
+		"[Lin: 57 Col: 12] object 'Bool' do not implement '+' unary operator",
+	}
+
+	assertErrorInFiles(t, "testdata/unaryexpr.ir", expectedErrors)
+}
