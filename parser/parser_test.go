@@ -781,3 +781,22 @@ func TestNewExpr_WithArguments(t *testing.T) {
 
 	assertArgumentList(t, newExpr.Arguments, []string{"10", "10"})
 }
+
+func TestSpecialType(t *testing.T) {
+	stmts := setupFunBody(t, "var a Array<Int>")
+
+	vd, ok := stmts[0].(*ast.VarDecl)
+	if !ok {
+		t.Fatalf("expected first stmt to be *ast.VarDecl, got %T", stmts[0])
+	}
+
+	assertIdent(t, vd.Name, "a")
+
+	sType, ok := vd.Type.(*ast.Type)
+	if !ok {
+		t.Fatalf("expected *ast.Type, got %T", vd.Value)
+	}
+
+	assertConst(t, sType.BaseType, "Array")
+	assertConst(t, sType.ParamType, "Int")
+}

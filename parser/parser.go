@@ -7,6 +7,7 @@ import (
 	"iracema/ast"
 	"iracema/lexer"
 	"iracema/token"
+	"os"
 )
 
 var startDecl = map[token.Type]bool{
@@ -43,6 +44,15 @@ type parser struct {
 	lexer lexer.Lexer
 	tok   *token.Token
 	err   error
+}
+
+func ParseFile(filename string) (*ast.File, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	return Parse(f)
 }
 
 func Parse(input io.Reader) (*ast.File, error) {
@@ -186,10 +196,10 @@ func (p *parser) parseObjectDecl() *ast.ObjectDecl {
 	p.expect(token.Object)
 
 	obj := new(ast.ObjectDecl)
-	obj.Name = p.parseConst()
+	obj.Name = p.parseIdent(true)
 
 	if p.consume(token.Is) {
-		obj.Parent = p.parseConst()
+		obj.Parent = p.parseIdent(true)
 	}
 
 	p.expect(token.LeftBrace)
@@ -217,15 +227,15 @@ func (p *parser) parseObjectDecl() *ast.ObjectDecl {
 }
 
 func (p *parser) parseVarDecl() *ast.VarDecl {
-	varTok := p.expect(token.Var)
+	tok := p.expect(token.Var)
 
 	decl := new(ast.VarDecl)
-	decl.Token = varTok
-	decl.Name = p.parseIdent()
+	decl.Pos = tok.Position
+	decl.Name = p.parseIdent(false)
 	if p.consume(token.Assign) {
 		decl.Value = p.parseExpr()
 	} else {
-		decl.Type = p.parseIdent()
+		decl.Type = p.parseType()
 		if p.consume(token.Assign) {
 			decl.Value = p.parseExpr()
 		}
@@ -234,16 +244,31 @@ func (p *parser) parseVarDecl() *ast.VarDecl {
 	return decl
 }
 
+func (p *parser) parseType() ast.Expr {
+	name := p.parseIdent(true)
+
+	switch p.tok.Type {
+	case token.Less:
+		p.advance()
+		paramType := p.parseIdent(true)
+		p.expect(token.Great)
+		return &ast.Type{BaseType: name, ParamType: paramType}
+
+	default:
+		return name
+	}
+}
+
 func (p *parser) parseFunDecl() *ast.FunDecl {
 	funToken := p.expect(token.Fun)
 
 	fun := new(ast.FunDecl)
 	fun.Pos = funToken.Position
-	fun.Name = p.parseIdent()
+	fun.Name = p.parseIdent(false)
 	fun.Parameters = p.parseParameterList()
 
 	if p.consume(token.Arrow) {
-		fun.Return = p.parseConst()
+		fun.Return = p.parseIdent(true)
 	}
 
 	fun.Body = p.parseBlockStmt()
@@ -254,9 +279,9 @@ func (p *parser) parseFunDecl() *ast.FunDecl {
 func (p *parser) parseCatchList() (list []*ast.CatchDecl) {
 	for p.consume(token.Catch) {
 		p.expect(token.LeftParen)
-		ref := p.parseIdent()
+		ref := p.parseIdent(false)
 		p.expect(token.Colon)
-		typ := p.parseConst()
+		typ := p.parseIdent(true)
 		p.expect(token.RightParen)
 		catch := &ast.CatchDecl{
 			Ref:  ref,
@@ -313,7 +338,7 @@ func (p *parser) parseWhileStmt() ast.Stmt {
 
 func (p *parser) parseForStmt() ast.Stmt {
 	p.expect(token.For)
-	element := p.parseIdent()
+	element := p.parseIdent(false)
 	p.expect(token.In)
 	iterator := p.parseExpr()
 	body := p.parseBlockStmt()
@@ -485,7 +510,7 @@ func (p *parser) parseOperand() ast.Expr {
 		return p.parseBlockExpr()
 
 	case token.Ident:
-		return p.parseIdent()
+		return p.parseIdent(false)
 
 	case token.LeftParen:
 		return p.parseGroupExpr()
@@ -544,21 +569,13 @@ func (p *parser) parseBlockExpr() *ast.BlockExpr {
 	}
 }
 
-func (p *parser) parseIdent() *ast.Ident {
-	tok := p.expect(token.Ident)
-	ident := new(ast.Ident)
-	ident.Pos = tok.Position
-	ident.Value = tok.Literal
-	return ident
-}
-
-func (p *parser) parseConst() *ast.Ident {
+func (p *parser) parseIdent(wantConst bool) *ast.Ident {
 	tok := p.expect(token.Ident)
 
 	ident := new(ast.Ident)
 	ident.Pos = tok.Position
 	ident.Value = tok.Literal
-	if !ident.IsConstant() {
+	if wantConst && !ident.IsConstant() {
 		p.setError(tok.Position, "expected ident to be a constant")
 	}
 
@@ -578,7 +595,7 @@ func (p *parser) parseMemberSelector(base ast.Expr) ast.Expr {
 	mSel := new(ast.MemberSelector)
 	mSel.Base = base
 	mSel.Pos = base.Position()
-	mSel.Member = p.parseIdent()
+	mSel.Member = p.parseIdent(false)
 
 	return mSel
 }
@@ -695,15 +712,15 @@ func (p *parser) parseNewExpr() ast.Expr {
 
 	expr := new(ast.NewExpr)
 	expr.Pos = tok.Position
-	expr.Type = p.parseConst()
+	expr.Type = p.parseType()
 	expr.Arguments = p.parseArgumentList()
 	return expr
 }
 
 func (p *parser) parseField() *ast.Field {
 	field := new(ast.Field)
-	field.Name = p.parseIdent()
-	field.Type = p.parseConst()
+	field.Name = p.parseIdent(false)
+	field.Type = p.parseIdent(true)
 
 	if p.consume(token.Assign) {
 		field.Value = p.parseExpr()

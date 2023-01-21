@@ -61,10 +61,12 @@ func (l *lexer) NextToken() *token.Token {
 
 	case '>':
 		l.advance()
+		l.readNewLine = true
 		kind := token.Great
 
 		if l.char == '=' {
 			l.advance()
+			l.readNewLine = false
 			kind = token.GreatEqual
 		}
 

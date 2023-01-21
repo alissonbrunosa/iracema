@@ -137,9 +137,8 @@ type Field struct {
 func (f *Field) String() string { return "ast.Field" }
 
 type VarDecl struct {
-	Token *token.Token
 	Name  *Ident
-	Type  *Ident
+	Type  Expr
 	Value Expr
 
 	stmt
@@ -261,8 +260,14 @@ type Ident struct {
 	expr
 }
 
-func (i *Ident) IsConstant() bool { return 'A' <= i.Value[0] && i.Value[0] <= 'Z' }
-func (*Ident) String() string     { return "Ident" }
+func (i *Ident) IsConstant() bool {
+	if i.Value == "" {
+		return false
+	}
+
+	return 'A' <= i.Value[0] && i.Value[0] <= 'Z'
+}
+func (*Ident) String() string { return "Ident" }
 
 type UnaryExpr struct {
 	Operator *token.Token
@@ -409,10 +414,21 @@ type MemberSelector struct {
 func (*MemberSelector) String() string { return "FieldSel" }
 
 type NewExpr struct {
-	Type      *Ident
+	Type      Expr
 	Arguments []Expr
 
 	expr
 }
 
 func (*NewExpr) String() string { return "NewExpr" }
+
+// TODO: special type is a weird name.
+// Need to find a better name for Array<T> and Hash<T,T>
+type Type struct {
+	BaseType  *Ident
+	ParamType *Ident
+
+	expr
+}
+
+func (*Type) String() string { return "Type" }

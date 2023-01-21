@@ -17,5 +17,8 @@ object VarDeclTest {
 
     ## declaration without type
     var z = 10
+
+    ## parameterized type Array
+    var ary Array<Int>
   }
 }

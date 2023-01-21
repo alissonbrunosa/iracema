@@ -170,3 +170,9 @@ func TestUnaryExpr(t *testing.T) {
 
 	assertErrorInFiles(t, "testdata/unaryexpr.ir", expectedErrors)
 }
+
+func TestArrayLit(t *testing.T) {
+	//expectedErrors := []string{}
+
+	// assertErrorInFiles(t, "testdata/arraylit.ir", expectedErrors)
+}

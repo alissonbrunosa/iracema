@@ -73,12 +73,6 @@ func (o *object) defineMethodSet(sigs []*signature) {
 
 func (o *object) String() string { return o.name }
 
-func (o *object) complete() {
-	if _, ok := o.methodSet["new"]; !ok {
-		o.methodSet["new"] = &signature{name: "new", ret: o}
-	}
-}
-
 func newObject(name string, parent Type) *object {
 	return &object{
 		name:      name,

@@ -298,6 +298,12 @@ func (tc *typechecker) checkExpr(expr ast.Expr) Type {
 	case *ast.MemberSelector:
 		return tc.checkMemberSelector(node)
 
+	case *ast.Type:
+		return tc.checkType(node)
+
+	case *ast.GroupExpr:
+		return tc.checkExpr(node.Expr)
+
 	default:
 		fmt.Printf("%+v\n", node)
 		panic("unreacheble")
@@ -438,7 +444,7 @@ func (tc *typechecker) checkBinary(node *ast.BinaryExpr) Type {
 }
 
 func (tc *typechecker) checkNewExpr(node *ast.NewExpr) Type {
-	objType := tc.lookupType(node.Type.Value)
+	objType := tc.checkExpr(node.Type)
 	initFun := objType.Method("init")
 	tc.checkArguments(initFun, node.Arguments...)
 	return objType
@@ -455,6 +461,18 @@ func (tc *typechecker) checkMemberSelector(node *ast.MemberSelector) (field Type
 	return field
 }
 
+func (tc *typechecker) checkType(node *ast.Type) Type {
+	switch node.BaseType.Value {
+	case "Array":
+		paramType := tc.lookupType(node.ParamType.Value)
+		return newArray(paramType)
+
+	default:
+		tc.errorf(node.BaseType, "only Array is a parameterized type")
+		return INVALID
+	}
+}
+
 func (tc *typechecker) checkArguments(sig *signature, args ...ast.Expr) {
 	context := fmt.Sprintf("in argument to %s", sig.name)
 
@@ -464,12 +482,11 @@ func (tc *typechecker) checkArguments(sig *signature, args ...ast.Expr) {
 }
 
 func (tc *typechecker) errorf(node ast.Node, format string, args ...any) {
-	if node != nil {
-		pos := node.Position()
-		format = "[Lin: %d Col: %d] " + format
-		args = append([]any{pos.Column()}, args...)
-		args = append([]any{pos.Line()}, args...)
-	}
+	pos := node.Position()
+	fmt.Printf("%v, %T\n", pos, node)
+	format = "[Lin: %d Col: %d] " + format
+	args = append([]any{pos.Column()}, args...)
+	args = append([]any{pos.Line()}, args...)
 	err := fmt.Errorf(format, args...)
 	tc.errs = append(tc.errs, err)
 }
@@ -580,8 +597,6 @@ func (tc *typechecker) defineObject(decl *ast.ObjectDecl) Type {
 				tc.errorf(f, "function %s is already defined in object %s", sig.name, objType)
 			}
 		}
-
-		objType.complete()
 	})
 
 	if !tc.Insert(objType.name, objType) {

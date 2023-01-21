@@ -1,0 +1,11 @@
+puts("LOADED")
+
+fun call {
+  puts("CALLED")
+}
+
+object Person {
+  fun name {
+    return "Person from test2.ir"
+  }
+}

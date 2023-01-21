@@ -1,0 +1,6 @@
+object TestArrayLit {
+  fun do() {
+
+    var x Array<Int, Int> = new Array<Int>()
+  }
+}
