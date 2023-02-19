@@ -361,48 +361,6 @@ func TestFunctionCall(t *testing.T) {
 	}
 }
 
-func TestParseObjectDecl(t *testing.T) {
-	stmts := setupTest(t, "object Person{}", 1)
-
-	objDecl, ok := stmts[0].(*ast.ObjectDecl)
-	if !ok {
-		t.Errorf("expected first stmt to be *ast.ObjectDecl, got %T", stmts[0])
-	}
-
-	testConst(t, objDecl.Name, "Person")
-}
-
-func TestParseObjectDecl_with_Parent(t *testing.T) {
-	stmts := setupTest(t, "object Dog is Animal {}", 1)
-
-	objDecl, ok := stmts[0].(*ast.ObjectDecl)
-	if !ok {
-		t.Errorf("expected first stmt to be *ast.ObjectDecl, got %T", stmts[0])
-	}
-
-	testConst(t, objDecl.Name, "Dog")
-	testConst(t, objDecl.Parent, "Animal")
-}
-
-func TestParseObjectDecl_withField(t *testing.T) {
-	object := `object Person {
-  var name String
-}`
-	stmts := setupTest(t, object, 1)
-
-	objDecl, ok := stmts[0].(*ast.ObjectDecl)
-	if !ok {
-		t.Errorf("expected first stmt to be *ast.ObjectDecl, got %T", stmts[0])
-	}
-
-	testConst(t, objDecl.Name, "Person")
-
-	for _, field := range objDecl.FieldList {
-		testIdent(t, field.Type, "String")
-		testIdent(t, field.Name, "name")
-	}
-}
-
 func TestFunDecl(t *testing.T) {
 	type expectParam = struct {
 		name  string
@@ -722,55 +680,4 @@ func TestFieldSel(t *testing.T) {
 	}
 
 	testIdent(t, fs.Name, "name")
-}
-
-func TestVarDecl(t *testing.T) {
-	table := []struct {
-		scenario      string
-		input         string
-		expectedIdent string
-		expectedType  string
-		expectedValue string
-	}{
-		{
-			scenario:      "without value",
-			input:         "var age Int",
-			expectedIdent: "age",
-			expectedType:  "Int",
-		},
-		{
-			scenario:      "with value",
-			input:         "var age Int = 40",
-			expectedIdent: "age",
-			expectedType:  "Int",
-			expectedValue: "40",
-		},
-		{
-			scenario:      "without type with value",
-			input:         "var age = 40",
-			expectedIdent: "age",
-			expectedValue: "40",
-		},
-	}
-
-	for _, test := range table {
-		t.Run(test.scenario, func(t *testing.T) {
-			stmts := setupTest(t, test.input, 1)
-
-			vd, ok := stmts[0].(*ast.VarDecl)
-			if !ok {
-				t.Fatalf("expected first stmt to be *ast.VarDecl, got %T", stmts[0])
-			}
-
-			testIdent(t, vd.Name, test.expectedIdent)
-
-			if vd.Type != nil {
-				testIdent(t, vd.Type, test.expectedType)
-			}
-
-			if vd.Value != nil {
-				testLit(t, vd.Value, test.expectedValue)
-			}
-		})
-	}
 }

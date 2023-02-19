@@ -161,6 +161,8 @@ func (p *parser) parseObjectDecl() ast.Stmt {
 	obj := new(ast.ObjectDecl)
 	obj.Name = p.parseConst()
 
+	obj.ParamTypeList = p.parseParamTypeList()
+
 	if p.consume(token.Is) {
 		obj.Parent = p.parseConst()
 	}
@@ -189,21 +191,66 @@ func (p *parser) parseObjectDecl() ast.Stmt {
 	return obj
 }
 
+func (p *parser) parseParamTypeList() (list []*ast.Field) {
+	if !p.at(token.Less) {
+		return
+	}
+
+	p.advance()
+	list = append(list, p.parseParamType())
+	for p.consume(token.Comma) {
+		list = append(list, p.parseParamType())
+	}
+
+	p.expect(token.Great)
+	return
+}
+
+func (p *parser) parseParamType() *ast.Field {
+	field := new(ast.Field)
+	field.Name = p.parseIdent()
+
+	if p.consume(token.Is) {
+		field.Type = p.parseConst()
+	}
+
+	return field
+}
+
 func (p *parser) parseVarDecl() *ast.VarDecl {
 	p.expect(token.Var)
 
 	decl := new(ast.VarDecl)
 	decl.Name = p.parseIdent()
+
 	if p.consume(token.Assign) {
 		decl.Value = p.parseExpr()
 	} else {
-		decl.Type = p.parseIdent()
+		decl.Type = p.parseVariableType()
+
 		if p.consume(token.Assign) {
 			decl.Value = p.parseExpr()
 		}
 	}
 
 	return decl
+}
+
+func (p *parser) parseVariableType() *ast.Type {
+	t := new(ast.Type)
+	t.Name = p.parseConst()
+
+	if p.consume(token.Less) {
+		t.ArgumentTypeList = append(t.ArgumentTypeList, p.parseConst())
+
+		for p.consume(token.Comma) {
+			t.ArgumentTypeList = append(t.ArgumentTypeList, p.parseConst())
+		}
+
+		p.expect(token.Great)
+	}
+
+	return t
 }
 
 func (p *parser) parseFunDecl() *ast.FunDecl {

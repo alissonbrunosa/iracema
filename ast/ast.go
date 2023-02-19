@@ -87,10 +87,11 @@ type NextStmt struct {
 func (*NextStmt) String() string { return "next" }
 
 type ObjectDecl struct {
-	Name      *Ident
-	Parent    *Ident
-	FieldList []*VarDecl
-	FunList   []*FunDecl
+	Name          *Ident
+	Parent        *Ident
+	ParamTypeList []*Field
+	FieldList     []*VarDecl
+	FunList       []*FunDecl
 
 	Body *BlockStmt
 
@@ -119,9 +120,18 @@ type Field struct {
 
 func (f *Field) String() string { return "ast.Field" }
 
+type Type struct {
+	Name             *Ident
+	ArgumentTypeList []*Ident
+
+	stmt
+}
+
+func (t *Type) String() string { return "ast.Type" }
+
 type VarDecl struct {
 	Name  *Ident
-	Type  *Ident
+	Type  *Type
 	Value Expr
 
 	stmt
@@ -250,8 +260,15 @@ type Ident struct {
 	expr
 }
 
-func (i *Ident) IsConstant() bool { return 'A' <= i.Value[0] && i.Value[0] <= 'Z' }
-func (*Ident) String() string     { return "Ident" }
+func (i *Ident) IsConstant() bool {
+	if len(i.Value) == 0 {
+		return false
+	}
+
+	return 'A' <= i.Value[0] && i.Value[0] <= 'Z'
+}
+
+func (*Ident) String() string { return "Ident" }
 
 type UnaryExpr struct {
 	Operator *token.Token
