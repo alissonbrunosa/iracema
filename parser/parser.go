@@ -593,8 +593,8 @@ func (p *parser) parseArrayLit() (ary *ast.ArrayLit) {
 	return
 }
 
-func (p *parser) parseHashLit() *ast.HashLit {
-	return &ast.HashLit{
+func (p *parser) parseHashLit() *ast.MapLit {
+	return &ast.MapLit{
 		LeftBrace:  p.expect(token.LeftBrace),
 		Entries:    p.parseHashEntries(),
 		RightBrace: p.expect(token.RightBrace),

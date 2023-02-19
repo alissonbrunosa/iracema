@@ -400,7 +400,7 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) error {
 	case *ast.ArrayLit:
 		return c.compileArrayLit(node)
 
-	case *ast.HashLit:
+	case *ast.MapLit:
 		return c.compileHashLit(node)
 
 	case *ast.GroupExpr:
@@ -964,7 +964,7 @@ func (c *compiler) compileArrayLit(node *ast.ArrayLit) error {
 	return nil
 }
 
-func (c *compiler) compileHashLit(hash *ast.HashLit) error {
+func (c *compiler) compileHashLit(hash *ast.MapLit) error {
 	size := len(hash.Entries)
 	for _, entry := range hash.Entries {
 		if err := c.compileExpr(entry.Key, true); err != nil {

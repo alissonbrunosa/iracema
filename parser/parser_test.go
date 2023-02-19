@@ -547,7 +547,7 @@ func TestParseArrayLiteral(t *testing.T) {
 	}
 }
 
-func TestParseHashLiteral(t *testing.T) {
+func TestParseMapLiteral(t *testing.T) {
 	code := "{ 1: 10, 2: 20 }"
 
 	stmts := setupTest(t, code, 1)
@@ -557,9 +557,9 @@ func TestParseHashLiteral(t *testing.T) {
 		t.Errorf("expected first stmt to be *ast.ExprStmt, got %T", stmts[0])
 	}
 
-	lit, ok := exprStmt.Expr.(*ast.HashLit)
+	lit, ok := exprStmt.Expr.(*ast.MapLit)
 	if !ok {
-		t.Errorf("expected first stmt to be *ast.HashLit, got %T", exprStmt.Expr)
+		t.Errorf("expected first stmt to be *ast.MapLit, got %T", exprStmt.Expr)
 	}
 
 	expectedKeyValues := [][]string{

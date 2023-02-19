@@ -319,7 +319,7 @@ type HashEntry struct {
 
 func (*HashEntry) String() string { return "KeyValueExpr" }
 
-type HashLit struct {
+type MapLit struct {
 	LeftBrace  *token.Token
 	Entries    []*HashEntry
 	RightBrace *token.Token
@@ -327,7 +327,7 @@ type HashLit struct {
 	expr
 }
 
-func (*HashLit) String() string { return "HashLit" }
+func (*MapLit) String() string { return "HashLit" }
 
 type IndexExpr struct {
 	Expr         Expr
