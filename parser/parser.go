@@ -241,10 +241,10 @@ func (p *parser) parseVariableType() *ast.Type {
 	t.Name = p.parseConst()
 
 	if p.consume(token.Less) {
-		t.ArgumentTypeList = append(t.ArgumentTypeList, p.parseConst())
+		t.ArgumentTypeList = append(t.ArgumentTypeList, p.parseVariableType())
 
 		for p.consume(token.Comma) {
-			t.ArgumentTypeList = append(t.ArgumentTypeList, p.parseConst())
+			t.ArgumentTypeList = append(t.ArgumentTypeList, p.parseVariableType())
 		}
 
 		p.expect(token.Great)

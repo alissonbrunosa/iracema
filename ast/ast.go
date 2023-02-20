@@ -122,7 +122,7 @@ func (f *Field) String() string { return "ast.Field" }
 
 type Type struct {
 	Name             *Ident
-	ArgumentTypeList []*Ident
+	ArgumentTypeList []*Type
 
 	stmt
 }
