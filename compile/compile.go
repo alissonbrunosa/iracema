@@ -874,7 +874,7 @@ func (c *compiler) compileObjectDecl(obj *ast.ObjectDecl) error {
 	return nil
 }
 
-func (c *compiler) compileFunParams(params []*ast.Field) error {
+func (c *compiler) compileFunParams(params []*ast.VarDecl) error {
 	c.argc = byte(len(params))
 
 	for _, param := range params {

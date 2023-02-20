@@ -109,7 +109,7 @@ func testLit(t *testing.T, expr ast.Expr, expectedValue string) {
 	}
 }
 
-type assertParam func(*testing.T, int, *ast.Field)
+type assertParam func(*testing.T, int, *ast.VarDecl)
 
 func assertFunDecl(t *testing.T, stmt ast.Stmt, name string, fn assertParam) *ast.FunDecl {
 	t.Helper()

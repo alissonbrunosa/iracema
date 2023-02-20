@@ -404,7 +404,7 @@ func TestFunDecl(t *testing.T) {
 	for _, test := range tests {
 		stmts := setupTest(t, test.code, 1)
 
-		assert := func(t *testing.T, pos int, field *ast.Field) {
+		assert := func(t *testing.T, pos int, field *ast.VarDecl) {
 			testIdent(t, field.Name, test.expectedParams[pos].name)
 
 			if field.Value != nil {

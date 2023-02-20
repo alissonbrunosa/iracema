@@ -141,7 +141,7 @@ func (*VarDecl) String() string { return "LetDecl" }
 
 type FunDecl struct {
 	Name       *Ident
-	Parameters []*Field
+	Parameters []*VarDecl
 	Return     *Ident
 	Body       *BlockStmt
 	Catches    []*CatchDecl
@@ -358,7 +358,7 @@ type IndexExpr struct {
 func (*IndexExpr) String() string { return "IndexExpr" }
 
 type BlockExpr struct {
-	Parameters []*Field
+	Parameters []*VarDecl
 	Body       *BlockStmt
 
 	expr

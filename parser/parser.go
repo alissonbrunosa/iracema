@@ -395,14 +395,13 @@ func (p *parser) parseReturnStmt() ast.Stmt {
 	return &ast.ReturnStmt{Token: retToken, Value: value}
 }
 
-func (p *parser) parseParameterList() (list []*ast.Field) {
-	if !p.at(token.LeftParen) {
+func (p *parser) parseParameterList() (list []*ast.VarDecl) {
+	if !p.consume(token.LeftParen) {
 		return
 	}
 
-	p.expect(token.LeftParen)
 	for p.tok.Type != token.RightParen && p.tok.Type != token.EOF {
-		list = append(list, p.parseField())
+		list = append(list, p.parseParameter())
 
 		if !p.consumeCommaOrExpect(token.RightParen) {
 			return
@@ -412,6 +411,18 @@ func (p *parser) parseParameterList() (list []*ast.Field) {
 	p.expect(token.RightParen)
 
 	return
+}
+
+func (p *parser) parseParameter() *ast.VarDecl {
+	decl := new(ast.VarDecl)
+	decl.Name = p.parseIdent()
+	decl.Type = p.parseVariableType()
+
+	if p.consume(token.Assign) {
+		decl.Value = p.parseExpr()
+	}
+
+	return decl
 }
 
 func (p *parser) parseSimpleStmt() ast.Stmt {
