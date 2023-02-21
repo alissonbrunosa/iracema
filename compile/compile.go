@@ -857,7 +857,7 @@ func (c *compiler) compileObjectDecl(obj *ast.ObjectDecl) error {
 		c.add(bytecode.DefineField, c.addConstant(field.Name.Value))
 	}
 
-	for _, fun := range obj.FunList {
+	for _, fun := range obj.FunctionList {
 		if err := c.compileFunDecl(fun); err != nil {
 			return err
 		}

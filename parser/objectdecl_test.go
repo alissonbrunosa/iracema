@@ -89,6 +89,7 @@ func TestParseObjectDecl_with_Parent(t *testing.T) {
 func TestParseObjectDecl_withField(t *testing.T) {
 	object := `object Person {
   var name String
+  const MIN_AGE Int = 18
 }`
 	stmts := setupTest(t, object, 1)
 
@@ -102,5 +103,10 @@ func TestParseObjectDecl_withField(t *testing.T) {
 	for _, field := range objDecl.FieldList {
 		testIdent(t, field.Name, "name")
 		testConst(t, field.Type.Name, "String")
+	}
+
+	for _, field := range objDecl.ConstantList {
+		testIdent(t, field.Name, "MIN_AGE")
+		testConst(t, field.Type.Name, "Int")
 	}
 }

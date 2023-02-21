@@ -26,6 +26,7 @@ var keywords = map[string]Type{
 	"this":    This,
 	"use":     Use,
 	"var":     Var,
+	"const":   Const,
 }
 
 const LowestPrecedence = 0

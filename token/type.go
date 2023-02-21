@@ -31,6 +31,7 @@ const (
 	This    // this
 	Use     // use
 	Var     // var
+	Const   // const
 
 	Int    // Int
 	Float  // Float

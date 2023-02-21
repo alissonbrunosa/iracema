@@ -91,7 +91,8 @@ type ObjectDecl struct {
 	Parent        *Ident
 	ParamTypeList []*Field
 	FieldList     []*VarDecl
-	FunList       []*FunDecl
+	FunctionList  []*FunDecl
+	ConstantList  []*ConstDecl
 
 	Body *BlockStmt
 
@@ -138,6 +139,16 @@ type VarDecl struct {
 }
 
 func (*VarDecl) String() string { return "LetDecl" }
+
+type ConstDecl struct {
+	Name  *Ident
+	Type  *Type
+	Value Expr
+
+	stmt
+}
+
+func (*ConstDecl) String() string { return "*ast.ConstDecl" }
 
 type FunDecl struct {
 	Name       *Ident

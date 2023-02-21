@@ -119,6 +119,9 @@ func (p *parser) parseStmt() ast.Stmt {
 	case token.Var:
 		return p.parseVarDecl()
 
+	case token.Const:
+		return p.parseConstDecl()
+
 	case token.Fun:
 		return p.parseFunDecl()
 
@@ -173,8 +176,11 @@ func (p *parser) parseObjectDecl() ast.Stmt {
 		case token.Var:
 			obj.FieldList = append(obj.FieldList, p.parseVarDecl())
 
+		case token.Const:
+			obj.ConstantList = append(obj.ConstantList, p.parseConstDecl())
+
 		case token.Fun:
-			obj.FunList = append(obj.FunList, p.parseFunDecl())
+			obj.FunctionList = append(obj.FunctionList, p.parseFunDecl())
 		case token.NewLine:
 			p.advance()
 			continue
@@ -231,6 +237,23 @@ func (p *parser) parseVarDecl() *ast.VarDecl {
 		if p.consume(token.Assign) {
 			decl.Value = p.parseExpr()
 		}
+	}
+
+	return decl
+}
+
+func (p *parser) parseConstDecl() *ast.ConstDecl {
+	p.expect(token.Const)
+
+	decl := new(ast.ConstDecl)
+	decl.Name = p.parseIdent()
+
+	if p.consume(token.Assign) {
+		decl.Value = p.parseExpr()
+	} else {
+		decl.Type = p.parseVariableType()
+		p.expect(token.Assign)
+		decl.Value = p.parseExpr()
 	}
 
 	return decl
