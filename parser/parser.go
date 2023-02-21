@@ -180,7 +180,7 @@ func (p *parser) parseObjectDecl() ast.Stmt {
 			continue
 
 		default:
-			mesg := fmt.Sprintf("unexpected %s, expecting FunDecl or Field", p.tok)
+			mesg := fmt.Sprintf("unexpected %s, expecting FunDecl or VarDecl", p.tok)
 			p.setError(p.tok.Position, mesg)
 			return obj
 		}

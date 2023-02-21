@@ -299,35 +299,50 @@ func TestParseCallExpr(t *testing.T) {
 
 func TestErrorParse(t *testing.T) {
 	tests := []struct {
-		Scenario    string
-		Code        string
-		ExpectedErr string
+		scenario  string
+		input     string
+		wantError string
 	}{
 		{
-			Scenario:    "Missing comma in parameter list",
-			Code:        `fun name(arg1 Int arg2 Int) {}`,
-			ExpectedErr: "[Lin: 1 Col: 19] syntax error: missing , or )",
+			scenario:  "Missing comma in parameter list",
+			input:     `fun name(arg1 Int arg2 Int) {}`,
+			wantError: "[Lin: 1 Col: 19] syntax error: missing , or )",
 		},
 		{
-			Scenario:    "Missing closing brace",
-			Code:        "fun name {\n",
-			ExpectedErr: "[Lin: 2 Col: 1] syntax error: expected '}', found 'EOF'",
+			scenario:  "Missing closing brace",
+			input:     "fun name {\n",
+			wantError: "[Lin: 2 Col: 1] syntax error: expected '}', found 'EOF'",
 		},
 		{
-			Scenario:    "var decl without type and value",
-			Code:        "var a",
-			ExpectedErr: "[Lin: 1 Col: 5] syntax error: expected 'Ident', found 'EOF'",
+			scenario:  "var decl without type and value",
+			input:     "var a",
+			wantError: "[Lin: 1 Col: 5] syntax error: expected 'Ident', found 'EOF'",
 		},
 		{
-			Scenario:    "object declaration without a constant",
-			Code:        "object car {}",
-			ExpectedErr: "[Lin: 1 Col: 8] syntax error: expected ident to be a constant",
+			scenario:  "object declaration without a constant",
+			input:     "object car {}",
+			wantError: "[Lin: 1 Col: 8] syntax error: expected ident to be a constant",
+		},
+		{
+			scenario:  "two statements in the same line",
+			input:     "var a = 10 var b = 20",
+			wantError: "[Lin: 1 Col: 12] syntax error: unexpected var, expecting EOF or new line",
+		},
+		{
+			scenario:  "two statements in the same line inside function body",
+			input:     "fun error() { var a = 10 var b = 20 }",
+			wantError: "[Lin: 1 Col: 26] syntax error: unexpected var, expecting } or new line",
+		},
+		{
+			scenario:  "statement other than FunDecl and VarDecl in object's body",
+			input:     "object Error { if true {} }",
+			wantError: "[Lin: 1 Col: 16] syntax error: unexpected if, expecting FunDecl or VarDecl",
 		},
 	}
 
 	for _, test := range tests {
-		t.Run(test.Scenario, func(t *testing.T) {
-			testParserError(t, test.Code, test.ExpectedErr)
+		t.Run(test.scenario, func(t *testing.T) {
+			testParserError(t, test.input, test.wantError)
 		})
 	}
 }
@@ -358,91 +373,6 @@ func TestFunctionCall(t *testing.T) {
 		callExpr := exprStmt.Expr.(*ast.CallExpr)
 		testIdent(t, callExpr.Method, test.ExpectedFunctionName)
 		testArguments(t, callExpr.Arguments, test.ExpectedArgs)
-	}
-}
-
-func TestFunDecl(t *testing.T) {
-	type expectParam = struct {
-		name  string
-		value string
-	}
-
-	tests := []struct {
-		scenario       string
-		code           string
-		expectedParams []expectParam
-	}{
-		{
-			scenario: "no params",
-			code:     "fun calc {}",
-		},
-		{
-			scenario: "single params",
-			code:     "fun calc(a Int) {}",
-			expectedParams: []expectParam{
-				{name: "a"},
-			},
-		},
-		{
-			scenario: "params has default",
-			code:     "fun calc(a Int = 1, b Int = 2) {}",
-			expectedParams: []expectParam{
-				{name: "a", value: "1"},
-				{name: "b", value: "2"},
-			},
-		},
-		{
-			scenario: "only one param has default",
-			code:     "fun calc(a Int, b Int = 10) {}",
-			expectedParams: []expectParam{
-				{name: "a"},
-				{name: "b", value: "10"},
-			},
-		},
-	}
-
-	for _, test := range tests {
-		stmts := setupTest(t, test.code, 1)
-
-		assert := func(t *testing.T, pos int, field *ast.VarDecl) {
-			testIdent(t, field.Name, test.expectedParams[pos].name)
-
-			if field.Value != nil {
-				testLit(t, field.Value, test.expectedParams[pos].value)
-			}
-		}
-
-		assertFunDecl(t, stmts[0], "calc", assert)
-	}
-}
-
-func TestFunDeclWithCatch(t *testing.T) {
-	tests := []struct {
-		Code          string
-		ExpectedRef   string
-		ExpectedTypes []string
-	}{
-		{
-			Code:          "fun walk() {} catch(err: Error) {}",
-			ExpectedRef:   "err",
-			ExpectedTypes: []string{"Error"},
-		},
-		{
-			Code:          "fun walk() {} catch(err: Error) {} catch(err: AnotherError) {}",
-			ExpectedRef:   "err",
-			ExpectedTypes: []string{"Error", "AnotherError"},
-		},
-	}
-
-	for _, test := range tests {
-		stmts := setupTest(t, test.Code, 1)
-
-		funDecl := assertFunDecl(t, stmts[0], "walk", nil)
-
-		for i, catch := range funDecl.Catches {
-			testIdent(t, catch.Ref, test.ExpectedRef)
-			testConst(t, catch.Type, test.ExpectedTypes[i])
-		}
 	}
 }
 
