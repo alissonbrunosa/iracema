@@ -164,7 +164,7 @@ func (p *parser) parseObjectDecl() ast.Stmt {
 	obj := new(ast.ObjectDecl)
 	obj.Name = p.parseConst()
 
-	obj.ParamTypeList = p.parseParamTypeList()
+	obj.TypeParamList = p.parseParamTypeList()
 
 	if p.consume(token.Is) {
 		obj.Parent = p.parseConst()
@@ -232,7 +232,7 @@ func (p *parser) parseVarDecl() *ast.VarDecl {
 	if p.consume(token.Assign) {
 		decl.Value = p.parseExpr()
 	} else {
-		decl.Type = p.parseVariableType()
+		decl.Type = p.parseType()
 
 		if p.consume(token.Assign) {
 			decl.Value = p.parseExpr()
@@ -251,7 +251,7 @@ func (p *parser) parseConstDecl() *ast.ConstDecl {
 	if p.consume(token.Assign) {
 		decl.Value = p.parseExpr()
 	} else {
-		decl.Type = p.parseVariableType()
+		decl.Type = p.parseType()
 		p.expect(token.Assign)
 		decl.Value = p.parseExpr()
 	}
@@ -259,19 +259,37 @@ func (p *parser) parseConstDecl() *ast.ConstDecl {
 	return decl
 }
 
-func (p *parser) parseVariableType() *ast.Type {
-	t := new(ast.Type)
-	t.Name = p.parseConst()
-
-	if p.consume(token.Less) {
-		t.ArgumentTypeList = append(t.ArgumentTypeList, p.parseVariableType())
-
-		for p.consume(token.Comma) {
-			t.ArgumentTypeList = append(t.ArgumentTypeList, p.parseVariableType())
+func (p *parser) parseType() ast.Type {
+	switch p.tok.Type {
+	case token.Ident:
+		name := p.parseConst()
+		if p.at(token.Less) {
+			return p.parseParameterizedType(name)
 		}
 
-		p.expect(token.Great)
+		return name
+	case token.Fun:
+		panic("HOLD YOUR HORSES")
+	default:
+		err := fmt.Sprintf("expected type, found %s", p.tok)
+		p.setError(p.tok.Position, err)
+		p.advance()
 	}
+
+	return nil
+}
+
+func (p *parser) parseParameterizedType(name *ast.Ident) ast.Type {
+	p.expect(token.Less)
+
+	t := new(ast.ParameterizedType)
+	t.Name = name
+	t.TypeArguments = append(t.TypeArguments, p.parseType())
+
+	for p.consume(token.Comma) {
+		t.TypeArguments = append(t.TypeArguments, p.parseType())
+	}
+	p.expect(token.Great)
 
 	return t
 }
@@ -284,7 +302,7 @@ func (p *parser) parseFunDecl() *ast.FunDecl {
 	fun.Parameters = p.parseParameterList()
 
 	if p.consume(token.Arrow) {
-		fun.Return = p.parseConst()
+		fun.Return = p.parseType()
 	}
 
 	fun.Body = p.parseBlockStmt()
@@ -439,7 +457,7 @@ func (p *parser) parseParameterList() (list []*ast.VarDecl) {
 func (p *parser) parseParameter() *ast.VarDecl {
 	decl := new(ast.VarDecl)
 	decl.Name = p.parseIdent()
-	decl.Type = p.parseVariableType()
+	decl.Type = p.parseType()
 
 	if p.consume(token.Assign) {
 		decl.Value = p.parseExpr()

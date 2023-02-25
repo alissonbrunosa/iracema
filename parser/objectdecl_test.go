@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestParseObjectDecl(t *testing.T) {
+func TestParse_ObjectDecl_(t *testing.T) {
 	stmts := setupTest(t, "object Person {}", 1)
 
 	objDecl, ok := stmts[0].(*ast.ObjectDecl)
@@ -13,10 +13,12 @@ func TestParseObjectDecl(t *testing.T) {
 		t.Fatalf("expected first stmt to be *ast.ObjectDecl, got %T", stmts[0])
 	}
 
-	testConst(t, objDecl.Name, "Person")
+	if err := assertConstant(objDecl.Name, "Person"); err != nil {
+		t.Error(err)
+	}
 }
 
-func TestParseObjectDecl_with_TypeParameters(t *testing.T) {
+func TestParse_ObjectDecl_with_TypeParameters(t *testing.T) {
 	table := []struct {
 		scenario           string
 		input              string
@@ -61,20 +63,26 @@ func TestParseObjectDecl_with_TypeParameters(t *testing.T) {
 				t.Fatalf("expected first stmt to be *ast.ObjectDecl, got %T", stmts[0])
 			}
 
-			testConst(t, objDecl.Name, tt.wantName)
+			if err := assertConstant(objDecl.Name, tt.wantName); err != nil {
+				t.Error(err)
+			}
 
-			for i, paramType := range objDecl.ParamTypeList {
-				testConst(t, paramType.Name, tt.wantParamTypeNames[i])
+			for i, paramType := range objDecl.TypeParamList {
+				if err := assertConstant(paramType.Name, tt.wantParamTypeNames[i]); err != nil {
+					t.Error(err)
+				}
 
 				if len(tt.wantParamTypes) != 0 {
-					testConst(t, paramType.Type, tt.wantParamTypes[i])
+					if err := assertConstant(paramType.Type, tt.wantParamTypes[i]); err != nil {
+						t.Error(err)
+					}
 				}
 			}
 		})
 	}
 }
 
-func TestParseObjectDecl_with_Parent(t *testing.T) {
+func TestParse_ObjectDecl_with_Parent(t *testing.T) {
 	stmts := setupTest(t, "object Dog is Animal {}", 1)
 
 	objDecl, ok := stmts[0].(*ast.ObjectDecl)
@@ -82,11 +90,15 @@ func TestParseObjectDecl_with_Parent(t *testing.T) {
 		t.Fatalf("expected first stmt to be *ast.ObjectDecl, got %T", stmts[0])
 	}
 
-	testConst(t, objDecl.Name, "Dog")
-	testConst(t, objDecl.Parent, "Animal")
+	if err := assertConstant(objDecl.Name, "Dog"); err != nil {
+		t.Error(err)
+	}
+	if err := assertConstant(objDecl.Parent, "Animal"); err != nil {
+		t.Error(err)
+	}
 }
 
-func TestParseObjectDecl_withField(t *testing.T) {
+func TestParse_ObjectDecl_withField(t *testing.T) {
 	object := `object Person {
   var name String
   const MIN_AGE Int = 18
@@ -98,15 +110,27 @@ func TestParseObjectDecl_withField(t *testing.T) {
 		t.Fatalf("expected first stmt to be *ast.ObjectDecl, got %T", stmts[0])
 	}
 
-	testConst(t, objDecl.Name, "Person")
-
-	for _, field := range objDecl.FieldList {
-		testIdent(t, field.Name, "name")
-		testConst(t, field.Type.Name, "String")
+	if err := assertConstant(objDecl.Name, "Person"); err != nil {
+		t.Error(err)
 	}
 
-	for _, field := range objDecl.ConstantList {
-		testIdent(t, field.Name, "MIN_AGE")
-		testConst(t, field.Type.Name, "Int")
+	for i, field := range objDecl.FieldList {
+		if err := assertIdent(field.Name, "name"); err != nil {
+			t.Errorf("[FAILED] field name at %d\n\tReason: %s", i, err)
+		}
+
+		if err := assertType(field.Type, "String"); err != nil {
+			t.Errorf("[FAILED] field type at %d\n\tReason: %s", i, err)
+		}
+	}
+
+	for i, field := range objDecl.ConstantList {
+		if err := assertIdent(field.Name, "MIN_AGE"); err != nil {
+			t.Errorf("[FAILED] const name at %d\n\tReason: %s", i, err)
+		}
+
+		if err := assertType(field.Type, "Int"); err != nil {
+			t.Errorf("[FAILED] const type at %d\n\tReason: %s", i, err)
+		}
 	}
 }

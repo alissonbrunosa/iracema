@@ -15,6 +15,11 @@ func TestParseForStmt(t *testing.T) {
 		t.Errorf("expected to be *ast.ForStmt, got %T", stmts[0])
 	}
 
-	testIdent(t, forStmt.Element, "el")
-	testIdent(t, forStmt.Iterable, "elements")
+	if err := assertIdent(forStmt.Element, "el"); err != nil {
+		t.Error(err)
+	}
+
+	if err := assertIdent(forStmt.Iterable, "elements"); err != nil {
+		t.Fatal(err)
+	}
 }

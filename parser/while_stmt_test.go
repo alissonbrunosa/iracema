@@ -21,8 +21,12 @@ func TestParseWhileStmt(t *testing.T) {
 		t.Errorf("expected to be *ast.BinaryExpr, got %T", whileStmt.Cond)
 	}
 
-	testIdent(t, predicate.Left, "value")
-	testLit(t, predicate.Right, "10")
+	if err := assertIdent(predicate.Left, "value"); err != nil {
+		t.Error(err)
+	}
+	if err := assertLiteral(predicate.Right, "10"); err != nil {
+		t.Error(err)
+	}
 
 	if predicate.Operator.Type != token.Great {
 		t.Errorf("expected operator to be token.GreaterThan, got %q", predicate.Operator)
@@ -44,8 +48,12 @@ func TestParseWhileStmtWithStopStmt(t *testing.T) {
 		t.Errorf("expected to be *ast.BinaryExpr, got %T", whileStmt.Cond)
 	}
 
-	testIdent(t, predicate.Left, "value")
-	testLit(t, predicate.Right, "10")
+	if err := assertIdent(predicate.Left, "value"); err != nil {
+		t.Error(err)
+	}
+	if err := assertLiteral(predicate.Right, "10"); err != nil {
+		t.Error(err)
+	}
 
 	if predicate.Operator.Type != token.Great {
 		t.Errorf("expected operator to be token.GreaterThan, got %q", predicate.Operator)

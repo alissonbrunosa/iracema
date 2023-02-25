@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bytes"
+	"fmt"
 	"iracema/ast"
 	"testing"
 )
@@ -42,34 +43,34 @@ func setupTest(t *testing.T, code string, expectStmts int) []ast.Stmt {
 	return file.Stmts
 }
 
-func testIdent(t *testing.T, expr ast.Expr, expectedName string) {
-	t.Helper()
-
+func assertIdent(expr ast.Expr, expectedName string) error {
 	ident, ok := expr.(*ast.Ident)
 	if !ok {
-		t.Errorf("expected *ast.Ident, got %T", expr)
+		return fmt.Errorf("expected *ast.Ident, got %T", expr)
 	}
 
 	if ident.Value != expectedName {
-		t.Errorf("expected Name to be %q, got %q", expectedName, ident.Value)
+		return fmt.Errorf("expected Name to be %q, got %q", expectedName, ident.Value)
 	}
+
+	return nil
 }
 
-func testConst(t *testing.T, expr ast.Expr, expectedName string) {
-	t.Helper()
-
+func assertConstant(expr ast.Expr, name string) error {
 	ident, ok := expr.(*ast.Ident)
 	if !ok {
-		t.Errorf("expected *ast.Ident, got %T", expr)
+		return fmt.Errorf("expected *ast.Ident, got %T", expr)
 	}
 
 	if !ident.IsConstant() {
-		t.Errorf("expected ident to start with up case letter")
+		return fmt.Errorf("expected ident to start with up case letter")
 	}
 
-	if ident.Value != expectedName {
-		t.Errorf("expected Value to be %q, got %q", expectedName, ident.Value)
+	if ident.Value != name {
+		return fmt.Errorf("expected constant name to be %q, got %q", name, ident.Value)
 	}
+
+	return nil
 }
 
 func testArguments(t *testing.T, args []ast.Expr, expectedArgs []string) {
@@ -96,17 +97,17 @@ func testArguments(t *testing.T, args []ast.Expr, expectedArgs []string) {
 	}
 }
 
-func testLit(t *testing.T, expr ast.Expr, expectedValue string) {
-	t.Helper()
-
+func assertLiteral(expr ast.Expr, expectedValue string) error {
 	lit, ok := expr.(*ast.BasicLit)
 	if !ok {
-		t.Errorf("expected to be *ast.BasicLit, got %T", expr)
+		return fmt.Errorf("expected to be *ast.BasicLit, got %T", expr)
 	}
 
 	if lit.Value != expectedValue {
-		t.Errorf("expected *ast.BasicLit.Value to be %q, got %q", expectedValue, lit.Value)
+		return fmt.Errorf("expected *ast.BasicLit.Value to be %q, got %q", expectedValue, lit.Value)
 	}
+
+	return nil
 }
 
 type assertParam func(*testing.T, int, *ast.VarDecl)
@@ -119,11 +120,45 @@ func assertFunDecl(t *testing.T, stmt ast.Stmt, name string, fn assertParam) *as
 		t.Fatalf("expected first stmt to be *ast.FunDecl, got %T", stmt)
 	}
 
-	testIdent(t, funDecl.Name, name)
+	if err := assertIdent(funDecl.Name, name); err != nil {
+		t.Error(err)
+	}
 
 	for i, field := range funDecl.Parameters {
 		fn(t, i, field)
 	}
 
 	return funDecl
+}
+
+func assertType(t ast.Type, want any) error {
+	switch _type := t.(type) {
+	case *ast.Ident:
+		return assertIdent(_type, want.(string))
+
+	case *ast.ParameterizedType:
+		return assertParameterizedType(_type, want.(*wantType))
+
+	default:
+		return fmt.Errorf("invalid ast.Type: %T", t)
+	}
+}
+
+type wantType struct {
+	wantType string
+	args     []any
+}
+
+func assertParameterizedType(t *ast.ParameterizedType, wt *wantType) error {
+	if err := assertConstant(t.Name, wt.wantType); err != nil {
+		return err
+	}
+
+	for i, typeArg := range t.TypeArguments {
+		if err := assertType(typeArg, wt.args[i]); err != nil {
+			return fmt.Errorf("type argument at %d: %s", i, err)
+		}
+	}
+
+	return nil
 }

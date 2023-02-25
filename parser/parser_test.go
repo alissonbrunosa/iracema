@@ -291,8 +291,12 @@ func TestParseCallExpr(t *testing.T) {
 			t.Errorf("expected *ast.CallExpr, got %T", exprStmt.Expr)
 		}
 
-		testIdent(t, callExpr.Receiver, test.ExpectedReceiver)
-		testIdent(t, callExpr.Method, test.ExpectedMethod)
+		if err := assertIdent(callExpr.Receiver, test.ExpectedReceiver); err != nil {
+			t.Error(err)
+		}
+		if err := assertIdent(callExpr.Method, test.ExpectedMethod); err != nil {
+			t.Error(err)
+		}
 		testArguments(t, callExpr.Arguments, test.ExpectedArgs)
 	}
 }
@@ -316,7 +320,7 @@ func TestErrorParse(t *testing.T) {
 		{
 			scenario:  "var decl without type and value",
 			input:     "var a",
-			wantError: "[Lin: 1 Col: 5] syntax error: expected 'Ident', found 'EOF'",
+			wantError: "[Lin: 1 Col: 5] syntax error: expected type, found EOF",
 		},
 		{
 			scenario:  "object declaration without a constant",
@@ -371,7 +375,9 @@ func TestFunctionCall(t *testing.T) {
 		exprStmt := stmts[0].(*ast.ExprStmt)
 
 		callExpr := exprStmt.Expr.(*ast.CallExpr)
-		testIdent(t, callExpr.Method, test.ExpectedFunctionName)
+		if err := assertIdent(callExpr.Method, test.ExpectedFunctionName); err != nil {
+			t.Error(err)
+		}
 		testArguments(t, callExpr.Arguments, test.ExpectedArgs)
 	}
 }
@@ -412,7 +418,9 @@ func TestUnaryExpr(t *testing.T) {
 			t.Errorf("expected operator to be %q, got %q", test.ExpectedOperator, expr.Operator)
 		}
 
-		testLit(t, expr.Expr, test.ExpectedValue)
+		if err := assertLiteral(expr.Expr, test.ExpectedValue); err != nil {
+			t.Error(err)
+		}
 	}
 }
 
@@ -431,7 +439,9 @@ func TestParseArrayLiteral(t *testing.T) {
 	}
 
 	for i, el := range []string{"1", "2", "3"} {
-		testLit(t, lit.Elements[i], el)
+		if err := assertLiteral(lit.Elements[i], el); err != nil {
+			t.Error(err)
+		}
 	}
 }
 
@@ -456,8 +466,12 @@ func TestParseMapLiteral(t *testing.T) {
 	}
 
 	for i, entry := range lit.Entries {
-		testLit(t, entry.Key, expectedKeyValues[i][0])
-		testLit(t, entry.Value, expectedKeyValues[i][1])
+		if err := assertLiteral(entry.Key, expectedKeyValues[i][0]); err != nil {
+			t.Error(err)
+		}
+		if err := assertLiteral(entry.Value, expectedKeyValues[i][1]); err != nil {
+			t.Error(err)
+		}
 	}
 }
 
@@ -476,8 +490,12 @@ func TestParseIndexExpr(t *testing.T) {
 		t.Errorf("expected first stmt to be *ast.IndexExpr, got %T", exprStmt.Expr)
 	}
 
-	testIdent(t, idxExpr.Expr, "value")
-	testLit(t, idxExpr.Index, "10")
+	if err := assertIdent(idxExpr.Expr, "value"); err != nil {
+		t.Error(err)
+	}
+	if err := assertLiteral(idxExpr.Index, "10"); err != nil {
+		t.Error(err)
+	}
 }
 
 func TestParseCodeBlock(t *testing.T) {
@@ -556,16 +574,24 @@ func TestParse_withStmtsInTheSameLine(t *testing.T) {
 		t.Fatalf("expected ast.AssignStmt, got %T", stmts[0])
 	}
 
-	testIdent(t, first.Left[0], "a")
-	testLit(t, first.Right[0], "10")
+	if err := assertIdent(first.Left[0], "a"); err != nil {
+		t.Error(err)
+	}
+	if err := assertLiteral(first.Right[0], "10"); err != nil {
+		t.Error(err)
+	}
 
 	second, ok := stmts[1].(*ast.AssignStmt)
 	if !ok {
 		t.Fatalf("expected ast.AssignStmt, got %T", stmts[1])
 	}
 
-	testIdent(t, second.Left[0], "b")
-	testLit(t, second.Right[0], "20")
+	if err := assertIdent(second.Left[0], "b"); err != nil {
+		t.Error(err)
+	}
+	if err := assertLiteral(second.Right[0], "20"); err != nil {
+		t.Error(err)
+	}
 }
 
 func TestParseReturnStmt(t *testing.T) {
@@ -578,7 +604,9 @@ func TestParseReturnStmt(t *testing.T) {
 		t.Errorf("expected first stmt to be *ast.ReturnStmt, got %T", stmts[0])
 	}
 
-	testLit(t, returnStmt.Value, "10")
+	if err := assertLiteral(returnStmt.Value, "10"); err != nil {
+		t.Error(err)
+	}
 }
 
 func TestParseReturnStmt_withoutValue(t *testing.T) {
@@ -609,5 +637,7 @@ func TestFieldSel(t *testing.T) {
 		t.Fatalf("expected first stmt to be *ast.FieldSel, got %T", exprStmt.Expr)
 	}
 
-	testIdent(t, fs.Name, "name")
+	if err := assertIdent(fs.Name, "name"); err != nil {
+		t.Error(err)
+	}
 }

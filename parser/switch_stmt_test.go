@@ -17,7 +17,9 @@ func TestParseSwitchStmt(t *testing.T) {
 		t.Errorf("expected to be *ast.SwitchStmt, got %T", stmts[0])
 	}
 
-	testLit(t, switchStmt.Key, "10")
+	if err := assertLiteral(switchStmt.Key, "10"); err != nil {
+		t.Error(err)
+	}
 
 	for _, cc := range switchStmt.Cases {
 		exprStmt, ok := cc.Body.Stmts[0].(*ast.ExprStmt)
@@ -26,7 +28,9 @@ func TestParseSwitchStmt(t *testing.T) {
 		}
 
 		callExpr := exprStmt.Expr.(*ast.CallExpr)
-		testIdent(t, callExpr.Method, "puts")
+		if err := assertIdent(callExpr.Method, "puts"); err != nil {
+			t.Error(err)
+		}
 		testArguments(t, callExpr.Arguments, []string{"10"})
 	}
 
@@ -48,7 +52,9 @@ func TestParseSwitchStmt_with_Default(t *testing.T) {
 		t.Errorf("expected to be *ast.SwitchStmt, got %T", stmts[0])
 	}
 
-	testLit(t, switchStmt.Key, "50")
+	if err := assertLiteral(switchStmt.Key, "50"); err != nil {
+		t.Error(err)
+	}
 
 	for _, cc := range switchStmt.Cases {
 		exprStmt, ok := cc.Body.Stmts[0].(*ast.ExprStmt)
@@ -57,7 +63,9 @@ func TestParseSwitchStmt_with_Default(t *testing.T) {
 		}
 
 		callExpr := exprStmt.Expr.(*ast.CallExpr)
-		testIdent(t, callExpr.Method, "puts")
+		if err := assertIdent(callExpr.Method, "puts"); err != nil {
+			t.Error(err)
+		}
 		testArguments(t, callExpr.Arguments, []string{"10"})
 	}
 
@@ -67,7 +75,9 @@ func TestParseSwitchStmt_with_Default(t *testing.T) {
 	}
 
 	callExpr := exprStmt.Expr.(*ast.CallExpr)
-	testIdent(t, callExpr.Method, "puts")
+	if err := assertIdent(callExpr.Method, "puts"); err != nil {
+		t.Error(err)
+	}
 	testArguments(t, callExpr.Arguments, []string{"Default"})
 }
 
@@ -84,7 +94,9 @@ func TestParseSwitchStmt_with_MultipleCases(t *testing.T) {
 		t.Errorf("expected to be *ast.SwitchStmt, got %T", stmts[0])
 	}
 
-	testLit(t, switchStmt.Key, "50")
+	if err := assertLiteral(switchStmt.Key, "50"); err != nil {
+		t.Error(err)
+	}
 
 	params := [][]string{
 		[]string{"10"},
@@ -98,7 +110,9 @@ func TestParseSwitchStmt_with_MultipleCases(t *testing.T) {
 		}
 
 		callExpr := exprStmt.Expr.(*ast.CallExpr)
-		testIdent(t, callExpr.Method, "puts")
+		if err := assertIdent(callExpr.Method, "puts"); err != nil {
+			t.Error(err)
+		}
 		testArguments(t, callExpr.Arguments, params[i])
 	}
 
@@ -121,7 +135,9 @@ func TestParseSwitchStmt_Full(t *testing.T) {
 		t.Errorf("expected to be *ast.SwitchStmt, got %T", stmts[0])
 	}
 
-	testLit(t, switchStmt.Key, "50")
+	if err := assertLiteral(switchStmt.Key, "50"); err != nil {
+		t.Error(err)
+	}
 
 	params := [][]string{
 		[]string{"10"},
@@ -135,7 +151,9 @@ func TestParseSwitchStmt_Full(t *testing.T) {
 		}
 
 		callExpr := exprStmt.Expr.(*ast.CallExpr)
-		testIdent(t, callExpr.Method, "puts")
+		if err := assertIdent(callExpr.Method, "puts"); err != nil {
+			t.Error(err)
+		}
 		testArguments(t, callExpr.Arguments, params[i])
 	}
 
@@ -145,7 +163,9 @@ func TestParseSwitchStmt_Full(t *testing.T) {
 	}
 
 	callExpr := exprStmt.Expr.(*ast.CallExpr)
-	testIdent(t, callExpr.Method, "puts")
+	if err := assertIdent(callExpr.Method, "puts"); err != nil {
+		t.Error(err)
+	}
 	testArguments(t, callExpr.Arguments, []string{"Default"})
 
 }

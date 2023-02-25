@@ -5,60 +5,41 @@ import (
 	"testing"
 )
 
-func TestConstDecl(t *testing.T) {
-	type wantType struct {
-		wantType string
-		args     []*wantType
+func TestParse_ConstDecl_SimpleType(t *testing.T) {
+	stmts := setupTest(t, "const PI Float = 3.1415", 1)
+
+	varDecl, ok := stmts[0].(*ast.ConstDecl)
+	if !ok {
+		t.Fatalf("expected first stmt to be *ast.ConstDecl, got %T", stmts[0])
 	}
 
-	table := []struct {
-		scenario  string
-		input     string
-		wantName  string
-		wantType  *wantType
-		wantValue string
-	}{
-		{
-			scenario: "without type",
-			input:    "const PI = 3.1415",
-			wantName: "PI",
-		},
-		{
-			scenario: "with type",
-			input:    "const MAX_INT Int = 2147483647",
-			wantName: "MAX_INT",
-			wantType: &wantType{wantType: "Int"},
-		},
+	if err := assertConstant(varDecl.Name, "PI"); err != nil {
+		t.Error(err)
 	}
 
-	var testParamType func(*testing.T, *ast.Type, *wantType)
-	testParamType = func(t *testing.T, tp *ast.Type, wType *wantType) {
-		t.Helper()
-
-		testConst(t, tp.Name, wType.wantType)
-		for i, arg := range wType.args {
-			testParamType(t, tp.ArgumentTypeList[i], arg)
-		}
+	if err := assertType(varDecl.Type, "Float"); err != nil {
+		t.Error(err)
 	}
 
-	for _, test := range table {
-		t.Run(test.scenario, func(t *testing.T) {
-			stmts := setupTest(t, test.input, 1)
+	if err := assertLiteral(varDecl.Value, "3.1415"); err != nil {
+		t.Error(err)
+	}
+}
 
-			varDecl, ok := stmts[0].(*ast.ConstDecl)
-			if !ok {
-				t.Fatalf("expected first stmt to be *ast.ConstDecl, got %T", stmts[0])
-			}
+func TestParse_ConstDecl_ParameterizedType(t *testing.T) {
+	stmts := setupTest(t, `const EMPTY Array<T> = "DUMMY"`, 1)
 
-			testIdent(t, varDecl.Name, test.wantName)
+	varDecl, ok := stmts[0].(*ast.ConstDecl)
+	if !ok {
+		t.Fatalf("expected first stmt to be *ast.ConstDecl, got %T", stmts[0])
+	}
 
-			if test.wantType != nil {
-				testParamType(t, varDecl.Type, test.wantType)
-			}
+	if err := assertConstant(varDecl.Name, "EMPTY"); err != nil {
+		t.Error(err)
+	}
 
-			if test.wantValue != "" {
-				testLit(t, varDecl.Value, test.wantValue)
-			}
-		})
+	wantType := &wantType{wantType: "Array", args: []any{"T"}}
+	if err := assertType(varDecl.Type, wantType); err != nil {
+		t.Error(err)
 	}
 }

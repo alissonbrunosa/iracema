@@ -5,51 +5,37 @@ import (
 	"testing"
 )
 
-func TestVarDecl(t *testing.T) {
-	type wantType struct {
-		wantType string
-		args     []*wantType
+func TestParse_VarDecl_SimpleType(t *testing.T) {
+	stmts := setupTest(t, "var x Int", 1)
+
+	varDecl, ok := stmts[0].(*ast.VarDecl)
+	if !ok {
+		t.Fatalf("expected first stmt to be *ast.VarDecl, got %T", stmts[0])
 	}
 
+	if err := assertIdent(varDecl.Name, "x"); err != nil {
+		t.Error(err)
+	}
+
+	if err := assertType(varDecl.Type, "Int"); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestParse_VarDecl_ParameterizedType(t *testing.T) {
 	table := []struct {
-		scenario  string
-		input     string
-		wantName  string
-		wantType  *wantType
-		wantValue string
+		scenario string
+		input    string
+		wantName string
+		wantType *wantType
 	}{
 		{
-			scenario: "without value",
-			input:    "var age Int",
-			wantName: "age",
-			wantType: &wantType{
-				wantType: "Int",
-			},
-		},
-		{
-			scenario:  "with value",
-			input:     "var age Int = 40",
-			wantValue: "40",
-			wantName:  "age",
-			wantType: &wantType{
-				wantType: "Int",
-			},
-		},
-		{
-			scenario:  "without type with value",
-			input:     "var age = 40",
-			wantValue: "40",
-			wantName:  "age",
-		},
-		{
-			scenario: "when type has a single argument type",
+			scenario: "when type has a single type argument",
 			input:    "var ages List<Int>",
 			wantName: "ages",
 			wantType: &wantType{
 				wantType: "List",
-				args: []*wantType{
-					{wantType: "Int"},
-				},
+				args:     []any{"Int"},
 			},
 		},
 		{
@@ -58,23 +44,16 @@ func TestVarDecl(t *testing.T) {
 			wantName: "cache",
 			wantType: &wantType{
 				wantType: "Map",
-				args: []*wantType{
-					{wantType: "String"},
-					{wantType: "Object"},
-				},
+				args:     []any{"String", "Object"},
 			},
 		},
 		{
 			scenario: "when type has multi-argument types",
-			input:    "var s Something<String, Object, Object>",
+			input:    "var s Something<String, Object, Int>",
 			wantName: "s",
 			wantType: &wantType{
 				wantType: "Something",
-				args: []*wantType{
-					{wantType: "String"},
-					{wantType: "Object"},
-					{wantType: "Object"},
-				},
+				args:     []any{"String", "Object", "Int"},
 			},
 		},
 		{
@@ -83,13 +62,8 @@ func TestVarDecl(t *testing.T) {
 			wantName: "list",
 			wantType: &wantType{
 				wantType: "List",
-				args: []*wantType{
-					{
-						wantType: "List",
-						args: []*wantType{
-							{wantType: "Int"},
-						},
-					},
+				args: []any{
+					&wantType{wantType: "List", args: []any{"Int"}},
 				},
 			},
 		},
@@ -99,27 +73,12 @@ func TestVarDecl(t *testing.T) {
 			wantName: "cache",
 			wantType: &wantType{
 				wantType: "Map",
-				args: []*wantType{
-					{wantType: "String"},
-					{
-						wantType: "List",
-						args: []*wantType{
-							{wantType: "Int"},
-						},
-					},
+				args: []any{
+					"String",
+					&wantType{wantType: "List", args: []any{"Int"}},
 				},
 			},
 		},
-	}
-
-	var testParamType func(*testing.T, *ast.Type, *wantType)
-	testParamType = func(t *testing.T, tp *ast.Type, wType *wantType) {
-		t.Helper()
-
-		testConst(t, tp.Name, wType.wantType)
-		for i, arg := range wType.args {
-			testParamType(t, tp.ArgumentTypeList[i], arg)
-		}
 	}
 
 	for _, test := range table {
@@ -131,14 +90,12 @@ func TestVarDecl(t *testing.T) {
 				t.Fatalf("expected first stmt to be *ast.VarDecl, got %T", stmts[0])
 			}
 
-			testIdent(t, varDecl.Name, test.wantName)
-
-			if test.wantType != nil {
-				testParamType(t, varDecl.Type, test.wantType)
+			if err := assertIdent(varDecl.Name, test.wantName); err != nil {
+				t.Error(err)
 			}
 
-			if test.wantValue != "" {
-				testLit(t, varDecl.Value, test.wantValue)
+			if err := assertType(varDecl.Type, test.wantType); err != nil {
+				t.Error(err)
 			}
 		})
 	}

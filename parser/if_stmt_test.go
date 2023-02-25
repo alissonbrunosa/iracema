@@ -23,8 +23,12 @@ func TestParseIfStmt(t *testing.T) {
 		t.Errorf("expected to be *ast.BinaryExpr, got %T", ifStmt.Cond)
 	}
 
-	testIdent(t, predicate.Left, "value")
-	testLit(t, predicate.Right, "10")
+	if err := assertIdent(predicate.Left, "value"); err != nil {
+		t.Error(err)
+	}
+	if err := assertLiteral(predicate.Right, "10"); err != nil {
+		t.Error(err)
+	}
 
 	if predicate.Operator.Type != token.Equal {
 		t.Errorf("expected operator to be token.Equal, got %q", predicate.Operator)
@@ -35,7 +39,9 @@ func TestParseIfStmt(t *testing.T) {
 		t.Errorf("expected to be *ast.ExprStmt, got %T", ifStmt.Then.Stmts[0])
 	}
 
-	testLit(t, exprStmt.Expr, "Equal")
+	if err := assertLiteral(exprStmt.Expr, "Equal"); err != nil {
+		t.Error(err)
+	}
 }
 
 func TestParseIfStmtWithElse(t *testing.T) {
@@ -57,8 +63,12 @@ func TestParseIfStmtWithElse(t *testing.T) {
 		t.Errorf("expected to be *ast.BinaryExpr, got %T", ifStmt.Cond)
 	}
 
-	testIdent(t, predicate.Left, "value")
-	testLit(t, predicate.Right, "10")
+	if err := assertIdent(predicate.Left, "value"); err != nil {
+		t.Error(err)
+	}
+	if err := assertLiteral(predicate.Right, "10"); err != nil {
+		t.Error(err)
+	}
 
 	if predicate.Operator.Type != token.Equal {
 		t.Errorf("expected operator to be token.Equal, got %q", predicate.Operator)
@@ -69,7 +79,9 @@ func TestParseIfStmtWithElse(t *testing.T) {
 		t.Errorf("expected to be *ast.ExprStmt, got %T", ifStmt.Then.Stmts[0])
 	}
 
-	testLit(t, exprStmt.Expr, "Equal")
+	if err := assertLiteral(exprStmt.Expr, "Equal"); err != nil {
+		t.Error(err)
+	}
 
 	elseBlock, ok := ifStmt.Else.(*ast.BlockStmt)
 	if !ok {
@@ -80,7 +92,9 @@ func TestParseIfStmtWithElse(t *testing.T) {
 	if !ok {
 		t.Errorf("expected to be *ast.ExprStmt, got %T", elseBlock.Stmts[0])
 	}
-	testLit(t, exprStmt.Expr, "Not Equal")
+	if err := assertLiteral(exprStmt.Expr, "Not Equal"); err != nil {
+		t.Error(err)
+	}
 }
 
 func TestParseIfStmt_WithElseIfStmt(t *testing.T) {
@@ -102,8 +116,12 @@ func TestParseIfStmt_WithElseIfStmt(t *testing.T) {
 		t.Errorf("expected to be *ast.BinaryExpr, got %T", ifStmt.Cond)
 	}
 
-	testIdent(t, predicate.Left, "value")
-	testLit(t, predicate.Right, "20")
+	if err := assertIdent(predicate.Left, "value"); err != nil {
+		t.Error(err)
+	}
+	if err := assertLiteral(predicate.Right, "20"); err != nil {
+		t.Error(err)
+	}
 
 	if predicate.Operator.Type != token.Equal {
 		t.Errorf("expected operator to be token.Equal, got %q", predicate.Operator)
@@ -114,7 +132,9 @@ func TestParseIfStmt_WithElseIfStmt(t *testing.T) {
 		t.Errorf("expected to be *ast.ExprStmt, got %T", ifStmt.Then.Stmts[0])
 	}
 
-	testLit(t, exprStmt.Expr, "path 1")
+	if err := assertLiteral(exprStmt.Expr, "path 1"); err != nil {
+		t.Error(err)
+	}
 
 	ifStmt, ok = ifStmt.Else.(*ast.IfStmt)
 	if !ok {
@@ -126,8 +146,13 @@ func TestParseIfStmt_WithElseIfStmt(t *testing.T) {
 		t.Errorf("expected to be *ast.BinaryExpr, got %T", ifStmt.Cond)
 	}
 
-	testIdent(t, predicate.Left, "value")
-	testLit(t, predicate.Right, "30")
+	if err := assertIdent(predicate.Left, "value"); err != nil {
+		t.Error(err)
+	}
+
+	if err := assertLiteral(predicate.Right, "30"); err != nil {
+		t.Error(err)
+	}
 
 	if predicate.Operator.Type != token.Equal {
 		t.Errorf("expected operator to be token.Equal, got %q", predicate.Operator)
@@ -138,7 +163,9 @@ func TestParseIfStmt_WithElseIfStmt(t *testing.T) {
 		t.Errorf("expected to be *ast.ExprStmt, got %T", ifStmt.Then.Stmts[0])
 	}
 
-	testLit(t, exprStmt.Expr, "path 2")
+	if err := assertLiteral(exprStmt.Expr, "path 2"); err != nil {
+		t.Error(err)
+	}
 }
 
 func TestIfWithInvalidElseBlock(t *testing.T) {

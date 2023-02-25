@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"fmt"
 	"iracema/token"
 	"strings"
 )
@@ -89,7 +90,7 @@ func (*NextStmt) String() string { return "next" }
 type ObjectDecl struct {
 	Name          *Ident
 	Parent        *Ident
-	ParamTypeList []*Field
+	TypeParamList []*Field
 	FieldList     []*VarDecl
 	FunctionList  []*FunDecl
 	ConstantList  []*ConstDecl
@@ -121,18 +122,42 @@ type Field struct {
 
 func (f *Field) String() string { return "ast.Field" }
 
-type Type struct {
-	Name             *Ident
-	ArgumentTypeList []*Type
-
-	stmt
+type Type interface {
+	Node
 }
 
-func (t *Type) String() string { return "ast.Type" }
+type Signature struct {
+	Name          *Ident
+	ParameterList []ParameterizedType
+	Return        ParameterizedType
+
+	node
+}
+
+func (s *Signature) String() string {
+	var b = new(strings.Builder)
+
+	fmt.Fprintf(b, "%s(", s.Name)
+	for _, parameter := range s.ParameterList {
+		fmt.Fprintf(b, "%s, ", parameter)
+	}
+	fmt.Fprintln(b, ")")
+
+	return b.String()
+}
+
+type ParameterizedType struct {
+	Name          *Ident
+	TypeArguments []Type
+
+	node
+}
+
+func (t *ParameterizedType) String() string { return "ast.Type" }
 
 type VarDecl struct {
 	Name  *Ident
-	Type  *Type
+	Type  Type
 	Value Expr
 
 	stmt
@@ -142,7 +167,7 @@ func (*VarDecl) String() string { return "LetDecl" }
 
 type ConstDecl struct {
 	Name  *Ident
-	Type  *Type
+	Type  Type
 	Value Expr
 
 	stmt
@@ -153,7 +178,7 @@ func (*ConstDecl) String() string { return "*ast.ConstDecl" }
 type FunDecl struct {
 	Name       *Ident
 	Parameters []*VarDecl
-	Return     *Ident
+	Return     Type
 	Body       *BlockStmt
 	Catches    []*CatchDecl
 
@@ -279,7 +304,7 @@ func (i *Ident) IsConstant() bool {
 	return 'A' <= i.Value[0] && i.Value[0] <= 'Z'
 }
 
-func (*Ident) String() string { return "Ident" }
+func (i *Ident) String() string { return i.Value }
 
 type UnaryExpr struct {
 	Operator *token.Token
