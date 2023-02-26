@@ -197,19 +197,50 @@ func TestParse_FunDecl_Return(t *testing.T) {
 		},
 	}
 
-	for _, test := range table {
-		t.Run(test.scenario, func(t *testing.T) {
-			stmts := setupTest(t, test.input, 1)
+	for _, row := range table {
+		t.Run(row.scenario, func(t *testing.T) {
+			stmts := setupTest(t, row.input, 1)
 
 			funDecl, ok := stmts[0].(*ast.FunDecl)
 			if !ok {
 				t.Fatalf("expected first stmt to be *ast.FunDecl, got %T", stmts[0])
 			}
 
-			if err := assertType(funDecl.Return, test.wantType); err != nil {
+			if err := assertType(funDecl.Return, row.wantType); err != nil {
 				t.Error(err)
 			}
 		})
+	}
+}
+
+func TestParse_FunDecl_WithFunctionType(t *testing.T) {
+	stmts := setupTest(t, "fun handle(fn fun(Int) -> Float) {}", 1)
+
+	funDecl, ok := stmts[0].(*ast.FunDecl)
+	if !ok {
+		t.Fatalf("expected first stmt to be *ast.FunDecl, got %T", stmts[0])
+	}
+
+	if err := assertIdent(funDecl.Name, "handle"); err != nil {
+		t.Error(err)
+	}
+
+	if len(funDecl.Parameters) != 1 {
+		t.Fatalf("expected 1 parameter, got %d", len(funDecl.Parameters))
+	}
+
+	if funDecl.Return != nil {
+		t.Error("expected return to be nil")
+	}
+
+	parameter := funDecl.Parameters[0]
+	if err := assertIdent(parameter.Name, "fn"); err != nil {
+		t.Error(err)
+	}
+
+	wantType := &wantType{args: []any{"Int"}, returnType: "Float"}
+	if err := assertType(parameter.Type, wantType); err != nil {
+		t.Error(err)
 	}
 }
 
