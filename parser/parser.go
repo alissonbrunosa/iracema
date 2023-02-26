@@ -269,7 +269,7 @@ func (p *parser) parseType() ast.Type {
 
 		return name
 	case token.Fun:
-		return p.parseFunctionType(false)
+		return p.parseFunctionType(false, false)
 
 	default:
 		err := fmt.Sprintf("expected type, found %s", p.tok)
@@ -295,15 +295,15 @@ func (p *parser) parseParameterizedType(name *ast.Ident) ast.Type {
 	return t
 }
 
-func (p *parser) parseFunctionType(wantNames bool) *ast.FunctionType {
+func (p *parser) parseFunctionType(wantName, wantParamNames bool) *ast.FunctionType {
 	p.expect(token.Fun)
 
 	sig := new(ast.FunctionType)
-	if wantNames {
+	if wantName {
 		sig.Name = p.parseIdent()
 	}
 
-	sig.ParameterList = p.parseParameterList(wantNames)
+	sig.ParameterList = p.parseParameterList(wantParamNames)
 	if p.consume(token.Arrow) {
 		sig.Return = p.parseType()
 	}
@@ -313,7 +313,7 @@ func (p *parser) parseFunctionType(wantNames bool) *ast.FunctionType {
 
 func (p *parser) parseFunDecl() *ast.FunDecl {
 	fun := new(ast.FunDecl)
-	fun.Type = p.parseFunctionType(true)
+	fun.Type = p.parseFunctionType(true, true)
 	fun.Body = p.parseBlockStmt()
 	fun.Catches = p.parseCatchList()
 	return fun
@@ -565,8 +565,8 @@ func (p *parser) parseOperand() ast.Expr {
 		token.None:
 		return p.parseBasicLit()
 
-	case token.Block:
-		return p.parseBlockExpr()
+	case token.Fun:
+		return p.parseFunLiteral()
 
 	case token.Ident:
 		return p.parseIdent()
@@ -612,14 +612,11 @@ func (p *parser) parseBasicLit() (lit *ast.BasicLit) {
 	}
 }
 
-// TODO: delete this later
-func (p *parser) parseBlockExpr() *ast.BlockExpr {
-	p.expect(token.Block)
-
-	return &ast.BlockExpr{
-		Parameters: p.parseParameterList(true),
-		Body:       p.parseBlockStmt(),
-	}
+func (p *parser) parseFunLiteral() (fun *ast.FunLiteral) {
+	fun = new(ast.FunLiteral)
+	fun.Type = p.parseFunctionType(false, true)
+	fun.Body = p.parseBlockStmt()
+	return
 }
 
 func (p *parser) parseIdent() *ast.Ident {

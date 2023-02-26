@@ -406,7 +406,7 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) error {
 	case *ast.GroupExpr:
 		return c.compileExpr(node.Expr, isEvaluated)
 
-	case *ast.BlockExpr:
+	case *ast.FunLiteral:
 		return errors.New("not implemented")
 
 	case *ast.IndexExpr:

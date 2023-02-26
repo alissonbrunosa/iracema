@@ -498,21 +498,21 @@ func TestParseIndexExpr(t *testing.T) {
 	}
 }
 
-func TestParseCodeBlock(t *testing.T) {
-	code := "block() {}"
+func TestParse_FunLiteral(t *testing.T) {
+	code := "var x = fun() {}"
 	stmts := setupTest(t, code, 1)
 
-	exprStmt, ok := stmts[0].(*ast.ExprStmt)
+	varDecl, ok := stmts[0].(*ast.VarDecl)
 	if !ok {
-		t.Errorf("expected first stmt to be *ast.ExprStmt, got %T", stmts[0])
+		t.Errorf("expected stmt to be *ast.VarDecl, got %T", stmts[0])
 	}
 
-	blockExpr, ok := exprStmt.Expr.(*ast.BlockExpr)
+	funLiteral, ok := varDecl.Value.(*ast.FunLiteral)
 	if !ok {
-		t.Errorf("expected first stmt to be *ast.BlockExpr, got %T", exprStmt.Expr)
+		t.Errorf("expected first stmt to be *ast.FunLiteral, got %T", varDecl.Value)
 	}
 
-	if len(blockExpr.Body.Stmts) != 0 {
+	if len(funLiteral.Body.Stmts) != 0 {
 		t.Errorf("expected block to have 0 stmts")
 	}
 }

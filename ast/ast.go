@@ -417,15 +417,6 @@ type IndexExpr struct {
 
 func (*IndexExpr) String() string { return "IndexExpr" }
 
-type BlockExpr struct {
-	Parameters []*VarDecl
-	Body       *BlockStmt
-
-	expr
-}
-
-func (*BlockExpr) String() string { return "CodeBlock" }
-
 type CallExpr struct {
 	Receiver  Expr
 	Method    *Ident
@@ -461,3 +452,12 @@ type SuperExpr struct {
 }
 
 func (*SuperExpr) String() string { return "SuperExpr" }
+
+type FunLiteral struct {
+	Type *FunctionType
+	Body *BlockStmt
+
+	expr
+}
+
+func (f *FunLiteral) String() string { return "ast.FunLiteral" }
