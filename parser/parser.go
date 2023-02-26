@@ -149,7 +149,7 @@ func (p *parser) parseStmt() ast.Stmt {
 	case
 		token.Ident, token.String, token.Bool, token.Int, token.Float,
 		token.LeftParen, token.Not, token.Plus, token.Minus,
-		token.LeftBracket, token.LeftBrace, token.None, token.Block,
+		token.LeftBracket, token.LeftBrace, token.None,
 		token.Super, token.This:
 		return p.parseSimpleStmt()
 
@@ -197,12 +197,11 @@ func (p *parser) parseObjectDecl() ast.Stmt {
 	return obj
 }
 
-func (p *parser) parseParamTypeList() (list []*ast.Field) {
-	if !p.at(token.Less) {
+func (p *parser) parseParamTypeList() (list []*ast.TypeParam) {
+	if !p.consume(token.Less) {
 		return
 	}
 
-	p.advance()
 	list = append(list, p.parseParamType())
 	for p.consume(token.Comma) {
 		list = append(list, p.parseParamType())
@@ -212,8 +211,8 @@ func (p *parser) parseParamTypeList() (list []*ast.Field) {
 	return
 }
 
-func (p *parser) parseParamType() *ast.Field {
-	field := new(ast.Field)
+func (p *parser) parseParamType() *ast.TypeParam {
+	field := new(ast.TypeParam)
 	field.Name = p.parseIdent()
 
 	if p.consume(token.Is) {
@@ -725,18 +724,6 @@ func (p *parser) parseSuperExpr() ast.Expr {
 		ExplicitArgs: p.at(token.LeftParen),
 		Arguments:    p.parseArgumentList(),
 	}
-}
-
-func (p *parser) parseField() *ast.Field {
-	field := new(ast.Field)
-	field.Name = p.parseIdent()
-	field.Type = p.parseConst()
-
-	if p.consume(token.Assign) {
-		field.Value = p.parseExpr()
-	}
-
-	return field
 }
 
 func (p *parser) advance() {

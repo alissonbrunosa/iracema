@@ -90,12 +90,10 @@ func (*NextStmt) String() string { return "next" }
 type ObjectDecl struct {
 	Name          *Ident
 	Parent        *Ident
-	TypeParamList []*Field
+	TypeParamList []*TypeParam
 	FieldList     []*VarDecl
 	FunctionList  []*FunDecl
 	ConstantList  []*ConstDecl
-
-	Body *BlockStmt
 
 	stmt
 }
@@ -112,15 +110,14 @@ type AssignStmt struct {
 
 func (*AssignStmt) String() string { return "AssignStmt" }
 
-type Field struct {
-	Name  *Ident
-	Type  *Ident
-	Value Expr
+type TypeParam struct {
+	Name *Ident
+	Type *Ident
 
 	stmt
 }
 
-func (f *Field) String() string { return "ast.Field" }
+func (f *TypeParam) String() string { return "ast.Field" }
 
 type Type interface {
 	Node
