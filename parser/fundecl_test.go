@@ -26,13 +26,13 @@ func TestFunDecl(t *testing.T) {
 	}
 }
 
-func TestFunDecl_WithParameter(t *testing.T) {
+func TestParse_FunDecl_WithParameter(t *testing.T) {
 	type wantParam struct {
 		wantName string
 		wantType string
 	}
 
-	tests := []struct {
+	table := []struct {
 		scenario   string
 		input      string
 		wantName   string
@@ -57,21 +57,21 @@ func TestFunDecl_WithParameter(t *testing.T) {
 		},
 	}
 
-	for _, test := range tests {
-		t.Run(test.scenario, func(t *testing.T) {
-			stmts := setupTest(t, test.input, 1)
+	for _, row := range table {
+		t.Run(row.scenario, func(t *testing.T) {
+			stmts := setupTest(t, row.input, 1)
 
 			funDecl, ok := stmts[0].(*ast.FunDecl)
 			if !ok {
 				t.Fatalf("expected first stmt to be *ast.FunDecl, got %T", stmts[0])
 			}
 
-			if err := assertIdent(funDecl.Name, test.wantName); err != nil {
+			if err := assertIdent(funDecl.Name, row.wantName); err != nil {
 				t.Fatal(err)
 			}
 
 			for i, parameter := range funDecl.Parameters {
-				wp := test.wantParams[i]
+				wp := row.wantParams[i]
 				if err := assertIdent(parameter.Name, wp.wantName); err != nil {
 					t.Errorf("param name failed at %d: %s", i, err)
 				}
@@ -84,7 +84,7 @@ func TestFunDecl_WithParameter(t *testing.T) {
 	}
 }
 
-func TestFunDecl_WithParameterizedType(t *testing.T) {
+func TestParse_FunDecl_WithParameterizedType(t *testing.T) {
 	table := []struct {
 		scenario string
 		input    string
@@ -143,9 +143,9 @@ func TestFunDecl_WithParameterizedType(t *testing.T) {
 		},
 	}
 
-	for _, test := range table {
-		t.Run(test.scenario, func(t *testing.T) {
-			stmts := setupTest(t, test.input, 1)
+	for _, row := range table {
+		t.Run(row.scenario, func(t *testing.T) {
+			stmts := setupTest(t, row.input, 1)
 
 			funDecl, ok := stmts[0].(*ast.FunDecl)
 			if !ok {
@@ -153,11 +153,11 @@ func TestFunDecl_WithParameterizedType(t *testing.T) {
 			}
 
 			for i, parameter := range funDecl.Parameters {
-				if err := assertIdent(parameter.Name, test.wantName); err != nil {
+				if err := assertIdent(parameter.Name, row.wantName); err != nil {
 					t.Errorf("param name failed at %d: %s", i, err)
 				}
 
-				if err := assertType(parameter.Type, test.wantType); err != nil {
+				if err := assertType(parameter.Type, row.wantType); err != nil {
 					t.Errorf("param type failed at %d: %s", i, err)
 				}
 			}
@@ -165,7 +165,7 @@ func TestFunDecl_WithParameterizedType(t *testing.T) {
 	}
 }
 
-func TestFunDecl_Return(t *testing.T) {
+func TestParse_FunDecl_Return(t *testing.T) {
 	table := []struct {
 		scenario string
 		input    string
