@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"iracema/ast"
 	"testing"
 )

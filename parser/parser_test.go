@@ -314,7 +314,7 @@ func TestErrorParse(t *testing.T) {
 		},
 		{
 			scenario:  "Missing closing brace",
-			input:     "fun name {\n",
+			input:     "fun name() {\n",
 			wantError: "[Lin: 2 Col: 1] syntax error: expected '}', found 'EOF'",
 		},
 		{
@@ -499,7 +499,7 @@ func TestParseIndexExpr(t *testing.T) {
 }
 
 func TestParseCodeBlock(t *testing.T) {
-	code := "block {}"
+	code := "block() {}"
 	stmts := setupTest(t, code, 1)
 
 	exprStmt, ok := stmts[0].(*ast.ExprStmt)
@@ -595,7 +595,7 @@ func TestParse_withStmtsInTheSameLine(t *testing.T) {
 }
 
 func TestParseReturnStmt(t *testing.T) {
-	stmts := setupTest(t, "fun do_stuff { return 10 }", 1)
+	stmts := setupTest(t, "fun do_stuff() { return 10 }", 1)
 
 	funDecl := assertFunDecl(t, stmts[0], "do_stuff", nil)
 
@@ -610,7 +610,7 @@ func TestParseReturnStmt(t *testing.T) {
 }
 
 func TestParseReturnStmt_withoutValue(t *testing.T) {
-	stmts := setupTest(t, "fun do_stuff { return }", 1)
+	stmts := setupTest(t, "fun do_stuff() { return }", 1)
 
 	funDecl := assertFunDecl(t, stmts[0], "do_stuff", nil)
 

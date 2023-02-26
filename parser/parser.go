@@ -269,7 +269,8 @@ func (p *parser) parseType() ast.Type {
 
 		return name
 	case token.Fun:
-		panic("HOLD YOUR HORSES")
+		return p.parseSignature(false)
+
 	default:
 		err := fmt.Sprintf("expected type, found %s", p.tok)
 		p.setError(p.tok.Position, err)
@@ -294,12 +295,28 @@ func (p *parser) parseParameterizedType(name *ast.Ident) ast.Type {
 	return t
 }
 
+func (p *parser) parseSignature(wantNames bool) *ast.Signature {
+	p.expect(token.Fun)
+
+	sig := new(ast.Signature)
+	if wantNames {
+		sig.Name = p.parseIdent()
+	}
+
+	sig.ParameterList = p.parseParameterList(wantNames)
+	if p.consume(token.Arrow) {
+		sig.Return = p.parseType()
+	}
+
+	return sig
+}
+
 func (p *parser) parseFunDecl() *ast.FunDecl {
 	p.expect(token.Fun)
 
 	fun := new(ast.FunDecl)
 	fun.Name = p.parseIdent()
-	fun.Parameters = p.parseParameterList()
+	fun.Parameters = p.parseParameterList(true)
 
 	if p.consume(token.Arrow) {
 		fun.Return = p.parseType()
@@ -436,13 +453,11 @@ func (p *parser) parseReturnStmt() ast.Stmt {
 	return &ast.ReturnStmt{Token: retToken, Value: value}
 }
 
-func (p *parser) parseParameterList() (list []*ast.VarDecl) {
-	if !p.consume(token.LeftParen) {
-		return
-	}
+func (p *parser) parseParameterList(wantNames bool) (list []*ast.VarDecl) {
+	p.expect(token.LeftParen)
 
 	for p.tok.Type != token.RightParen && p.tok.Type != token.EOF {
-		list = append(list, p.parseParameter())
+		list = append(list, p.parseParameter(wantNames))
 
 		if !p.consumeCommaOrExpect(token.RightParen) {
 			return
@@ -454,11 +469,14 @@ func (p *parser) parseParameterList() (list []*ast.VarDecl) {
 	return
 }
 
-func (p *parser) parseParameter() *ast.VarDecl {
+func (p *parser) parseParameter(wantName bool) *ast.VarDecl {
 	decl := new(ast.VarDecl)
-	decl.Name = p.parseIdent()
-	decl.Type = p.parseType()
 
+	if wantName {
+		decl.Name = p.parseIdent()
+	}
+
+	decl.Type = p.parseType()
 	if p.consume(token.Assign) {
 		decl.Value = p.parseExpr()
 	}
@@ -602,11 +620,12 @@ func (p *parser) parseBasicLit() (lit *ast.BasicLit) {
 	}
 }
 
+// TODO: delete this later
 func (p *parser) parseBlockExpr() *ast.BlockExpr {
 	p.expect(token.Block)
 
 	return &ast.BlockExpr{
-		Parameters: p.parseParameterList(),
+		Parameters: p.parseParameterList(true),
 		Body:       p.parseBlockStmt(),
 	}
 }

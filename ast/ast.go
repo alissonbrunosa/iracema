@@ -128,8 +128,8 @@ type Type interface {
 
 type Signature struct {
 	Name          *Ident
-	ParameterList []ParameterizedType
-	Return        ParameterizedType
+	ParameterList []*VarDecl
+	Return        Type
 
 	node
 }
@@ -137,11 +137,21 @@ type Signature struct {
 func (s *Signature) String() string {
 	var b = new(strings.Builder)
 
-	fmt.Fprintf(b, "%s(", s.Name)
+	fmt.Fprint(b, "fun")
+	if s.Name != nil {
+		fmt.Fprintf(b, "%s(", s.Name)
+	} else {
+		b.WriteByte('(')
+	}
+
 	for _, parameter := range s.ParameterList {
 		fmt.Fprintf(b, "%s, ", parameter)
 	}
-	fmt.Fprintln(b, ")")
+
+	b.WriteByte(')')
+	if s.Return != nil {
+		fmt.Fprintf(b, " -> %s", s.Return)
+	}
 
 	return b.String()
 }
@@ -163,7 +173,23 @@ type VarDecl struct {
 	stmt
 }
 
-func (*VarDecl) String() string { return "LetDecl" }
+func (v *VarDecl) String() string {
+	var buf = new(strings.Builder)
+
+	if v.Name != nil {
+		fmt.Fprintf(buf, "var %s ", v.Name)
+	}
+
+	if v.Type != nil {
+		fmt.Fprintf(buf, "%s", v.Type)
+	}
+
+	if v.Value != nil {
+		fmt.Fprintf(buf, "= %s", v.Value)
+	}
+
+	return buf.String()
+}
 
 type ConstDecl struct {
 	Name  *Ident
