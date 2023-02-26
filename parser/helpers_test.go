@@ -120,11 +120,12 @@ func assertFunDecl(t *testing.T, stmt ast.Stmt, name string, fn assertParam) *as
 		t.Fatalf("expected first stmt to be *ast.FunDecl, got %T", stmt)
 	}
 
-	if err := assertIdent(funDecl.Name, name); err != nil {
+	funType := funDecl.Type
+	if err := assertIdent(funType.Name, name); err != nil {
 		t.Error(err)
 	}
 
-	for i, field := range funDecl.Parameters {
+	for i, field := range funType.ParameterList {
 		fn(t, i, field)
 	}
 

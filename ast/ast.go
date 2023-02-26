@@ -202,11 +202,9 @@ type ConstDecl struct {
 func (*ConstDecl) String() string { return "*ast.ConstDecl" }
 
 type FunDecl struct {
-	Name       *Ident
-	Parameters []*VarDecl
-	Return     Type
-	Body       *BlockStmt
-	Catches    []*CatchDecl
+	Type    *FunctionType
+	Body    *BlockStmt
+	Catches []*CatchDecl
 
 	stmt
 }

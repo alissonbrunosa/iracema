@@ -312,16 +312,8 @@ func (p *parser) parseFunctionType(wantNames bool) *ast.FunctionType {
 }
 
 func (p *parser) parseFunDecl() *ast.FunDecl {
-	p.expect(token.Fun)
-
 	fun := new(ast.FunDecl)
-	fun.Name = p.parseIdent()
-	fun.Parameters = p.parseParameterList(true)
-
-	if p.consume(token.Arrow) {
-		fun.Return = p.parseType()
-	}
-
+	fun.Type = p.parseFunctionType(true)
 	fun.Body = p.parseBlockStmt()
 	fun.Catches = p.parseCatchList()
 	return fun

@@ -9,19 +9,20 @@ func TestFunDecl(t *testing.T) {
 	stmts := setupTest(t, "fun noop() {}", 1)
 
 	funDecl, ok := stmts[0].(*ast.FunDecl)
+	funType := funDecl.Type
 	if !ok {
 		t.Fatalf("expected first stmt to be *ast.FunDecl, got %T", stmts[0])
 	}
 
-	if err := assertIdent(funDecl.Name, "noop"); err != nil {
+	if err := assertIdent(funType.Name, "noop"); err != nil {
 		t.Error(err)
 	}
 
-	if len(funDecl.Parameters) != 0 {
-		t.Errorf("expected paramerer size to be 0, got %d", len(funDecl.Parameters))
+	if len(funType.ParameterList) != 0 {
+		t.Errorf("expected paramerer size to be 0, got %d", len(funType.ParameterList))
 	}
 
-	if funDecl.Return != nil {
+	if funType.Return != nil {
 		t.Errorf("expected Return to be nil")
 	}
 }
@@ -66,11 +67,12 @@ func TestParse_FunDecl_WithParameter(t *testing.T) {
 				t.Fatalf("expected first stmt to be *ast.FunDecl, got %T", stmts[0])
 			}
 
-			if err := assertIdent(funDecl.Name, row.wantName); err != nil {
+			funType := funDecl.Type
+			if err := assertIdent(funType.Name, row.wantName); err != nil {
 				t.Fatal(err)
 			}
 
-			for i, parameter := range funDecl.Parameters {
+			for i, parameter := range funType.ParameterList {
 				wp := row.wantParams[i]
 				if err := assertIdent(parameter.Name, wp.wantName); err != nil {
 					t.Errorf("param name failed at %d: %s", i, err)
@@ -152,7 +154,8 @@ func TestParse_FunDecl_WithParameterizedType(t *testing.T) {
 				t.Fatalf("expected first stmt to be *ast.FunDecl, got %T", stmts[0])
 			}
 
-			for i, parameter := range funDecl.Parameters {
+			funType := funDecl.Type
+			for i, parameter := range funType.ParameterList {
 				if err := assertIdent(parameter.Name, row.wantName); err != nil {
 					t.Errorf("param name failed at %d: %s", i, err)
 				}
@@ -206,7 +209,8 @@ func TestParse_FunDecl_Return(t *testing.T) {
 				t.Fatalf("expected first stmt to be *ast.FunDecl, got %T", stmts[0])
 			}
 
-			if err := assertType(funDecl.Return, row.wantType); err != nil {
+			funType := funDecl.Type
+			if err := assertType(funType.Return, row.wantType); err != nil {
 				t.Error(err)
 			}
 		})
@@ -221,19 +225,20 @@ func TestParse_FunDecl_WithFunctionType(t *testing.T) {
 		t.Fatalf("expected first stmt to be *ast.FunDecl, got %T", stmts[0])
 	}
 
-	if err := assertIdent(funDecl.Name, "handle"); err != nil {
+	funType := funDecl.Type
+	if err := assertIdent(funType.Name, "handle"); err != nil {
 		t.Error(err)
 	}
 
-	if len(funDecl.Parameters) != 1 {
-		t.Fatalf("expected 1 parameter, got %d", len(funDecl.Parameters))
+	if len(funType.ParameterList) != 1 {
+		t.Fatalf("expected 1 parameter, got %d", len(funType.ParameterList))
 	}
 
-	if funDecl.Return != nil {
+	if funType.Return != nil {
 		t.Error("expected return to be nil")
 	}
 
-	parameter := funDecl.Parameters[0]
+	parameter := funType.ParameterList[0]
 	if err := assertIdent(parameter.Name, "fn"); err != nil {
 		t.Error(err)
 	}

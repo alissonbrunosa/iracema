@@ -906,9 +906,10 @@ func (c *compiler) compileFunDecl(fun *ast.FunDecl) error {
 		return errors.New("can not declare a method inside of a method")
 	}
 
-	c.openScope(fun.Name.Value, FUN_SCOPE)
+	funType := fun.Type
+	c.openScope(funType.Name.Value, FUN_SCOPE)
 
-	if err := c.compileFunParams(fun.Parameters); err != nil {
+	if err := c.compileFunParams(funType.ParameterList); err != nil {
 		return err
 	}
 
