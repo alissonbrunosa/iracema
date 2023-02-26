@@ -292,14 +292,6 @@ func (r *ReturnStmt) String() string {
 	return buf.String()
 }
 
-type FieldSel struct {
-	Name *Ident
-
-	expr
-}
-
-func (*FieldSel) String() string { return "FieldSel" }
-
 //
 // Expressions
 //
@@ -418,8 +410,7 @@ type IndexExpr struct {
 func (*IndexExpr) String() string { return "IndexExpr" }
 
 type CallExpr struct {
-	Receiver  Expr
-	Method    *Ident
+	Function  Expr
 	Arguments []Expr
 
 	expr
@@ -461,3 +452,13 @@ type FunLiteral struct {
 }
 
 func (f *FunLiteral) String() string { return "ast.FunLiteral" }
+
+type MemberExpr struct {
+	Base Expr
+	Dot  *token.Token
+	Name *Ident
+
+	expr
+}
+
+func (*MemberExpr) String() string { return "ast.MemberExpr" }

@@ -312,7 +312,7 @@ func (c *compiler) compileStmt(stmt ast.Stmt) error {
 				ci := lang.NewCallInfo("insert", 2)
 				c.add(bytecode.CallMethod, c.addConstant(ci))
 				c.add(bytecode.Pop, 0)
-			case *ast.FieldSel:
+			case *ast.MemberExpr:
 				if err := c.compileExpr(value, true); err != nil {
 					return err
 				}
@@ -425,12 +425,17 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) error {
 		}
 
 	case *ast.CallExpr:
-		if node.Receiver != nil {
-			if err := c.compileExpr(node.Receiver, true); err != nil {
+		var methodName string
+		switch fun := node.Function.(type) {
+		case *ast.Ident:
+			c.add(bytecode.PushThis, 0)
+			methodName = fun.Value
+		case *ast.MemberExpr:
+			if err := c.compileExpr(fun.Base, true); err != nil {
 				return err
 			}
-		} else {
-			c.add(bytecode.PushThis, 0)
+
+			methodName = fun.Name.Value
 		}
 
 		for _, arg := range node.Arguments {
@@ -439,7 +444,7 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) error {
 			}
 		}
 
-		ci := lang.NewCallInfo(node.Method.Value, byte(len(node.Arguments)))
+		ci := lang.NewCallInfo(methodName, byte(len(node.Arguments)))
 		c.add(bytecode.CallMethod, c.addConstant(ci))
 		if !isEvaluated {
 			c.add(bytecode.Pop, 0)
@@ -470,7 +475,7 @@ func (c *compiler) compileExpr(expr ast.Expr, isEvaluated bool) error {
 			c.add(bytecode.Pop, 0)
 		}
 
-	case *ast.FieldSel:
+	case *ast.MemberExpr:
 		c.add(bytecode.GetField, c.addConstant(node.Name.Value))
 
 	default:

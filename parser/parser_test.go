@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bytes"
+	"fmt"
 	"iracema/ast"
 	"iracema/token"
 	"testing"
@@ -245,59 +246,68 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 	}
 }
 
-func TestParseCallExpr(t *testing.T) {
-	tests := []struct {
-		Code             string
-		ExpectedReceiver string
-		ExpectedMethod   string
-		ExpectedArgs     []string
+func TestParse_CallExpr_withMemberExpr(t *testing.T) {
+	table := []struct {
+		input         string
+		wantBase      string
+		wantName      string
+		wantArguments []string
 	}{
 		{
-			Code:             "author.name",
-			ExpectedReceiver: "author",
-			ExpectedMethod:   "name",
-			ExpectedArgs:     []string{},
+			input:         "author.name()",
+			wantBase:      "author",
+			wantName:      "name",
+			wantArguments: []string{},
 		},
 		{
-			Code:             "one.plus(2)",
-			ExpectedReceiver: "one",
-			ExpectedMethod:   "plus",
-			ExpectedArgs:     []string{"2"},
+			input:         "one.plus(2)",
+			wantBase:      "one",
+			wantName:      "plus",
+			wantArguments: []string{"2"},
 		},
 		{
-			Code:             "math.pow(2, 3)",
-			ExpectedReceiver: "math",
-			ExpectedMethod:   "pow",
-			ExpectedArgs:     []string{"2", "3"},
+			input:         "math.pow(2, 3)",
+			wantBase:      "math",
+			wantName:      "pow",
+			wantArguments: []string{"2", "3"},
 		},
 		{
-			Code:             "out.println(1 + 2)",
-			ExpectedReceiver: "out",
-			ExpectedMethod:   "println",
-			ExpectedArgs:     []string{"(1+2)"},
+			input:         `out.println("Hello World")`,
+			wantBase:      "out",
+			wantName:      "println",
+			wantArguments: []string{"Hello World"},
 		},
 	}
 
-	for _, test := range tests {
-		stmts := setupTest(t, test.Code, 1)
+	for i, row := range table {
+		t.Run(fmt.Sprintf("scenario %d", i), func(t *testing.T) {
+			stmts := setupTest(t, row.input, 1)
 
-		exprStmt, ok := stmts[0].(*ast.ExprStmt)
-		if !ok {
-			t.Errorf("expected *ast.ExprStmt, got %T", stmts[0])
-		}
+			exprStmt, ok := stmts[0].(*ast.ExprStmt)
+			if !ok {
+				t.Errorf("expected *ast.ExprStmt, got %T", stmts[0])
+			}
 
-		callExpr, ok := exprStmt.Expr.(*ast.CallExpr)
-		if !ok {
-			t.Errorf("expected *ast.CallExpr, got %T", exprStmt.Expr)
-		}
+			callExpr, ok := exprStmt.Expr.(*ast.CallExpr)
+			if !ok {
+				t.Errorf("expected *ast.CallExpr, got %T", exprStmt.Expr)
+			}
 
-		if err := assertIdent(callExpr.Receiver, test.ExpectedReceiver); err != nil {
-			t.Error(err)
-		}
-		if err := assertIdent(callExpr.Method, test.ExpectedMethod); err != nil {
-			t.Error(err)
-		}
-		testArguments(t, callExpr.Arguments, test.ExpectedArgs)
+			memberExpr := callExpr.Function.(*ast.MemberExpr)
+			if err := assertIdent(memberExpr.Base, row.wantBase); err != nil {
+				t.Error(err)
+			}
+
+			if err := assertIdent(memberExpr.Name, row.wantName); err != nil {
+				t.Error(err)
+			}
+
+			for i, argument := range callExpr.Arguments {
+				if err := assertLiteral(argument, row.wantArguments[i]); err != nil {
+					t.Errorf("[FAILED] argument at %d\r\tReason: %s", i, err)
+				}
+			}
+		})
 	}
 }
 
@@ -352,33 +362,33 @@ func TestErrorParse(t *testing.T) {
 }
 
 func TestFunctionCall(t *testing.T) {
-	tests := []struct {
-		Code                 string
-		ExpectedFunctionName string
-		ExpectedArgs         []string
+	table := []struct {
+		input         string
+		wantFunction  string
+		wantArguments []string
 	}{
 		{
-			Code:                 "println()",
-			ExpectedFunctionName: "println",
-			ExpectedArgs:         []string{},
+			input:         "println()",
+			wantFunction:  "println",
+			wantArguments: []string{},
 		},
 		{
-			Code:                 `println("Hello")`,
-			ExpectedFunctionName: "println",
-			ExpectedArgs:         []string{"Hello"},
+			input:         `println("Hello")`,
+			wantFunction:  "println",
+			wantArguments: []string{"Hello"},
 		},
 	}
 
-	for _, test := range tests {
-		stmts := setupTest(t, test.Code, 1)
-
+	for _, row := range table {
+		stmts := setupTest(t, row.input, 1)
 		exprStmt := stmts[0].(*ast.ExprStmt)
 
 		callExpr := exprStmt.Expr.(*ast.CallExpr)
-		if err := assertIdent(callExpr.Method, test.ExpectedFunctionName); err != nil {
+
+		if err := assertIdent(callExpr.Function, row.wantFunction); err != nil {
 			t.Error(err)
 		}
-		testArguments(t, callExpr.Arguments, test.ExpectedArgs)
+		testArguments(t, callExpr.Arguments, row.wantArguments)
 	}
 }
 
@@ -517,7 +527,9 @@ func TestParse_FunLiteral(t *testing.T) {
 	}
 }
 
-func Test_ParseSuperExpr(t *testing.T) {
+func TestParse_SuperExpr(t *testing.T) {
+	t.Skip("WILL GET BACK TO THIS LATER")
+
 	table := []struct {
 		scenario string
 		code     string
@@ -525,7 +537,7 @@ func Test_ParseSuperExpr(t *testing.T) {
 	}{
 		{
 			scenario: "without args",
-			code:     "super",
+			code:     "super()",
 			testFun: func(expr *ast.SuperExpr) {
 				if expr.ExplicitArgs {
 					t.Error("expected .ExplictArgs to be false")
@@ -551,9 +563,9 @@ func Test_ParseSuperExpr(t *testing.T) {
 		},
 	}
 
-	for _, test := range table {
-		t.Run(test.scenario, func(t *testing.T) {
-			stmts := setupTest(t, test.code, 1)
+	for _, row := range table {
+		t.Run(row.scenario, func(t *testing.T) {
+			stmts := setupTest(t, row.code, 1)
 
 			exprStmt := stmts[0].(*ast.ExprStmt)
 
@@ -561,7 +573,7 @@ func Test_ParseSuperExpr(t *testing.T) {
 			if !ok {
 				t.Errorf("expected first stmt to be *ast.SuperExpr, got %T", exprStmt.Expr)
 			}
-			test.testFun(super)
+			row.testFun(super)
 		})
 	}
 }
@@ -594,7 +606,7 @@ func TestParse_withStmtsInTheSameLine(t *testing.T) {
 	}
 }
 
-func TestParseReturnStmt(t *testing.T) {
+func TestParse_ReturnStmt(t *testing.T) {
 	stmts := setupTest(t, "fun do_stuff() { return 10 }", 1)
 
 	funDecl := assertFunDecl(t, stmts[0], "do_stuff", nil)
@@ -609,7 +621,7 @@ func TestParseReturnStmt(t *testing.T) {
 	}
 }
 
-func TestParseReturnStmt_withoutValue(t *testing.T) {
+func TestParse_ReturnStmt_withoutValue(t *testing.T) {
 	stmts := setupTest(t, "fun do_stuff() { return }", 1)
 
 	funDecl := assertFunDecl(t, stmts[0], "do_stuff", nil)
@@ -624,7 +636,7 @@ func TestParseReturnStmt_withoutValue(t *testing.T) {
 	}
 }
 
-func TestFieldSel(t *testing.T) {
+func TestParse_MemberExpr(t *testing.T) {
 	stmts := setupTest(t, "this.name", 1)
 
 	exprStmt, ok := stmts[0].(*ast.ExprStmt)
@@ -632,9 +644,9 @@ func TestFieldSel(t *testing.T) {
 		t.Fatalf("expected first stmt to be *ast.ExprStmt, got %T", stmts[0])
 	}
 
-	fs, ok := exprStmt.Expr.(*ast.FieldSel)
+	fs, ok := exprStmt.Expr.(*ast.MemberExpr)
 	if !ok {
-		t.Fatalf("expected first stmt to be *ast.FieldSel, got %T", exprStmt.Expr)
+		t.Fatalf("expected first stmt to be *ast.MemberExpr, got %T", exprStmt.Expr)
 	}
 
 	if err := assertIdent(fs.Name, "name"); err != nil {

@@ -539,16 +539,14 @@ func (p *parser) parsePrimaryExpr() (expr ast.Expr) {
 	for {
 		switch p.tok.Type {
 		case token.Dot:
-			expr = p.parseCallExpr(expr)
+			member := new(ast.MemberExpr)
+			member.Base = expr
+			p.expect(token.Dot)
+			member.Name = p.parseIdent()
+			expr = member
 
 		case token.LeftParen:
-			ident, ok := expr.(*ast.Ident)
-			if !ok {
-				expr = new(ast.BadExpr)
-				p.advance()
-			} else {
-				expr = &ast.CallExpr{Method: ident, Arguments: p.parseArgumentList()}
-			}
+			expr = &ast.CallExpr{Function: expr, Arguments: p.parseArgumentList()}
 
 		case token.LeftBracket:
 			expr = p.parseIndexExpr(expr)
@@ -581,14 +579,11 @@ func (p *parser) parseOperand() ast.Expr {
 		return p.parseHashLit()
 
 	case token.This:
-		// TODO: make some improvements in this section
-		thisTok := p.tok
+		this := new(ast.BasicLit)
+		this.Token = p.tok
 		p.advance()
-		if p.consume(token.Dot) {
-			return &ast.FieldSel{Name: p.parseIdent()}
-		}
 
-		return &ast.BasicLit{Token: thisTok}
+		return this
 
 	case token.Super:
 		return p.parseSuperExpr()
@@ -644,22 +639,9 @@ func (p *parser) parseGroupExpr() ast.Expr {
 	return &ast.GroupExpr{Expr: expr}
 }
 
-func (p *parser) parseCallExpr(receiver ast.Expr) ast.Expr {
-	p.expect(token.Dot)
-
-	return &ast.CallExpr{
-		Receiver:  receiver,
-		Method:    p.parseIdent(),
-		Arguments: p.parseArgumentList(),
-	}
-}
-
 func (p *parser) parseArgumentList() (list []ast.Expr) {
-	if !p.at(token.LeftParen) {
-		return
-	}
-
 	p.expect(token.LeftParen)
+
 	for p.tok.Type != token.RightParen && p.tok.Type != token.EOF {
 		list = append(list, p.parseExpr())
 
