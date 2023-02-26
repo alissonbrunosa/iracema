@@ -732,7 +732,7 @@ func TestCompileObjectDecl_WithFunction(t *testing.T) {
 	}
 
 	code := `object Person {
- 			   fun age {}
+ 			   fun age() {}
  			 }`
 
 	fun := compile(code)
@@ -902,7 +902,7 @@ func TestCompileFunDecl_withMultipleCatches(t *testing.T) {
 		expect(bytecode.Return),
 	}
 
-	code := "fun dangerous { explode() } catch(err: Error) { puts(err) } catch(err: ExplodeError) { exit(1) }"
+	code := "fun dangerous() { explode() } catch(err: Error) { puts(err) } catch(err: ExplodeError) { exit(1) }"
 
 	meth := compile(code)
 	for i, instr := range meth.Instrs() {
@@ -1002,7 +1002,7 @@ func TestCompileReturnStmt(t *testing.T) {
 		expect(bytecode.Return),
 	}
 
-	meth := compile("fun do_stuff { return 10 }")
+	meth := compile("fun do_stuff() { return 10 }")
 	for i, instr := range meth.Instrs() {
 		top[i].Match(t, instr, meth.Constants())
 	}
@@ -1021,7 +1021,7 @@ func TestCompileReturnStmt_withoutValue(t *testing.T) {
 		expect(bytecode.Return),
 	}
 
-	meth := compile("fun do_stuff { return }")
+	meth := compile("fun do_stuff() { return }")
 	for i, instr := range meth.Instrs() {
 		top[i].Match(t, instr, meth.Constants())
 	}
