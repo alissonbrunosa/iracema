@@ -139,14 +139,39 @@ func assertType(t ast.Type, want any) error {
 	case *ast.ParameterizedType:
 		return assertParameterizedType(_type, want.(*wantType))
 
+	case *ast.Signature:
+		return assertSignature(_type, want.(*wantType))
+
 	default:
 		return fmt.Errorf("invalid ast.Type: %T", t)
 	}
 }
 
 type wantType struct {
-	wantType string
-	args     []any
+	wantType   string
+	returnType any
+	args       []any
+}
+
+func assertSignature(t *ast.Signature, wt *wantType) error {
+	want := len(wt.args)
+	got := len(t.ParameterList)
+
+	if want != got {
+		return fmt.Errorf("expected Signature to have %d parameters, got %d", want, got)
+	}
+
+	for i, parameter := range t.ParameterList {
+		if err := assertType(parameter.Type, wt.args[i]); err != nil {
+			return err
+		}
+	}
+
+	if wt.returnType != nil {
+		return assertType(t.Return, wt.returnType)
+	}
+
+	return nil
 }
 
 func assertParameterizedType(t *ast.ParameterizedType, wt *wantType) error {
