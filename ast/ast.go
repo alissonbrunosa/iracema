@@ -126,7 +126,7 @@ type Type interface {
 	Node
 }
 
-type Signature struct {
+type FunctionType struct {
 	Name          *Ident
 	ParameterList []*VarDecl
 	Return        Type
@@ -134,7 +134,7 @@ type Signature struct {
 	node
 }
 
-func (s *Signature) String() string {
+func (s *FunctionType) String() string {
 	var b = new(strings.Builder)
 
 	fmt.Fprint(b, "fun")

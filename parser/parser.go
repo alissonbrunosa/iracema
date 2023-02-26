@@ -269,7 +269,7 @@ func (p *parser) parseType() ast.Type {
 
 		return name
 	case token.Fun:
-		return p.parseSignature(false)
+		return p.parseFunctionType(false)
 
 	default:
 		err := fmt.Sprintf("expected type, found %s", p.tok)
@@ -295,10 +295,10 @@ func (p *parser) parseParameterizedType(name *ast.Ident) ast.Type {
 	return t
 }
 
-func (p *parser) parseSignature(wantNames bool) *ast.Signature {
+func (p *parser) parseFunctionType(wantNames bool) *ast.FunctionType {
 	p.expect(token.Fun)
 
-	sig := new(ast.Signature)
+	sig := new(ast.FunctionType)
 	if wantNames {
 		sig.Name = p.parseIdent()
 	}
