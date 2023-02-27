@@ -93,7 +93,8 @@ func TestParse_ObjectDecl_with_Parent(t *testing.T) {
 	if err := assertConstant(objDecl.Name, "Dog"); err != nil {
 		t.Error(err)
 	}
-	if err := assertConstant(objDecl.Parent, "Animal"); err != nil {
+
+	if err := assertType(objDecl.Parent, "Animal"); err != nil {
 		t.Error(err)
 	}
 }
@@ -132,5 +133,23 @@ func TestParse_ObjectDecl_withField(t *testing.T) {
 		if err := assertType(field.Type, "Int"); err != nil {
 			t.Errorf("[FAILED] const type at %d\n\tReason: %s", i, err)
 		}
+	}
+}
+
+func TestParse_ObjectDecl_with_TypeParameters_with_TypeArgument(t *testing.T) {
+	stmts := setupTest(t, "object Person is Comparable<Person> {}", 1)
+
+	objDecl, ok := stmts[0].(*ast.ObjectDecl)
+	if !ok {
+		t.Fatalf("expected first stmt to be *ast.ObjectDecl, got %T", stmts[0])
+	}
+
+	if err := assertConstant(objDecl.Name, "Person"); err != nil {
+		t.Error(err)
+	}
+
+	wantType := &wantType{wantType: "Comparable", args: []any{"Person"}}
+	if err := assertType(objDecl.Parent, wantType); err != nil {
+		t.Error(err)
 	}
 }

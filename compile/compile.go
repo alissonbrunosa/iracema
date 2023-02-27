@@ -851,7 +851,12 @@ func (c *compiler) compileObjectDecl(obj *ast.ObjectDecl) error {
 	}
 
 	if obj.Parent != nil {
-		c.add(bytecode.GetConstant, c.addConstant(obj.Parent.Value))
+		switch parent := obj.Parent.(type) {
+		case *ast.Ident:
+			c.add(bytecode.GetConstant, c.addConstant(parent.Value))
+		default:
+			return errors.New("ParameterizedType is not compilable yet")
+		}
 	} else {
 		c.add(bytecode.PushNone, 0)
 	}

@@ -167,7 +167,7 @@ func (p *parser) parseObjectDecl() ast.Stmt {
 	obj.TypeParamList = p.parseParamTypeList()
 
 	if p.consume(token.Is) {
-		obj.Parent = p.parseConst()
+		obj.Parent = p.parseType()
 	}
 
 	p.expect(token.LeftBrace)

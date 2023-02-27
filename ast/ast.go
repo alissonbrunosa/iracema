@@ -89,7 +89,7 @@ func (*NextStmt) String() string { return "next" }
 
 type ObjectDecl struct {
 	Name          *Ident
-	Parent        *Ident
+	Parent        Type
 	TypeParamList []*TypeParam
 	FieldList     []*VarDecl
 	FunctionList  []*FunDecl
