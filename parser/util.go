@@ -4,9 +4,8 @@ import (
 	"strings"
 )
 
-func readEscape(s string) string {
+func unescapeString(s string) string {
 	var buf strings.Builder
-	buf.Grow(len(s))
 
 	for i := 0; i < len(s); i++ {
 		ch := s[i]
@@ -15,36 +14,35 @@ func readEscape(s string) string {
 			continue
 		}
 
-		next := i + 1
-		switch s[next] {
+		i++
+		if i >= len(s) {
+			break
+		}
+
+		switch s[i] {
 		case 'a':
 			buf.WriteByte('\a')
-
 		case 'b':
 			buf.WriteByte('\b')
-
 		case 'f':
 			buf.WriteByte('\f')
-
 		case 'n':
 			buf.WriteByte('\n')
-
 		case 'r':
 			buf.WriteByte('\r')
-
 		case 't':
 			buf.WriteByte('\t')
-
 		case 'v':
 			buf.WriteByte('\v')
-
+		case '\\':
+			buf.WriteByte('\\')
 		case '"':
 			buf.WriteByte('"')
-
 		default:
-			buf.WriteByte('\\')
+			// pretty sure we should never get here,
+			// since we check all valid escape character
+			panic("Damn! That's a bug!")
 		}
-		i++
 	}
 
 	return buf.String()

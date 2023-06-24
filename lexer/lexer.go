@@ -198,7 +198,7 @@ func (l *lexer) skipWhitespace() {
 
 		case '#':
 			l.skipComment()
-			continue
+
 		default:
 			return
 		}
@@ -240,6 +240,7 @@ func (l *lexer) readString() string {
 			if !l.escape() {
 				break
 			}
+			continue
 		}
 
 		if l.char <= 0 || l.char == '\n' {

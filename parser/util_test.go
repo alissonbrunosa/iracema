@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func Test_readEscape(t *testing.T) {
+func Test_unescapeString(t *testing.T) {
 	table := []struct {
 		scenario string
 		input    []byte
@@ -68,7 +68,7 @@ func Test_readEscape(t *testing.T) {
 	}
 
 	for _, test := range table {
-		v := readEscape(string(test.input))
+		v := unescapeString(string(test.input))
 
 		if v != test.expected {
 			t.Errorf("expected %q, got %q", test.expected, v)

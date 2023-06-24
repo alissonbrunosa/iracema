@@ -600,7 +600,7 @@ func (p *parser) parseBasicLit() (lit *ast.BasicLit) {
 
 	switch p.tok.Type {
 	case token.String:
-		return &ast.BasicLit{Token: p.tok, Value: readEscape(p.tok.Literal)}
+		return &ast.BasicLit{Token: p.tok, Value: unescapeString(p.tok.Literal)}
 	default:
 		return &ast.BasicLit{Token: p.tok, Value: p.tok.Literal}
 	}
