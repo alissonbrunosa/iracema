@@ -440,20 +440,25 @@ func TestInvalidEscape(t *testing.T) {
 	}
 }
 
-func TestNumberFollowedByDot(t *testing.T) {
+func TestLiteralNumberInCallExpr(t *testing.T) {
 	table := []struct {
 		scenario string
 		source   string
 		tokens   []token.Type
 	}{
 		{
-			scenario: "literal Int with dot",
+			scenario: "literal Int",
 			source:   "10.plus",
 			tokens:   []token.Type{token.Int, token.Dot, token.Ident},
 		},
 		{
-			scenario: "literal Float with dot",
+			scenario: "literal Float",
 			source:   "3.1415.plus",
+			tokens:   []token.Type{token.Float, token.Dot, token.Ident},
+		},
+		{
+			scenario: "literal Float with single decimal number",
+			source:   "3.1.plus",
 			tokens:   []token.Type{token.Float, token.Dot, token.Ident},
 		},
 	}

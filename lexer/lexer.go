@@ -32,7 +32,7 @@ func (l *lexer) NextToken() *token.Token {
 		return token.New(kind, literal, position)
 	}
 
-	if isDecimal(l.char) {
+	if isDigit(l.char) {
 		kind, literal := l.readNumber()
 		return token.New(kind, literal, position)
 	}
@@ -173,11 +173,11 @@ func (l *lexer) advance() {
 }
 
 func (l *lexer) peek() byte {
-	if l.readOffset+1 > len(l.source) {
+	if l.readOffset >= len(l.source) {
 		return 0
 	}
 
-	return l.source[l.readOffset+1]
+	return l.source[l.readOffset]
 }
 
 func (l *lexer) pushBack() {
@@ -220,7 +220,7 @@ func isSpecialChar(char byte) bool {
 	return char == '?' || char == '!'
 }
 
-func isDecimal(char byte) bool {
+func isDigit(char byte) bool {
 	return '0' <= char && char <= '9'
 }
 
@@ -268,7 +268,7 @@ func (l *lexer) readIdent() string {
 	l.readNewLine = true
 
 	start := l.offset
-	for isLetter(l.char) || isDecimal(l.char) {
+	for isLetter(l.char) || isDigit(l.char) {
 		l.advance()
 	}
 
@@ -285,15 +285,15 @@ func (l *lexer) readNumber() (token.Type, string) {
 	start := l.offset
 	tok := token.Int
 
-	for isDecimal(l.char) {
+	for isDigit(l.char) {
 		l.advance()
 	}
 
-	if l.char == '.' && isDecimal(l.peek()) {
+	if l.char == '.' && isDigit(l.peek()) {
 		l.advance()
 		tok = token.Float
 
-		for isDecimal(l.char) {
+		for isDigit(l.char) {
 			l.advance()
 		}
 	}
