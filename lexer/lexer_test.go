@@ -439,3 +439,37 @@ func TestInvalidEscape(t *testing.T) {
 		t.Errorf("expected token to be %q, got %q", token.String, tok.Type)
 	}
 }
+
+func TestNumberFollowedByDot(t *testing.T) {
+	table := []struct {
+		scenario string
+		source   string
+		tokens   []token.Type
+	}{
+		{
+			scenario: "literal Int with dot",
+			source:   "10.plus",
+			tokens:   []token.Type{token.Int, token.Dot, token.Ident},
+		},
+		{
+			scenario: "literal Float with dot",
+			source:   "3.1415.plus",
+			tokens:   []token.Type{token.Float, token.Dot, token.Ident},
+		},
+	}
+
+	for _, test := range table {
+		t.Run(test.scenario, func(t *testing.T) {
+			input := bytes.NewBufferString(test.source)
+			l := New(input, nil)
+
+			for i, want := range test.tokens {
+				got := l.NextToken()
+
+				if got.Type != want {
+					t.Errorf("expected token at %d to be %s, got %s", i, want, got.Type)
+				}
+			}
+		})
+	}
+}

@@ -172,6 +172,14 @@ func (l *lexer) advance() {
 	}
 }
 
+func (l *lexer) peek() byte {
+	if l.readOffset+1 > len(l.source) {
+		return 0
+	}
+
+	return l.source[l.readOffset+1]
+}
+
 func (l *lexer) pushBack() {
 	l.offset -= 1
 	l.readOffset -= 1
@@ -274,21 +282,23 @@ func (l *lexer) readIdent() string {
 func (l *lexer) readNumber() (token.Type, string) {
 	l.readNewLine = true
 
-	offs := l.offset
+	start := l.offset
+	tok := token.Int
+
 	for isDecimal(l.char) {
 		l.advance()
 	}
 
-	if l.char != '.' {
-		return token.Int, string(l.source[offs:l.offset])
-	}
-
-	l.advance()
-	for isDecimal(l.char) {
+	if l.char == '.' && isDecimal(l.peek()) {
 		l.advance()
+		tok = token.Float
+
+		for isDecimal(l.char) {
+			l.advance()
+		}
 	}
 
-	return token.Float, string(l.source[offs:l.offset])
+	return tok, string(l.source[start:l.offset])
 }
 
 func New(input io.Reader, errHandler ErrorHandler) *lexer {
