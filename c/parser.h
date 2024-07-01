@@ -31,6 +31,8 @@ enum node_type {
     BOOL_NODE,
     STRING_NODE,
     NUMBER_NODE,
+    NEXT_NODE,
+    STOP_NODE,
     RETURN_NODE,
     BLOCK_NODE,
     PARAMETER_NODE,
