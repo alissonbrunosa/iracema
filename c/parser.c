@@ -27,6 +27,8 @@ static struct for_node* parse_for_node(ir_parser_t*);
 static struct switch_node* parse_switch_node(ir_parser_t*);
 static ir_node_t* parse_case_clause(ir_parser_t*);
 static struct expr_wrapper_node* parse_return_node(ir_parser_t*);
+static ir_node_t* parse_next_node(ir_parser_t*);
+static ir_node_t* parse_stop_node(ir_parser_t*);
 static struct node_list* parse_block(ir_parser_t*);
 static ir_node_t* parse_stmt(ir_parser_t*);
 static struct node_list* parse_stmt_list(ir_parser_t*);
@@ -332,8 +334,12 @@ static ir_node_t* parse_stmt(ir_parser_t* p) {
             case TOKEN_RETURN:
                 return (ir_node_t *) parse_return_node(p);
 
-            case TOKEN_STOP:
             case TOKEN_NEXT:
+                return parse_next_node(p);
+
+            case TOKEN_STOP:
+                return parse_stop_node(p);
+
             case TOKEN_THIS:
                 parse_object(p);
                 break;
@@ -433,6 +439,16 @@ static struct expr_wrapper_node* parse_return_node(ir_parser_t* p) {
     struct expr_wrapper_node* node = NEW_NODE(struct expr_wrapper_node, RETURN_NODE);
     node->expr = parse_expr(p);
     return node;
+}
+
+static ir_node_t* parse_next_node(ir_parser_t* p) {
+    expect(p, TOKEN_NEXT);
+    return NEW_NODE(ir_node_t, NEXT_NODE);
+}
+
+static ir_node_t* parse_stop_node(ir_parser_t* p) {
+    expect(p, TOKEN_STOP);
+    return NEW_NODE(ir_node_t, STOP_NODE);
 }
 
 static struct node_list* parse_block(ir_parser_t* p) {
