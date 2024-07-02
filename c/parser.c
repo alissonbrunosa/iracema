@@ -137,6 +137,9 @@ static struct node_list* create_node_list() {
         exit(1);
     }
 
+    list->size = 0;
+    list->capacity = 0;
+    list->items = NULL;
     return list;
 }
 
