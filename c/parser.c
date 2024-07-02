@@ -17,6 +17,7 @@ static int token_precedence(ir_token_t*);
 static struct number_node* parse_number(ir_parser_t*);
 static struct ident_node* parse_ident(ir_parser_t*);
 static struct group_node* parse_group_expr(ir_parser_t*);
+static ir_node_t* parse_self_refence(ir_parser_t*);
 static struct bool_node* parse_bool(ir_parser_t*);
 static struct string_node* parse_string(ir_parser_t*);
 static struct node_list* parse_parameter_list(ir_parser_t*);
@@ -197,6 +198,11 @@ static struct group_node* parse_group_expr(ir_parser_t* p) {
     return node;
 }
 
+static ir_node_t* parse_self_refence(ir_parser_t* p) {
+    expect(p, TOKEN_THIS);
+    return NEW_NODE(ir_node_t, THIS_NODE);
+}
+
 static struct bool_node* parse_bool(ir_parser_t* p) {
     struct bool_node* node = NEW_NODE(struct bool_node, BOOL_NODE);
     node->value = p->current->id == TOKEN_TRUE;
@@ -339,10 +345,6 @@ static ir_node_t* parse_stmt(ir_parser_t* p) {
 
             case TOKEN_STOP:
                 return parse_stop_node(p);
-
-            case TOKEN_THIS:
-                parse_object(p);
-                break;
 
             default:
                 return parse_simple_stmt(p);
@@ -579,6 +581,9 @@ static ir_node_t* parse_operand(ir_parser_t* p) {
 
         case TOKEN_LEFT_PAREN:
             return (ir_node_t *) parse_group_expr(p);
+
+        case TOKEN_THIS:
+            return parse_self_refence(p);
 
         default:
             printf("bad expr: %s\n", token_names[p->current->id]);

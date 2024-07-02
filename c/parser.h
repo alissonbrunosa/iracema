@@ -29,6 +29,7 @@ enum node_type {
     CASE_NODE,
     ASSIGN_NODE,
     BOOL_NODE,
+    THIS_NODE,
     STRING_NODE,
     NUMBER_NODE,
     NEXT_NODE,
