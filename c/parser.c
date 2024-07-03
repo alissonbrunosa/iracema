@@ -1,7 +1,7 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "parser.h"
 
@@ -46,11 +46,9 @@ static ir_node_t* parse_method_call(ir_parser_t*, ir_node_t*);
 static ir_node_t* parse_index_access(ir_parser_t*, ir_node_t*);
 static struct node_list* parse_argument_list(ir_parser_t*);
 
-static void advance(ir_parser_t *p) {
-    p->current = lexer_next(p->lex);
-}
+static void advance(ir_parser_t* p) { p->current = lexer_next(p->lex); }
 
-static int consume(ir_parser_t *p, enum ID id) {
+static int consume(ir_parser_t* p, enum ID id) {
     if (p->current->id == id) {
         advance(p);
         return 1;
@@ -61,28 +59,45 @@ static int consume(ir_parser_t *p, enum ID id) {
 
 static int unary_operator(ir_token_t* t) {
     switch (t->id) {
-        case TOKEN_BANG: return UNARY_NOT;
-        case TOKEN_PLUS: return UNARY_PLUS;
-        case TOKEN_MINUS: return UNARY_MINUS;
-        default: return NOOP;
+        case TOKEN_BANG:
+            return UNARY_NOT;
+        case TOKEN_PLUS:
+            return UNARY_PLUS;
+        case TOKEN_MINUS:
+            return UNARY_MINUS;
+        default:
+            return NOOP;
     }
 }
 
 static int binary_operator(ir_token_t* t) {
     switch (t->id) {
-        case TOKEN_OR: return BINARY_OR;
-        case TOKEN_AND: return BINARY_AND;
-        case TOKEN_PLUS: return BINARY_PLUS;
-        case TOKEN_MINUS: return BINARY_MINUS;
-        case TOKEN_SLASH: return BINARY_SLASH;
-        case TOKEN_STAR: return BINARY_STAR;
-        case TOKEN_GREAT: return BINARY_GREAT;
-        case TOKEN_GREAT_EQUAL: return BINARY_GREAT_EQUAL;
-        case TOKEN_LESS: return BINARY_LESS;
-        case TOKEN_LESS_EQUAL: return BINARY_LESS_EQUAL;
-        case TOKEN_EQUAL: return BINARY_EQUAL;
-        case TOKEN_NOT_EQUAL: return BINARY_NOT_EQUAL;
-        default: return NOOP;
+        case TOKEN_OR:
+            return BINARY_OR;
+        case TOKEN_AND:
+            return BINARY_AND;
+        case TOKEN_PLUS:
+            return BINARY_PLUS;
+        case TOKEN_MINUS:
+            return BINARY_MINUS;
+        case TOKEN_SLASH:
+            return BINARY_SLASH;
+        case TOKEN_STAR:
+            return BINARY_STAR;
+        case TOKEN_GREAT:
+            return BINARY_GREAT;
+        case TOKEN_GREAT_EQUAL:
+            return BINARY_GREAT_EQUAL;
+        case TOKEN_LESS:
+            return BINARY_LESS;
+        case TOKEN_LESS_EQUAL:
+            return BINARY_LESS_EQUAL;
+        case TOKEN_EQUAL:
+            return BINARY_EQUAL;
+        case TOKEN_NOT_EQUAL:
+            return BINARY_NOT_EQUAL;
+        default:
+            return NOOP;
     }
 }
 
@@ -146,12 +161,12 @@ static struct node_list* create_node_list() {
 static void node_list_append(struct node_list* list, ir_node_t* node) {
     if (list->size == list->capacity) {
         list->capacity = list->capacity == 0 ? 4 : list->capacity * 2;
-        list->items = (ir_node_t **) realloc(list->items, sizeof(ir_node_t *) * list->capacity);
+        list->items = (ir_node_t**) realloc(list->items, sizeof(ir_node_t*) * list->capacity);
     }
     list->items[list->size++] = node;
 }
 
-ir_token_t* expect(ir_parser_t *p, enum ID id) {
+ir_token_t* expect(ir_parser_t* p, enum ID id) {
     ir_token_t* current = p->current;
 
     if (current->id != id) {
@@ -165,7 +180,7 @@ ir_token_t* expect(ir_parser_t *p, enum ID id) {
 
 static struct number_node* parse_number(ir_parser_t* p) {
     ir_token_t* t = expect(p, TOKEN_NUMBER);
-    char *endptr;
+    char* endptr;
 
     char* literal = strndup(t->literal, t->length);
     if (literal == NULL) {
@@ -174,7 +189,6 @@ static struct number_node* parse_number(ir_parser_t* p) {
     }
 
     struct number_node* node = NEW_NODE(struct number_node, NUMBER_NODE);
-
     node->value = strtod(literal, &endptr);
     if (endptr == literal) {
         printf("failed to parser '%s' into double.\n", literal);
@@ -228,7 +242,7 @@ static struct string_node* parse_string(ir_parser_t* p) {
     return node;
 }
 
-static struct object_node* parse_object(ir_parser_t *p) {
+static struct object_node* parse_object(ir_parser_t* p) {
     expect(p, TOKEN_OBJECT);
 
     struct object_node* node = NEW_NODE(struct object_node, OBJECT_NODE);
@@ -294,7 +308,7 @@ ir_parser_t* new_parser(char* source) {
     return p;
 }
 
-void free_parser(ir_parser_t *p) {
+void free_parser(ir_parser_t* p) {
     if (p == NULL) {
         return;
     }
@@ -304,8 +318,8 @@ void free_parser(ir_parser_t *p) {
     free(p);
 }
 
-struct file* start(ir_parser_t *p) {
-    while(p->current->id != TOKEN_EOF) {
+struct file* start(ir_parser_t* p) {
+    while (p->current->id != TOKEN_EOF) {
         file_add_node(p->file, parse_stmt(p));
     }
 
@@ -313,9 +327,14 @@ struct file* start(ir_parser_t *p) {
     return p->file;
 }
 
+unsigned long end_stmt_set = (1UL << TOKEN_EOF)         //
+                           | (1UL << TOKEN_RIGHT_BRACE) //
+                           | (1UL << TOKEN_CASE)        //
+                           | (1UL << TOKEN_DEFAULT);    //
+
 static struct node_list* parse_stmt_list(ir_parser_t* p) {
     struct node_list* list = create_node_list();
-    while (p->current->id != TOKEN_RIGHT_BRACE && p->current->id != TOKEN_CASE && p->current->id != TOKEN_DEFAULT && p->current->id != TOKEN_EOF) {
+    while (!(end_stmt_set & (1UL << p->current->id))) {
         node_list_append(list, parse_stmt(p));
     }
 
@@ -323,25 +342,25 @@ static struct node_list* parse_stmt_list(ir_parser_t* p) {
 }
 
 static ir_node_t* parse_stmt(ir_parser_t* p) {
-    while(p->current->id != TOKEN_EOF) {
+    while (p->current->id != TOKEN_EOF) {
         switch (p->current->id) {
             case TOKEN_OBJECT:
-                return (ir_node_t *) parse_object(p);
+                return (ir_node_t*) parse_object(p);
 
             case TOKEN_FUN:
-                return (ir_node_t *) parse_function(p);
+                return (ir_node_t*) parse_function(p);
 
             case TOKEN_IF:
-                return (ir_node_t *) parse_if_node(p);
+                return (ir_node_t*) parse_if_node(p);
 
             case TOKEN_FOR:
-                return (ir_node_t *) parse_for_node(p);
+                return (ir_node_t*) parse_for_node(p);
 
             case TOKEN_SWITCH:
-                return (ir_node_t *) parse_switch_node(p);
+                return (ir_node_t*) parse_switch_node(p);
 
             case TOKEN_RETURN:
-                return (ir_node_t *) parse_return_node(p);
+                return (ir_node_t*) parse_return_node(p);
 
             case TOKEN_NEXT:
                 return parse_next_node(p);
@@ -407,7 +426,7 @@ static struct for_node* parse_for_node(ir_parser_t* p) {
 static struct switch_node* parse_switch_node(ir_parser_t* p) {
     expect(p, TOKEN_SWITCH);
 
-    struct switch_node* node = (struct switch_node *) NEW_NODE(struct switch_node, SWITCH_NODE);
+    struct switch_node* node = (struct switch_node*) NEW_NODE(struct switch_node, SWITCH_NODE);
     node->tag = parse_expr(p);
     node->cases = create_node_list();
 
@@ -435,7 +454,7 @@ static ir_node_t* parse_case_clause(ir_parser_t* p) {
     expect(p, TOKEN_COLON);
     node->body = parse_stmt_list(p);
 
-    return (ir_node_t *) node;
+    return (ir_node_t*) node;
 }
 
 static struct expr_wrapper_node* parse_return_node(ir_parser_t* p) {
@@ -476,7 +495,7 @@ static ir_node_t* parse_simple_stmt(ir_parser_t* p) {
             return parse_assigment(p, lhs);
 
         default:
-            ir_node_t* node = lhs->items[lhs->size-1];
+            ir_node_t* node = lhs->items[lhs->size - 1];
             free(lhs);
             return node;
     }
@@ -503,9 +522,7 @@ static struct node_list* parse_expr_list(ir_parser_t* p) {
     return list;
 }
 
-static ir_node_t* parse_expr(ir_parser_t* p) {
-    return parse_binary_expr(p, 0);
-}
+static ir_node_t* parse_expr(ir_parser_t* p) { return parse_binary_expr(p, 0); }
 
 static ir_node_t* parse_binary_expr(ir_parser_t* p, int prec) {
     ir_node_t* expr = parse_unary_expr(p);
@@ -520,9 +537,9 @@ static ir_node_t* parse_binary_expr(ir_parser_t* p, int prec) {
 
         struct binary_node* node = NEW_NODE(struct binary_node, BINARY_NODE);
         node->lhs = expr;
-        node->operator = binary_operator(t);
+        node->operator= binary_operator(t);
         node->rhs = parse_binary_expr(p, current_prec);
-        expr = (ir_node_t *) node;
+        expr = (ir_node_t*) node;
     }
 
     return expr;
@@ -534,7 +551,7 @@ static ir_node_t* parse_unary_expr(ir_parser_t* p) {
         case TOKEN_PLUS:
         case TOKEN_MINUS:
             struct unary_node* node = NEW_NODE(struct unary_node, UNARY_NODE);
-            node->operator = unary_operator(p->current);
+            node->operator= unary_operator(p->current);
             advance(p);
             node->expr = parse_unary_expr(p);
             return AS_NODE(node);
@@ -570,20 +587,20 @@ static ir_node_t* parse_primary_expr(ir_parser_t* p) {
 static ir_node_t* parse_operand(ir_parser_t* p) {
     switch (p->current->id) {
         case TOKEN_NUMBER:
-            return (ir_node_t *) parse_number(p);
+            return (ir_node_t*) parse_number(p);
 
         case TOKEN_STRING:
-            return (ir_node_t *) parse_string(p);
+            return (ir_node_t*) parse_string(p);
 
         case TOKEN_TRUE:
         case TOKEN_FALSE:
-            return (ir_node_t *) parse_bool(p);
+            return (ir_node_t*) parse_bool(p);
 
         case TOKEN_IDENT:
-            return (ir_node_t *) parse_ident(p);
+            return (ir_node_t*) parse_ident(p);
 
         case TOKEN_LEFT_PAREN:
-            return (ir_node_t *) parse_group_expr(p);
+            return (ir_node_t*) parse_group_expr(p);
 
         case TOKEN_THIS:
             return parse_self_refence(p);
@@ -601,7 +618,7 @@ static ir_node_t* parse_member_access(ir_parser_t* p, ir_node_t* object) {
     struct member_access_node* node = NEW_NODE(struct member_access_node, MEMBER_ACCESS_NODE);
     node->object = object;
     node->member = parse_ident(p);
-    return (ir_node_t *) node;
+    return (ir_node_t*) node;
 }
 
 static ir_node_t* parse_method_call(ir_parser_t* p, ir_node_t* func) {
@@ -609,7 +626,7 @@ static ir_node_t* parse_method_call(ir_parser_t* p, ir_node_t* func) {
     node->func = func;
     node->arguments = parse_argument_list(p);
 
-    return (ir_node_t *) node;
+    return (ir_node_t*) node;
 }
 
 static ir_node_t* parse_index_access(ir_parser_t* p, ir_node_t* expr) {
@@ -621,10 +638,10 @@ static ir_node_t* parse_index_access(ir_parser_t* p, ir_node_t* expr) {
     node->index = parse_expr(p);
     expect(p, TOKEN_RIGHT_BRACKET);
 
-    return (ir_node_t *) node;
+    return (ir_node_t*) node;
 }
 
-static struct node_list* parse_argument_list(ir_parser_t *p) {
+static struct node_list* parse_argument_list(ir_parser_t* p) {
     expect(p, TOKEN_LEFT_PAREN);
     if (consume(p, TOKEN_RIGHT_PAREN)) {
         return NULL;
@@ -654,7 +671,7 @@ void file_free(struct file* f) {
     }
 
     if (f->nodes != NULL) {
-        for(int i = 0; i < f->size; i++) {
+        for (int i = 0; i < f->size; i++) {
             node_free(f->nodes[i]);
         }
     }
@@ -675,7 +692,7 @@ void file_add_node(struct file* f, ir_node_t* node) {
 }
 
 void node_free(ir_node_t* node) {
-    switch(node->type) {
+    switch (node->type) {
         case NUMBER_NODE:
             free(node);
             break;

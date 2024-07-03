@@ -1,0 +1,18 @@
+Language: Cpp
+IndentWidth: 4
+UseTab: false
+SortIncludes: true
+SpaceBeforeAssignmentOperators: true
+DerivePointerAlignment: false
+IndentCaseLabels: true
+PointerAlignment: Left
+ColumnLimit: 100
+SpaceBeforeParens: ControlStatements
+SpaceAfterCStyleCast: true
+AlignOperands: AlignAfterOperator
+BreakBeforeBinaryOperators: NonAssignment
+AllowShortIfStatementsOnASingleLine: true
+AlignConsecutiveShortCaseStatements:
+  Enabled: true
+  AlignCaseColons: false
+  AcrossEmptyLines: false

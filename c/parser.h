@@ -39,7 +39,6 @@ enum node_type {
     PARAMETER_NODE,
     INDEX_ACCESS_NODE,
     MEMBER_ACCESS_NODE,
-
     CALL_NODE,
     IDENT_NODE,
     GROUP_NODE,
