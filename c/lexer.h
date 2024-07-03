@@ -61,43 +61,23 @@ enum ID {
     TOKEN_UNKNOWN
 };
 
-struct token {
+typedef struct token {
     enum ID id;
     char* literal;
     int length;
     int line;
     int column;
-};
+} ir_token_t;
 
-typedef struct token ir_token_t;
-
-void token_free(ir_token_t* tok);
-
-struct lexer {
+typedef struct lexer {
     char* source;
     char* current;
     int line;
     int column;
-};
-
-typedef struct lexer ir_lexer_t;
-
-char lexer_peek(ir_lexer_t* lex);
-
-char lexer_advance(ir_lexer_t* lex);
-
-void lexer_skip_whitespace(ir_lexer_t* lex);
-
-ir_token_t* lexer_next(ir_lexer_t* lex);
-
-ir_token_t* lexer_read_ident(ir_lexer_t* lex);
-
-ir_token_t* lexer_read_number(ir_lexer_t* lex);
-
-ir_token_t* lexer_read_string(ir_lexer_t* lex);
+} ir_lexer_t;
 
 ir_lexer_t* new_lexer(char* source);
-
-void lexer_free(ir_lexer_t* lex);
+void lexer_free(ir_lexer_t*);
+ir_token_t* lexer_next(ir_lexer_t*);
 
 #endif

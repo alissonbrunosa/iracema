@@ -219,7 +219,7 @@ static struct string_node* parse_string(ir_parser_t* p) {
 
     struct string_node* node = NEW_NODE(struct string_node, STRING_NODE);
 
-    node->value = strndup(t->literal, t->length);
+    node->value = strndup(t->literal + 1, t->length - 2);
     if (node->value == NULL) {
         printf("failed to dup token literal into string node\n");
         exit(1);
@@ -265,7 +265,7 @@ static struct node_list* parse_parameter_list(ir_parser_t* p) {
 
     struct node_list* list = create_node_list();
     while (p->current->id != TOKEN_RIGHT_PAREN && p->current->id != TOKEN_EOF) {
-        struct parameter* node = NEW_NODE(struct parameter, PARAMETER_NODE);
+        struct parameter_node* node = NEW_NODE(struct parameter_node, PARAMETER_NODE);
         node->name = parse_ident(p);
 
         if (consume(p, TOKEN_ASSIGN)) {

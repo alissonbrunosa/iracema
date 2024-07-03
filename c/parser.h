@@ -66,7 +66,7 @@ struct ident_node {
     const char* value;
 };
 
-struct parameter {
+struct parameter_node {
     ir_node_t base;
     struct ident_node* name;
     struct node* value;
